@@ -32,6 +32,7 @@ export default function LoginScreen() {
     try {
       const result = await axiosInstance.post("/api/user/v1/login", formData);
       console.log(result.data);
+      router.push("/(protected)/(tabs)/explore");
     } catch (error) {
       console.error(error)
     }
