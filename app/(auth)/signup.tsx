@@ -1,18 +1,12 @@
-import axiosInstance from "@/lib/axios";
+import Input from "@/components/Input";
+import Logo from "@/components/Logo";
+import PasswordInput from "@/components/PasswordInput";
+import Button from "@/components/ui/Button";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useState } from "react";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function SignUpScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -21,26 +15,8 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSignUp = async () => {
-    const formData = new FormData();
-
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
-    formData.append("email", email);
-    formData.append("password", password);
-
-    try {
-      const result = await axiosInstance.post(
-        "/api/user/v1/signup",
-        formData
-      );
-
-      console.log(result.data);
-
-      router.replace("/(auth)/login");
-    } catch (error) {
-      console.log(error);
-    }
+  const handleRegister = async () => {
+    router.replace("/(auth)/verify-email");
   };
 
   return (
@@ -49,76 +25,28 @@ export default function SignUpScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={styles.content}>
-        <Image
-          source={require("@/assets/images/logo.jpg")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Logo />
 
         <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Set up your CareLink account</Text>
 
-        <Text style={styles.subtitle}>
-          Set up your CareLink account
-        </Text>
+        <Input placeholder="First Name" value={firstName} onChangeText={setFirstName} />
+        <View style={styles.space} />
+        <Input placeholder="Last Name" value={lastName} onChangeText={setLastName} />
+        <View style={styles.space} />
+        <Input placeholder="Email" keyboardType="email-address" value={email} onChangeText={setEmail} />
+        <View style={styles.space} />
+        <PasswordInput value={password} onChangeText={setPassword} />
+        <View style={styles.space} />
+        <PasswordInput value={confirmPassword} onChangeText={setConfirmPassword} />
+        <View style={styles.space} />
 
-        <TextInput
-          style={styles.input}
-          placeholder="First Name"
-          placeholderTextColor="#888"
-          value={firstName}
-          onChangeText={setFirstName}
-        />
+        <Button title="Register" onPress={handleRegister} />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Last Name"
-          placeholderTextColor="#888"
-          value={lastName}
-          onChangeText={setLastName}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#888"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#888"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSignUp}
-        >
-          <Text style={styles.buttonText}>
-            Register
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.push("/(auth)/login")}
-        >
+        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
           <Text style={styles.footer}>
             Already have an account?
-            <Text style={styles.login}> Login</Text>
+            <Text style={styles.link}> Login</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -126,97 +54,38 @@ export default function SignUpScreen() {
   );
 }
 
-const PRIMARY = "#F16A66";
-const TEAL = "#14A3A5";
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF",
     justifyContent: "center",
   },
-
   content: {
     paddingHorizontal: 24,
   },
-
-  logo: {
-    width: 240,
-    height: 110,
-    alignSelf: "center",
-    marginBottom: 15,
-  },
-
   title: {
-    fontSize: 38,
+    fontSize: 28,
     fontWeight: "700",
-    color: TEAL,
+    color: "#111",
     textAlign: "center",
+    marginBottom: 6,
   },
-
   subtitle: {
-    fontSize: 17,
+    fontSize: 15,
     color: "#666",
     textAlign: "center",
-    marginTop: 8,
-    marginBottom: 28,
+    marginBottom: 24,
   },
-
-  input: {
-    height: 55,
-    backgroundColor: "#FFF",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D7D7D7",
-    paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 16,
-
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 5,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-
-    elevation: 4,
+  space: {
+    height: 12,
   },
-
-  button: {
-    height: 55,
-    backgroundColor: PRIMARY,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-
-    shadowColor: PRIMARY,
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-
-    elevation: 5,
-  },
-
-  buttonText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-
   footer: {
-    marginTop: 22,
+    marginTop: 16,
     textAlign: "center",
     color: "#666",
-    fontSize: 16,
   },
-
-  login: {
-    color: PRIMARY,
+  link: {
+    color: "#F16A66",
     fontWeight: "600",
   },
 });
