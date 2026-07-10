@@ -27,7 +27,9 @@ export default function LoginScreen() {
       formData.append("email", email);
       formData.append("password", password);
 
-      await axiosInstance.post("/api/user/v1/login", formData);
+      const result = await axiosInstance.post("/api/user/v1/login", formData);
+      
+      console.log(result.data);
 
       router.replace("/(protected)/(tabs)/explore");
     } catch (err) {
