@@ -17,7 +17,6 @@ export const register = async (
   lastName: string,
   email: string,
   password: string,
-  confirmPassword: string
 ) => {
   const formData = new FormData();
 
@@ -25,7 +24,6 @@ export const register = async (
   formData.append("lastName", lastName);
   formData.append("email", email);
   formData.append("password", password);
-  formData.append("confirmPassword", confirmPassword);
 
   return axiosInstance.post("/api/user/v1/signup", formData);
 };
