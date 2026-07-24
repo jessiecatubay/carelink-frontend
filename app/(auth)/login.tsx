@@ -3,7 +3,8 @@ import Logo from "@/components/Logo";
 import PasswordInput from "@/components/PasswordInput";
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
-import axiosInstance from "@/lib/axios";
+import { loginSchema, type LoginFormValues } from "@/schema/auth";
+import { login } from "@/services/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -19,17 +20,26 @@ export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof LoginFormValues, string>>
+  >({});
 
   const handleLogin = async () => {
+    const parsed = loginSchema.safeParse({ email, password });
+
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      setErrors({
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      return;
+    }
+
+    setErrors({});
+
     try {
-      const formData = new FormData();
-      formData.append("email", email);
-      formData.append("password", password);
-
-      const result = await axiosInstance.post("/api/user/v1/login", formData);
-      
-      console.log(result.data);
-
+      await login(email, password);
       router.replace("/(protected)/(tabs)/explore");
     } catch (error) {
       console.log(error);
@@ -47,13 +57,28 @@ export default function Login() {
         <Input
           placeholder="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (errors.email) {
+              setErrors((prev) => ({ ...prev, email: undefined }));
+            }
+          }}
           keyboardType="email-address"
+          error={errors.email}
         />
 
         <View style={styles.spacing} />
 
-        <PasswordInput value={password} onChangeText={setPassword} />
+        <PasswordInput
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            if (errors.password) {
+              setErrors((prev) => ({ ...prev, password: undefined }));
+            }
+          }}
+          error={errors.password}
+        />
 
         <View style={styles.rowBetween}>
           <Pressable style={styles.checkboxRow}>
@@ -74,7 +99,8 @@ export default function Login() {
 
         <Pressable onPress={() => router.push("/(auth)/signup")}>
           <Text style={styles.footerText}>
-            Don&apos;t have an account? <Text style={styles.linkText}>Register</Text>
+            Don&apos;t have an account?{" "}
+            <Text style={styles.linkText}>Register</Text>
           </Text>
         </Pressable>
       </View>
