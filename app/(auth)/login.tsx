@@ -1,6 +1,6 @@
-import Input from "@/components/Input";
-import Logo from "@/components/Logo";
-import PasswordInput from "@/components/PasswordInput";
+import Input from "@/components/features/auth/Input";
+import Logo from "@/components/features/auth/Logo";
+import PasswordInput from "@/components/features/auth/PasswordInput";
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
 import axiosInstance from "@/lib/axios";
@@ -86,10 +86,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   content: {
     paddingHorizontal: 24,
+    paddingTop: 24,
+    marginTop: 40,
   },
   title: {
     fontSize: 28,

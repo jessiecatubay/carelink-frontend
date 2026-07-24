@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import { Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
 
-import Logo from "@/components/Logo";
+import Logo from "@/components/features/auth/Logo";
+import VerificationCard from "@/components/features/auth/VerificationCard";
 import Button from "@/components/ui/Button";
-import VerificationCard from "@/components/ui/VerificationCard";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function VerifyEmailScreen() {
           </Text>
         </View>
 
-        <Button title="Open Gmail" onPress={() => router.push("/(onboarding)/non-patient/screen1")} />
+        <Button title="Open Gmail" onPress={() => router.push("/(onboarding)/non-patient/get-started")} />
       </View>
     </SafeAreaView>
   );
@@ -45,7 +45,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingTop: 24,
   },
   title: {
     fontSize: 28,

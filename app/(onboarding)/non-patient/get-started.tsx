@@ -1,32 +1,49 @@
+import Logo from "@/components/features/auth/Logo";
+import Button from "@/components/ui/Button";
+import PaginationDots from "@/components/ui/PaginationDots";
+import { Italianno_400Regular, useFonts } from "@expo-google-fonts/italianno";
 import { useRouter } from "expo-router";
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 
-import Logo from "@/components/Logo";
-import Button from "@/components/ui/Button";
-import PaginationDots from "@/components/ui/PaginationDots";
-
 export default function NonPatientOnboardingScreen() {
   const router = useRouter();
+  const [fontsLoaded] = useFonts({
+    "Italianno-Regular": Italianno_400Regular,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
+        {/* Pagination */}
         <View style={styles.paginationWrap}>
           <PaginationDots currentIndex={0} total={8} />
         </View>
 
+        {/* Main Content */}
         <View style={styles.content}>
           <Text style={styles.welcomeText}>Welcome to</Text>
-          <Logo />
+
+          <View style={styles.logoWrap}>
+            <Logo />
+          </View>
+
           <Text style={styles.subtitle}>
-            Stay connected and care for{"\n"}your loved one anytime.
+            Stay connected and care for{"\n"}
+            your loved one anytime.
           </Text>
         </View>
 
+        {/* Button */}
         <View style={styles.buttonWrap}>
           <Button
             title="Get Started"
-            onPress={() => router.push("/(onboarding)/non-patient/screen2")}
+            onPress={() =>
+              router.push("/(onboarding)/non-patient/terms")
+            }
             style={styles.button}
           />
         </View>
@@ -40,38 +57,52 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
+
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: "space-between",
   },
+
   paginationWrap: {
-    marginTop: 40,
     alignItems: "center",
+    marginTop: 50,
   },
+
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: -40,
   },
+
   welcomeText: {
-    fontSize: 48,
-    color: "#14A3A5",
-    marginBottom: 24,
-    fontFamily: "GreatVibes-Regular",
+    fontFamily: "Italianno-Regular",
+    fontSize: 70,
+    color: "#12A7B3",
     textAlign: "center",
+    marginBottom: 12,
   },
+
+  logoWrap: {
+    marginBottom: 28,
+    alignItems: "center",
+  },
+
   subtitle: {
     textAlign: "center",
-    color: "#6B7280",
-    fontSize: 16,
-    marginTop: 24,
-    lineHeight: 24,
+    color: "#666666",
+    fontSize: 18,
+    lineHeight: 28,
+    paddingHorizontal: 20,
   },
+
   buttonWrap: {
-    marginBottom: 40,
+    paddingBottom: 40,
   },
+
   button: {
     width: "100%",
+    height: 55,
+    borderRadius: 8,
   },
 });

@@ -1,6 +1,6 @@
-import Input from "@/components/Input";
-import Logo from "@/components/Logo";
-import PasswordInput from "@/components/PasswordInput";
+import Input from "@/components/features/auth/Input";
+import Logo from "@/components/features/auth/Logo";
+import PasswordInput from "@/components/features/auth/PasswordInput";
 import Button from "@/components/ui/Button";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -58,10 +58,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   content: {
     paddingHorizontal: 24,
+    paddingTop: 24,
   },
   title: {
     fontSize: 28,
