@@ -12,7 +12,7 @@ export default function Logo() {
 
 const styles = StyleSheet.create({
   logo: {
-    width: 320,
+    width: 700,
     height: 160,
     alignSelf: "center",
     marginBottom: 32,

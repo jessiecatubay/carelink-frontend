@@ -5,25 +5,31 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TextInputProps,
   View,
 } from "react-native";
 
-type PasswordInputProps = {
-  value?: string;
-  onChangeText?: (text: string) => void;
+type PasswordInputProps = TextInputProps & {
   error?: string;
 };
 
 export default function PasswordInput({
-  value = "",
+  placeholder = "Password",
+  value,
   onChangeText,
   error,
+  ...props
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <View>
-      <View style={[styles.container, error ? styles.errorContainer : null]}>
+      <View
+        style={[
+          styles.container,
+          error ? styles.errorContainer : null,
+        ]}
+      >
         <Image
           source={require("@/assets/icons/padlock.png")}
           style={styles.icon}
@@ -32,26 +38,34 @@ export default function PasswordInput({
 
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder={placeholder}
           placeholderTextColor="#999"
           secureTextEntry={!showPassword}
           value={value}
           onChangeText={onChangeText}
+          {...props}
         />
 
-        <Pressable onPress={() => setShowPassword(!showPassword)}>
+        <Pressable
+          onPress={() => setShowPassword(!showPassword)}
+        >
           <Image
             source={
               showPassword
                 ? require("@/assets/icons/hide.png")
                 : require("@/assets/icons/view.png")
             }
-            style={styles.icon}
+            style={styles.eyeIcon}
             resizeMode="contain"
           />
         </Pressable>
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      {error ? (
+        <Text style={styles.errorText}>
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -65,21 +79,31 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 15,
     backgroundColor: "#FFF",
+    height: 55,
   },
+
   errorContainer: {
     borderColor: "#F16A66",
   },
+
   icon: {
     width: 20,
     height: 20,
     marginRight: 10,
   },
+
   input: {
     flex: 1,
-    height: 55,
     fontSize: 16,
     color: "#111",
   },
+
+  eyeIcon: {
+    width: 20,
+    height: 20,
+    tintColor: "#777",
+  },
+
   errorText: {
     marginTop: 6,
     color: "#F16A66",
