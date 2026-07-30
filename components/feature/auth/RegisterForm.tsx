@@ -1,19 +1,16 @@
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { registerSchema, type RegisterFormValues } from "@/schema/auth";
 import { register } from "@/services/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const { setData } = useOnboarding();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -53,7 +50,12 @@ export default function RegisterForm() {
     try {
       await register(firstName, lastName, email, password);
 
-      router.replace("/(auth)/verify-email");
+      setData((prev) => ({
+        ...prev,
+        email,
+      }));
+
+      router.replace("/(auth)/user-onboarding");
     } catch (error) {
       console.log(error);
     }
@@ -152,14 +154,9 @@ export default function RegisterForm() {
 
       <View style={styles.space} />
 
-      <Button
-        title="Register"
-        onPress={handleRegister}
-      />
+      <Button title="Register" onPress={handleRegister} />
 
-      <Pressable
-        onPress={() => router.push("/(auth)/login")}
-      >
+      <Pressable onPress={() => router.push("/(auth)/login")}>
         <Text style={styles.footer}>
           Already have an account?
           <Text style={styles.link}> Login</Text>

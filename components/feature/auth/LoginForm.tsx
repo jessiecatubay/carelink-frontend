@@ -2,17 +2,13 @@ import { loginSchema, type LoginFormValues } from "@/schema/auth";
 import { login } from "@/services/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { useOnboarding } from "@/context/OnboardingContext";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -24,6 +20,7 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof LoginFormValues, string>>
   >({});
+  const { setData } = useOnboarding();
 
   const handleLogin = async () => {
     const parsed = loginSchema.safeParse({
@@ -45,9 +42,18 @@ export default function LoginForm() {
     setErrors({});
 
     try {
-      await login(email, password);
+      const result = await login(email, password);
 
-      router.replace("/(protected)/(tabs)/explore");
+      setData((prev) => ({
+        ...prev,
+        email,
+      }));
+
+      if(result.data.data.user.onBoarded === false) {
+        router.replace("/(auth)/user-onboarding");
+      } else {
+        router.replace("/(protected)/(tabs)/explore");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -95,45 +101,28 @@ export default function LoginForm() {
           onPress={() => setRememberMe(!rememberMe)}
         >
           <View
-            style={[
-              styles.checkbox,
-              rememberMe && styles.checkboxChecked,
-            ]}
+            style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
           />
 
-          <Text style={styles.checkboxText}>
-            Remember me
-          </Text>
+          <Text style={styles.checkboxText}>Remember me</Text>
         </Pressable>
 
         <Pressable>
-          <Text style={styles.linkText}>
-            Forgot Password?
-          </Text>
+          <Text style={styles.linkText}>Forgot Password?</Text>
         </Pressable>
       </View>
 
       <View style={styles.spacing} />
 
-      <Button
-        title="Login"
-        onPress={handleLogin}
-      />
+      <Button title="Login" onPress={handleLogin} />
 
       <Divider text="Or" />
 
-      <Button
-        title="Sign In with Google"
-      />
+      <Button title="Sign In with Google" />
 
-      <Pressable
-        onPress={() => router.push("/(auth)/signup")}
-      >
+      <Pressable onPress={() => router.push("/(auth)/signup")}>
         <Text style={styles.footerText}>
-          Don't have an account?{" "}
-          <Text style={styles.linkText}>
-            Register
-          </Text>
+          Don't have an account? <Text style={styles.linkText}>Register</Text>
         </Text>
       </Pressable>
     </>

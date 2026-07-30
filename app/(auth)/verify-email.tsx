@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Logo from "@/components/common/Logo";
 import Button from "@/components/ui/Button";
@@ -31,7 +32,10 @@ export default function VerifyEmailScreen() {
           </Text>
         </View>
 
-        <Button title="Open Gmail" onPress={() => router.push("/(onboarding)/non-patient/welcome")} />
+        <Button
+          title="Open Gmail"
+          onPress={() => router.push("/(onboarding)/non-patient/welcome")}
+        />
       </View>
     </SafeAreaView>
   );
