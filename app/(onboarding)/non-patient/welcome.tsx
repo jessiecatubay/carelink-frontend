@@ -27,7 +27,7 @@ export default function NonPatientOnboardingScreen() {
         <View style={styles.buttonWrap}>
           <Button
             title="Get Started"
-            onPress={() => router.push("/(onboarding)/non-patient/terms")}
+            onPress={() => router.push("/non-patient/terms")}
             style={styles.button}
           />
         </View>

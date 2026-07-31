@@ -50,9 +50,13 @@ export default function LoginForm() {
       }));
 
       if(result.data.data.user.onBoarded === false) {
-        router.replace("/(auth)/user-onboarding");
+        router.replace("/user-onboarding");
       } else {
-        router.replace("/(protected)/(tabs)/explore");
+        if(result.data.data.user.role === "CAREGIVER")
+        router.replace("/non-patient");
+        
+        if(result.data.data.user.role === "PATIENT")
+        router.replace("/patient");
       }
     } catch (error) {
       console.log(error);
@@ -120,7 +124,7 @@ export default function LoginForm() {
 
       <Button title="Sign In with Google" />
 
-      <Pressable onPress={() => router.push("/(auth)/signup")}>
+      <Pressable onPress={() => router.push("/signup")}> 
         <Text style={styles.footerText}>
           Don't have an account? <Text style={styles.linkText}>Register</Text>
         </Text>
