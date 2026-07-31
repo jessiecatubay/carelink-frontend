@@ -15,14 +15,14 @@ export default function SetupComplete() {
     try {
       await userOnboarding(data);
 
-      router.replace("/non-patient");
+      router.replace("/patient");
     } catch (error) {
       console.error(error);
     }
   }
   return (
     <View>
-      <Text>Screen 7 non-patient side</Text>
+      <Text>Screen 6 patient side</Text>
       <Button 
         title="Go to Dashboard"
         onPress={handlePress}

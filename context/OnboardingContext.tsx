@@ -2,9 +2,7 @@ import { createContext, useContext, useState } from "react";
 
 type OnboardingData = {
   email: string;
-  role?: "patient" | "caregiver";
-  firstName?: string;
-  lastName?: string;
+  role?: "PATIENT" | "CAREGIVER";
 };
 
 type OnboardingContextType = {
@@ -21,6 +19,7 @@ export function OnboardingProvider({
 }) {
   const [data, setData] = useState<OnboardingData>({
     email: "",
+    role: undefined,
   });
 
   return (

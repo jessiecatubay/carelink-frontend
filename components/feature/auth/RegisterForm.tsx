@@ -55,7 +55,7 @@ export default function RegisterForm() {
         email,
       }));
 
-      router.replace("/(auth)/user-onboarding");
+      router.replace("/login");
     } catch (error) {
       console.log(error);
     }
@@ -156,7 +156,7 @@ export default function RegisterForm() {
 
       <Button title="Register" onPress={handleRegister} />
 
-      <Pressable onPress={() => router.push("/(auth)/login")}>
+      <Pressable onPress={() => router.push("/login")}>
         <Text style={styles.footer}>
           Already have an account?
           <Text style={styles.link}> Login</Text>
