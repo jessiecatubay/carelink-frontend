@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     alignItems: "center",
-    marginTop: 50, // Adjust to your preference (20–40)
+    marginTop: 50, 
     marginBottom: 5,
   },
 });
