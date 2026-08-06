@@ -115,7 +115,7 @@ export default function Screen3() {
 
       <Button
         title="Continue"
-        onPress={() => router.push("/non-patient/qrcode")}
+        onPress={() => router.push("./qrcode")}
       />
     </View>
   );

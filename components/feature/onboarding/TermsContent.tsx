@@ -24,11 +24,7 @@ export default function TermsCard() {
       return;
     }
 
-<<<<<<< Updated upstream
-    // router.push("/(onboarding)/non-patient/instructions");
-=======
-    router.replace("/non-patient/instruction");
->>>>>>> Stashed changes
+    router.push("../instruction");
   };
 
   return (
