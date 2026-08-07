@@ -2,13 +2,13 @@ import TermsContent from "@/components/feature/onboarding/TermsContent";
 import PaginationDots from "@/components/ui/PaginationDots";
 
 import {
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TermsPage() {
   return (
@@ -23,9 +23,7 @@ export default function TermsPage() {
         >
           <PaginationDots currentIndex={1} total={8} />
 
-          <Text style={styles.title}>
-            Terms and Conditions
-          </Text>
+          <Text style={styles.title}>Terms and Conditions</Text>
 
           <TermsContent />
         </ScrollView>

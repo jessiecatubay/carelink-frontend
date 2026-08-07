@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Logo from "@/components/common/Logo";
 import Button from "@/components/ui/Button";
@@ -26,7 +27,7 @@ export default function NonPatientOnboardingScreen() {
         <View style={styles.buttonWrap}>
           <Button
             title="Get Started"
-            onPress={() => router.push("/(onboarding)/non-patient/terms")}
+            onPress={() => router.push("/non-patient/terms")}
             style={styles.button}
           />
         </View>

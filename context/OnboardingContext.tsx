@@ -1,21 +1,25 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-
-type OnboardingRole = "PATIENT" | "CAREGIVER" | null;
+import { createContext, useContext, useState } from "react";
 
 type OnboardingData = {
-  role: OnboardingRole;
+  email: string;
+  role?: "PATIENT" | "CAREGIVER";
 };
 
-type OnboardingContextValue = {
+type OnboardingContextType = {
   data: OnboardingData;
   setData: React.Dispatch<React.SetStateAction<OnboardingData>>;
 };
 
-const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
+const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
-export function OnboardingProvider({ children }: { children: ReactNode }) {
+export function OnboardingProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [data, setData] = useState<OnboardingData>({
-    role: null,
+    email: "",
+    role: undefined,
   });
 
   return (
@@ -29,7 +33,7 @@ export function useOnboarding() {
   const context = useContext(OnboardingContext);
 
   if (!context) {
-    throw new Error("useOnboarding must be used within an OnboardingProvider.");
+    throw new Error("useOnboarding must be used within OnboardingProvider");
   }
 
   return context;
