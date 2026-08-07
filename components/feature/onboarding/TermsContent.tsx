@@ -1,11 +1,11 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 import Button from "@/components/ui/Button";
@@ -24,7 +24,7 @@ export default function TermsCard() {
       return;
     }
 
-    router.replace("/non-patient/screen7");
+    router.push("../instruction");
   };
 
   return (

@@ -1,10 +1,10 @@
-import { View } from "react-native";
 import SelectRole from "@/components/feature/onboarding/SelectRole";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserOnboarding() {
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <SelectRole />
-    </View>
+    </SafeAreaView>
   );
 }
