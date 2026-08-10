@@ -6,28 +6,28 @@ import Logo from "@/components/common/Logo";
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
 
-export default function NonPatientOnboardingScreen() {
+export default function Welcome() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={0} total={8} />
+          <PaginationDots currentIndex={0} total={6} />
         </View>
 
         <View style={styles.content}>
           <Text style={styles.welcomeText}>Welcome to</Text>
           <Logo />
           <Text style={styles.subtitle}>
-            Stay connected and care for{"\n"}your loved one anytime.
+            Stay connected and send requests{"\n"}to your caregivers anytime.
           </Text>
         </View>
 
         <View style={styles.buttonWrap}>
           <Button
             title="Get Started"
-            onPress={() => router.push("/non-patient/terms")}
+            onPress={() => router.push("/patient/onboarding/terms")}
             style={styles.button}
           />
         </View>
@@ -43,11 +43,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     justifyContent: "space-between",
   },
   paginationWrap: {
-    marginTop: 40,
+    marginTop: 20,
     alignItems: "center",
   },
   content: {
@@ -56,11 +56,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeText: {
-    fontSize: 48,
+    fontSize: 54,
     color: "#14A3A5",
-    marginBottom: 24,
-    fontFamily: "GreatVibes-Regular",
+    fontFamily: "Italianno-Regular",
     textAlign: "center",
+    marginBottom: -10, // Pulls the logo closer to "Welcome to" like the mockup
   },
   subtitle: {
     textAlign: "center",

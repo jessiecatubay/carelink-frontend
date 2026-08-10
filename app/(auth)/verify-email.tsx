@@ -34,7 +34,7 @@ export default function VerifyEmailScreen() {
 
         <Button
           title="Open Gmail"
-          onPress={() => router.push("/non-patient/welcome")}
+          onPress={() => router.push("/nonpatient/onboarding/welcome")}
         />
       </View>
     </SafeAreaView>
