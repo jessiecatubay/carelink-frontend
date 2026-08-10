@@ -1,5 +1,5 @@
+import { useAuth } from "@/context/AuthContext";
 import { loginSchema, type LoginFormValues } from "@/schema/auth";
-import { login } from "@/services/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -12,6 +12,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 
 export default function LoginForm() {
   const router = useRouter();
+  const { signIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,22 +43,11 @@ export default function LoginForm() {
     setErrors({});
 
     try {
-      const result = await login(email, password);
-
+      await signIn({ email, password, rememberMe });
       setData((prev) => ({
         ...prev,
         email,
       }));
-
-      if(result.data.data.user.onBoarded === false) {
-        router.replace("/user-onboarding");
-      } else {
-        if(result.data.data.user.role === "CAREGIVER")
-        router.replace("/non-patient");
-        
-        if(result.data.data.user.role === "PATIENT")
-        router.replace("/patient");
-      }
     } catch (error) {
       console.log(error);
     }
@@ -124,7 +114,7 @@ export default function LoginForm() {
 
       <Button title="Sign In with Google" />
 
-      <Pressable onPress={() => router.push("/signup")}> 
+      <Pressable onPress={() => router.push("/signup")}>
         <Text style={styles.footerText}>
           Don't have an account? <Text style={styles.linkText}>Register</Text>
         </Text>

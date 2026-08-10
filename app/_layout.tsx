@@ -1,3 +1,4 @@
+import { AuthProvider } from "@/context/AuthContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -15,10 +16,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <OnboardingProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-          <StatusBar style="auto" />
-        </OnboardingProvider>
+        <AuthProvider>
+          <OnboardingProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+            <StatusBar style="auto" />
+          </OnboardingProvider>
+        </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
