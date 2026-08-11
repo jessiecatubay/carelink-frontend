@@ -1,15 +1,18 @@
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
 import { useRouter } from "expo-router";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function NotificationSetupScreen() {
+export default function EmergencyContactScreen() {
     const router = useRouter();
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [relationship, setRelationship] = useState("");
 
-    const handleEnable = () => {
-        // Navigate to setup complete
-        router.push("/nonpatient/onboarding/setupcomplete");
+    const handleContinue = () => {
+        // Navigate to notification setup
+        router.push("/(onboarding)/nonpatient/notificationsetup");
     };
 
     return (
@@ -17,39 +20,44 @@ export default function NotificationSetupScreen() {
             <View style={styles.container}>
                 {/* Progress */}
                 <View style={styles.paginationWrap}>
-                    <PaginationDots currentIndex={6} total={8} />
+                    <PaginationDots currentIndex={5} total={8} />
                 </View>
 
                 {/* Centered Content */}
                 <View style={styles.content}>
                     {/* Title */}
-                    <Text style={styles.title}>Notifications Setup</Text>
+                    <Text style={styles.title}>Emergency Contact</Text>
 
                     {/* Description */}
                     <Text style={styles.subtitle}>
-                        Never miss a critical moment.
+                        Who should be contacted in{"\n"}case of emergency?
                     </Text>
 
-                    {/* Card */}
+                    {/* Form Card */}
                     <View style={styles.card}>
-                        <Image
-                            source={require("@/assets/icons/bell.png")}
-                            style={styles.bellIcon}
-                            resizeMode="contain"
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Phone Number"
+                            placeholderTextColor="#8E8E93"
+                            value={phoneNumber}
+                            onChangeText={setPhoneNumber}
+                            keyboardType="phone-pad"
                         />
 
-                        <Text style={styles.cardTitle}>Stay Alerted</Text>
-
-                        <Text style={styles.cardText}>
-                            Get notified instantly when the patient needs help
-                        </Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Relationship"
+                            placeholderTextColor="#8E8E93"
+                            value={relationship}
+                            onChangeText={setRelationship}
+                        />
                     </View>
                 </View>
 
-                {/* Action Button */}
+                {/* Continue Button */}
                 <Button
-                    title="Enable Notifications"
-                    onPress={handleEnable}
+                    title="Continue"
+                    onPress={handleContinue}
                     style={styles.button}
                 />
             </View>
@@ -70,7 +78,6 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         justifyContent: "center",
-        alignItems: "center",
     },
     paginationWrap: {
         marginTop: 100,
@@ -98,28 +105,19 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#333333",
         backgroundColor: "#FFFFFF",
-        paddingVertical: 40,
-        paddingHorizontal: 30,
-        alignItems: "center",
+        paddingVertical: 32,
+        paddingHorizontal: 20,
+        gap: 20,
     },
-    bellIcon: {
-        width: 60,
-        height: 60,
-        marginBottom: 20,
-        tintColor: "#12A5B5",
-    },
-    cardTitle: {
-        fontSize: 24,
-        fontWeight: "700",
-        color: "#F16A66",
-        textAlign: "center",
-        marginBottom: 12,
-    },
-    cardText: {
+    input: {
+        height: 56,
+        borderRadius: 28,
+        borderWidth: 1,
+        borderColor: "#7A7A7A",
+        backgroundColor: "#FFFFFF",
+        paddingHorizontal: 24,
         fontSize: 16,
-        color: "#7A7A7A",
-        textAlign: "center",
-        lineHeight: 22,
+        color: "#111111",
     },
     button: {
         width: "100%",

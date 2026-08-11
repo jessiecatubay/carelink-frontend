@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import { UserOnboardingData } from "@/types/user";
+import { AuthUser } from "@/types/user";
 
 export const login = async (
   email: string,
@@ -37,6 +37,6 @@ export const checkVerification = async () => {
   return axiosInstance.get("/api/user/v1/check-verification");
 };
 
-export const userOnboarding = async (data: UserOnboardingData) => {
+export const userOnboarding = async (data: AuthUser) => {
   return axiosInstance.post("/api/user/v1/user-onboarding", data);
 }

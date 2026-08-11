@@ -32,9 +32,9 @@ export default function SelectRole() {
     }));
 
     if (selectedRole === "patient") {
-      router.push("/patient/onboarding/welcome");
+      router.push("/(onboarding)/patient/welcome");
     } else {
-      router.push("/nonpatient/onboarding/welcome");
+      router.push("/(onboarding)/nonpatient/welcome");
     }
   };
 
