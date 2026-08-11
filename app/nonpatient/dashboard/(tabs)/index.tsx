@@ -1,3 +1,6 @@
+import { emitPatientVitals, initSocket, onPatientVitals } from "@/lib/socket";
+import { useEffect, useState } from "react";
+import { getUser } from "@/services/token";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Image,
@@ -8,10 +11,113 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Path,
+  Stop,
+} from "react-native-svg";
+
+const CHART_WIDTH = 140;
+const CHART_HEIGHT = 40;
+const MAX_HISTORY = 8;
+
+const buildChartPoints = (
+  values: number[],
+  width = CHART_WIDTH,
+  height = CHART_HEIGHT,
+) => {
+  if (!values.length) return "";
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max === min ? Math.max(1, max) : max - min;
+  const step = width / Math.max(values.length - 1, 1);
+
+  return values
+    .map((value, index) => {
+      const x = index * step;
+      const y = height - ((value - min) / range) * height;
+      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+};
+
+const buildFillPath = (
+  values: number[],
+  width = CHART_WIDTH,
+  height = CHART_HEIGHT,
+) => {
+  const points = buildChartPoints(values, width, height);
+  if (!points) return "";
+  return `${points} L ${width.toFixed(1)} ${height.toFixed(1)} L 0 ${height.toFixed(
+    1,
+  )} Z`;
+};
 
 export default function Home() {
+  const [heartRate, setHeartRate] = useState<number>(78);
+  const [temperature, setTemperature] = useState<number>(36.6);
+  const [lastUpdated, setLastUpdated] = useState<string>("Today, 9:41 AM");
+  const [heartHistory, setHeartHistory] = useState<number[]>([
+    78, 80, 76, 79, 78,
+  ]);
+  const [tempHistory, setTempHistory] = useState<number[]>([
+    36.2, 36.4, 36.5, 36.6, 36.6,
+  ]);
+
+  useEffect(() => {
+    initSocket();
+
+    const off = onPatientVitals((payload: any) => {
+      if (!payload) return;
+
+      if (typeof payload.heartRate === "number") {
+        setHeartRate(payload.heartRate);
+        setHeartHistory((prev) => {
+          const next = [...prev, payload.heartRate];
+          return next.slice(-MAX_HISTORY);
+        });
+      }
+
+      if (typeof payload.temperature === "number") {
+        setTemperature(payload.temperature);
+        setTempHistory((prev) => {
+          const next = [...prev, payload.temperature];
+          return next.slice(-MAX_HISTORY);
+        });
+      }
+
+      if (payload.receivedAt) {
+        const date = new Date(payload.receivedAt);
+        const today = new Date();
+        const sameDay =
+          date.getFullYear() === today.getFullYear() &&
+          date.getMonth() === today.getMonth() &&
+          date.getDate() === today.getDate();
+
+        const formattedTime = date.toLocaleTimeString("en-PH", {
+          timeZone: "Asia/Manila",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+
+        setLastUpdated(
+          sameDay
+            ? `Today, ${formattedTime}`
+            : `${date.toLocaleDateString()} ${formattedTime}`,
+        );
+      }
+
+      console.log("Received patientVitals via socket", payload);
+    });
+
+    return () => {
+      off?.();
+    };
+  }, []);
   return (
     <SafeAreaView style={styles.screen}>
       {/* Header */}
@@ -85,11 +191,18 @@ export default function Home() {
               <View style={styles.vitalLabelContainer}>
                 <Text style={styles.vitalLabel}>Heart Rate</Text>
                 <View style={styles.vitalValueRow}>
-                  <Text style={[styles.vitalValue, { color: "#12A5B5" }]}>78</Text>
-                  <Text style={[styles.vitalUnit, { color: "#12A5B5" }]}> BPM</Text>
+                  <Text style={[styles.vitalValue, { color: "#12A5B5" }]}>
+                    {heartRate}
+                  </Text>
+                  <Text style={[styles.vitalUnit, { color: "#12A5B5" }]}>
+                    {" "}
+                    BPM
+                  </Text>
                 </View>
                 <View style={styles.rangeRow}>
-                  <View style={[styles.rangeDot, { backgroundColor: "#48BB78" }]} />
+                  <View
+                    style={[styles.rangeDot, { backgroundColor: "#48BB78" }]}
+                  />
                   <Text style={styles.rangeText}>Normal Range</Text>
                 </View>
                 <Text style={styles.rangeDetail}>60 - 100 BPM</Text>
@@ -98,24 +211,20 @@ export default function Home() {
 
             {/* SVG Cardiogram Wave */}
             <View style={styles.graphContainer}>
-              <Svg height="50" width="100%">
+              <Svg height={CHART_HEIGHT} width="100%">
                 <Defs>
                   <LinearGradient id="hrGradient" x1="0" y1="0" x2="0" y2="1">
                     <Stop offset="0%" stopColor="#12A5B5" stopOpacity="0.2" />
                     <Stop offset="100%" stopColor="#12A5B5" stopOpacity="0.0" />
                   </LinearGradient>
                 </Defs>
+                <Path d={buildFillPath(heartHistory)} fill="url(#hrGradient)" />
                 <Path
-                  d="M -10 50 L -10 30 C 10 42, 25 10, 40 32 C 55 45, 65 5, 80 28 C 95 40, 110 15, 125 22 L 140 22 L 140 50 Z"
-                  fill="url(#hrGradient)"
-                />
-                <Path
-                  d="M -10 30 C 10 42, 25 10, 40 32 C 55 45, 65 5, 80 28 C 95 40, 110 15, 125 22 L 140 22"
+                  d={buildChartPoints(heartHistory)}
                   fill="none"
                   stroke="#12A5B5"
                   strokeWidth="2"
                 />
-                <Circle cx="140" cy="22" r="3.5" fill="#12A5B5" />
               </Svg>
             </View>
           </View>
@@ -133,11 +242,18 @@ export default function Home() {
               <View style={styles.vitalLabelContainer}>
                 <Text style={styles.vitalLabel}>Temperature</Text>
                 <View style={styles.vitalValueRow}>
-                  <Text style={[styles.vitalValue, { color: "#F16A66" }]}>36.6</Text>
-                  <Text style={[styles.vitalUnit, { color: "#F16A66" }]}> °C</Text>
+                  <Text style={[styles.vitalValue, { color: "#F16A66" }]}>
+                    {temperature}
+                  </Text>
+                  <Text style={[styles.vitalUnit, { color: "#F16A66" }]}>
+                    {" "}
+                    °C
+                  </Text>
                 </View>
                 <View style={styles.rangeRow}>
-                  <View style={[styles.rangeDot, { backgroundColor: "#48BB78" }]} />
+                  <View
+                    style={[styles.rangeDot, { backgroundColor: "#48BB78" }]}
+                  />
                   <Text style={styles.rangeText}>Normal Range</Text>
                 </View>
                 <Text style={styles.rangeDetail}>36.0 - 37.5 °C</Text>
@@ -146,7 +262,7 @@ export default function Home() {
 
             {/* SVG Temperature Wave */}
             <View style={styles.graphContainer}>
-              <Svg height="50" width="100%">
+              <Svg height={CHART_HEIGHT} width="100%">
                 <Defs>
                   <LinearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
                     <Stop offset="0%" stopColor="#F16A66" stopOpacity="0.2" />
@@ -154,16 +270,15 @@ export default function Home() {
                   </LinearGradient>
                 </Defs>
                 <Path
-                  d="M -10 50 L -10 35 C 15 15, 30 45, 45 25 C 60 10, 75 35, 90 20 C 105 10, 120 30, 135 25 L 140 25 L 140 50 Z"
+                  d={buildFillPath(tempHistory)}
                   fill="url(#tempGradient)"
                 />
                 <Path
-                  d="M -10 35 C 15 15, 30 45, 45 25 C 60 10, 75 35, 90 20 C 105 10, 120 30, 135 25 L 140 25"
+                  d={buildChartPoints(tempHistory)}
                   fill="none"
                   stroke="#F16A66"
                   strokeWidth="2"
                 />
-                <Circle cx="140" cy="25" r="3.5" fill="#F16A66" />
               </Svg>
             </View>
           </View>
@@ -208,7 +323,7 @@ export default function Home() {
               style={styles.beltIcon}
               resizeMode="contain"
             />
-            <Text style={styles.syncText}>Last updated: Today, 9:41 AM</Text>
+            <Text style={styles.syncText}>Last updated: {lastUpdated}</Text>
           </View>
           <View style={styles.syncDivider} />
           <View style={styles.syncCol}>
@@ -513,6 +628,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
+  },
+  syncButton: {
+    backgroundColor: "#12A5B5",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: "center",
+    marginLeft: 12,
+  },
+  syncButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   smileIconContainer: {
     width: 44,
