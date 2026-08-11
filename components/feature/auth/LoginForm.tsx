@@ -1,6 +1,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { loginSchema, type LoginFormValues } from "@/schema/auth";
-import { useRouter } from "expo-router";
+import { login } from "@/services/auth";
+import { Href, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -48,6 +49,16 @@ export default function LoginForm() {
         ...prev,
         email,
       }));
+
+      if(result.data.data.user.onBoarded === false) {
+        router.replace("/user-onboarding" as Href);
+      } else {
+        if(result.data.data.user.role === "CAREGIVER")
+        router.replace("/nonpatient/dashboard" as Href);
+        
+        if(result.data.data.user.role === "PATIENT")
+        router.replace("/patient/dashboard" as Href);
+      }
     } catch (error) {
       console.log(error);
     }

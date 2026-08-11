@@ -1,6 +1,6 @@
 import Logo from "@/components/common/Logo";
 import Button from "@/components/ui/Button";
-import RoleSelectorDot from "@/components/ui/RoleSelectorDot";
+import RadioButton from "@/components/ui/RadioButton";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -12,12 +12,15 @@ import {
   View,
 } from "react-native";
 
+const COLOR_PATIENT = "#12A5B5";
+const COLOR_CAREGIVER = "#F16A66";
+
 export default function SelectRole() {
   const router = useRouter();
   const { setData } = useOnboarding();
 
   const [selectedRole, setSelectedRole] = useState<
-    "PATIENT" | "CAREGIVER" | null
+    "patient" | "caregiver" | null
   >(null);
 
   const handleContinue = () => {
@@ -25,13 +28,13 @@ export default function SelectRole() {
 
     setData((prev) => ({
       ...prev,
-      role: selectedRole,
+      role: selectedRole === "patient" ? "PATIENT" : "CAREGIVER",
     }));
 
-    if (selectedRole === "PATIENT") {
-      router.push("/patient/welcome");
+    if (selectedRole === "patient") {
+      router.push("/patient/onboarding/welcome");
     } else {
-      router.push("/non-patient/welcome");
+      router.push("/nonpatient/onboarding/welcome");
     }
   };
 
@@ -45,13 +48,10 @@ export default function SelectRole() {
         Select your role to continue
       </Text>
 
-      {/* Patient */}
+      {/* Patient Card */}
       <Pressable
-        style={[
-          styles.card,
-          selectedRole === "PATIENT" && styles.selectedCard,
-        ]}
-        onPress={() => setSelectedRole("PATIENT")}
+        style={styles.card}
+        onPress={() => setSelectedRole("patient")}
       >
         <Image
           source={require("@/assets/icons/disabled.png")}
@@ -60,25 +60,21 @@ export default function SelectRole() {
 
         <View style={styles.textContainer}>
           <Text style={styles.cardTitle}>Patient</Text>
-
           <Text style={styles.cardSubtitle}>
             Send requests using remote
           </Text>
         </View>
 
-        <RoleSelectorDot
-          selected={selectedRole === "PATIENT"}
-          color="blue"
+        <RadioButton
+          selected={selectedRole === "patient"}
+          selectedColor={COLOR_PATIENT}
         />
       </Pressable>
 
-      {/* Caregiver */}
+      {/* Family / Caregiver Card */}
       <Pressable
-        style={[
-          styles.card,
-          selectedRole === "CAREGIVER" && styles.selectedCard,
-        ]}
-        onPress={() => setSelectedRole("CAREGIVER")}
+        style={styles.card}
+        onPress={() => setSelectedRole("caregiver")}
       >
         <Image
           source={require("@/assets/icons/family.png")}
@@ -86,18 +82,15 @@ export default function SelectRole() {
         />
 
         <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>
-            Family / Caregiver
-          </Text>
-
+          <Text style={styles.cardTitle}>Family / Caregiver</Text>
           <Text style={styles.cardSubtitle}>
             Monitor and assist the patient
           </Text>
         </View>
 
-        <RoleSelectorDot
-          selected={selectedRole === "CAREGIVER"}
-          color="pink"
+        <RadioButton
+          selected={selectedRole === "caregiver"}
+          selectedColor={COLOR_CAREGIVER}
         />
       </Pressable>
 
@@ -107,14 +100,18 @@ export default function SelectRole() {
         title="Continue"
         onPress={handleContinue}
         disabled={!selectedRole}
-        style={{
-          opacity: selectedRole ? 1 : 0.5,
-        }}
+        style={styles.button}
       />
 
-      <Text style={styles.note}>
-        Please select a role to continue
-      </Text>
+      {!selectedRole && (
+        <View style={styles.helperContainer}>
+          <Image
+            source={require("@/assets/icons/padlock.png")}
+            style={styles.lockIcon}
+          />
+          <Text style={styles.helperText}>Please select a role to continue</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -123,70 +120,79 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF",
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 30,
     alignItems: "center",
   },
-
   title: {
     fontSize: 26,
     fontWeight: "700",
     color: "#12A5B5",
-    marginBottom: 10,
+    marginBottom: 4,
     textAlign: "center",
   },
-
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#666",
-    marginTop: 15,
-    marginBottom: 40,
+    marginTop: 8,
+    marginBottom: 32,
     textAlign: "center",
   },
-
   card: {
     width: "100%",
+    height: 72,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F7F7F7",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 22,
-    elevation: 4,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    // Subtle shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-
-  selectedCard: {
-    borderWidth: 2,
-    borderColor: "#12A5B5",
-  },
-
   icon: {
-    width: 55,
-    height: 55,
+    width: 44,
+    height: 44,
     resizeMode: "contain",
   },
-
   textContainer: {
     flex: 1,
-    marginLeft: 18,
+    marginLeft: 16,
   },
-
   cardTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#222",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
   },
-
   cardSubtitle: {
-    marginTop: 4,
-    fontSize: 14,
-    color: "#777",
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2,
   },
-
-  note: {
+  button: {
+    width: "100%",
+  },
+  helperContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 12,
-    color: "#888",
-    fontSize: 13,
+  },
+  lockIcon: {
+    width: 12,
+    height: 12,
+    tintColor: "#8E8E93",
+    marginRight: 6,
+    resizeMode: "contain",
+  },
+  helperText: {
+    fontSize: 12,
+    color: "#8E8E93",
   },
 });
+
