@@ -3,6 +3,7 @@ import { createContext, useContext, useState } from "react";
 type OnboardingData = {
   email: string;
   role?: "PATIENT" | "CAREGIVER";
+  onBoarded: boolean
 };
 
 type OnboardingContextType = {
@@ -20,6 +21,7 @@ export function OnboardingProvider({
   const [data, setData] = useState<OnboardingData>({
     email: "",
     role: undefined,
+    onBoarded: false,
   });
 
   return (

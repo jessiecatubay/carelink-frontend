@@ -6,28 +6,28 @@ import Logo from "@/components/common/Logo";
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
 
-export default function NonPatientOnboardingScreen() {
+export default function Welcome() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={0} total={8} />
+          <PaginationDots currentIndex={0} total={6} />
         </View>
 
         <View style={styles.content}>
           <Text style={styles.welcomeText}>Welcome to</Text>
           <Logo />
           <Text style={styles.subtitle}>
-            Stay connected and care for{"\n"}your loved one anytime.
+            Stay connected and send requests{"\n"}to your caregivers anytime.
           </Text>
         </View>
 
         <View style={styles.buttonWrap}>
           <Button
             title="Get Started"
-            onPress={() => router.push("/nonpatient/onboarding/terms")}
+            onPress={() => router.push("/(onboarding)/patient/terms")}
             style={styles.button}
           />
         </View>
@@ -47,9 +47,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   paginationWrap: {
-    marginTop: 100,
+    marginTop: 20,
     alignItems: "center",
-    marginBottom: 40,
   },
   content: {
     flex: 1,
@@ -57,17 +56,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeText: {
-    fontSize: 70,
+    fontSize: 54,
     color: "#14A3A5",
     fontFamily: "Italianno-Regular",
     textAlign: "center",
-    marginBottom: -50,
+    marginBottom: -10, // Pulls the logo closer to "Welcome to" like the mockup
   },
   subtitle: {
     textAlign: "center",
     color: "#6B7280",
     fontSize: 16,
-    marginTop: 20,
+    marginTop: 24,
     lineHeight: 24,
   },
   buttonWrap: {

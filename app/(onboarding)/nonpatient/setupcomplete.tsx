@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
+import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { userOnboarding } from "@/services/auth";
 import { Href, useRouter } from "expo-router";
@@ -9,15 +10,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function SetupCompleteScreen() {
   const router = useRouter();
   const { data } = useOnboarding();
+  const { updateUser } = useAuth();
 
   const handlePress = async () => {
-    console.log(data);
-
     try {
-      await userOnboarding(data);
-      router.replace("/nonpatient/dashboard" as Href);
+      const response = await userOnboarding(data);
+      const updatedUser = response?.data?.data?.user ?? response?.data?.data;
+
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      }
+
+      router.dismissAll();
+      router.replace("/nonpatient/dashboard/(tabs)" as Href);
     } catch (error) {
-      console.error(error);
+      console.error("SetupCompleteScreen onboarding failed", error);
     }
   };
 

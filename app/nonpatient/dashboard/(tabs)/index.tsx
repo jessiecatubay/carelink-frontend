@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   Image,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
 export default function Home() {

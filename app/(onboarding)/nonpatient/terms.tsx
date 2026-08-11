@@ -13,7 +13,7 @@ export default function TermsPage() {
 
   const handleContinue = () => {
     if (!checked) return;
-    router.push("/nonpatient/onboarding/instruction");
+    router.push("/(onboarding)/nonpatient/instruction");
   };
 
   return (

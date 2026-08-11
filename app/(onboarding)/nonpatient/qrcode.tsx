@@ -38,7 +38,7 @@ export default function Screen4() {
 
         <Button
           title="Continue"
-          onPress={() => router.push("/nonpatient/onboarding/emergencycontact")}
+          onPress={() => router.push("/(onboarding)/nonpatient/emergencycontact")}
           style={styles.button}
         />
       </View>
