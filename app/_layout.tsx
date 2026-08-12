@@ -1,6 +1,8 @@
 import { AuthProvider } from "@/context/AuthContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useEffect } from "react";
+import { initSocket } from "@/lib/socket";
 import {
   DarkTheme,
   DefaultTheme,
@@ -12,6 +14,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    initSocket();
+  }, []);
 
   return (
     <SafeAreaProvider>
