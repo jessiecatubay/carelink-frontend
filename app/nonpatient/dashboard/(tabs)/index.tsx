@@ -1,7 +1,8 @@
-import { emitPatientVitals, initSocket, onPatientVitals } from "@/lib/socket";
-import { useEffect, useState } from "react";
-import { getUser } from "@/services/token";
+import axiosInstance from "@/lib/axios";
+import { initSocket, onPatientVitals } from "@/lib/socket";
+import { Vital } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
   Image,
   Platform,
@@ -12,13 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Path,
-  Stop,
-} from "react-native-svg";
+import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
 const CHART_WIDTH = 140;
 const CHART_HEIGHT = 40;
@@ -57,16 +52,87 @@ const buildFillPath = (
   )} Z`;
 };
 
+const getChartTicks = (values: number[], count = 4) => {
+  if (!values.length) return Array.from({ length: count }, () => 0);
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min;
+  const step = count > 1 ? range / (count - 1) : 0;
+
+  return Array.from({ length: count }, (_, index) => max - index * step);
+};
+
+const formatTickValue = (value: number, type: "heart" | "temp") => {
+  return type === "heart" ? Math.round(value).toString() : value.toFixed(1);
+};
+
 export default function Home() {
-  const [heartRate, setHeartRate] = useState<number>(78);
-  const [temperature, setTemperature] = useState<number>(36.6);
-  const [lastUpdated, setLastUpdated] = useState<string>("Today, 9:41 AM");
-  const [heartHistory, setHeartHistory] = useState<number[]>([
-    78, 80, 76, 79, 78,
-  ]);
-  const [tempHistory, setTempHistory] = useState<number[]>([
-    36.2, 36.4, 36.5, 36.6, 36.6,
-  ]);
+  const [heartRate, setHeartRate] = useState<number>(0);
+  const [temperature, setTemperature] = useState<number>(0);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [heartHistory, setHeartHistory] = useState<number[]>([]);
+  const [tempHistory, setTempHistory] = useState<number[]>([]);
+
+  useEffect(() => {
+    const getPatientVitalsHistory = async () => {
+      const result = await axiosInstance.get(
+        "/api/device/v1/get-recent-vitals",
+      );
+
+      console.log("GetResultData: ", JSON.stringify(result.data.data, null, 2));
+
+      const vitals: Vital[] = result.data.data;
+
+      const temperatures = vitals.map((vital: Vital) => vital.temperature);
+      const heartRates = vitals.map((vital: Vital) => vital.heartRate);
+      const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
+
+      const formatLastUpdated = (dateString: string): string => {
+        const date = new Date(dateString);
+
+        const now = new Date();
+
+        const time = date
+          .toLocaleTimeString("en-PH", {
+            timeZone: "Asia/Manila",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .toLowerCase();
+
+        const datePH = date.toLocaleDateString("en-PH", {
+          timeZone: "Asia/Manila",
+        });
+
+        const todayPH = now.toLocaleDateString("en-PH", {
+          timeZone: "Asia/Manila",
+        });
+
+        if (datePH === todayPH) {
+          return `Today ${time}`;
+        }
+
+        return `${datePH} ${time}`;
+      };
+
+      const formattedTime = formatLastUpdated(lastUpdated[0]);
+
+      const reversedTemps = [...temperatures].reverse();
+      const reversedHeartRates = [...heartRates].reverse();
+
+      setTemperature(reversedTemps[4]);
+      setHeartRate(reversedHeartRates[4]);
+
+      setTempHistory(reversedTemps);
+      setHeartHistory(reversedHeartRates);
+
+      setLastUpdated(formattedTime);
+    };
+
+    getPatientVitalsHistory();
+  }, [heartRate, temperature]);
 
   useEffect(() => {
     initSocket();
@@ -210,22 +276,38 @@ export default function Home() {
             </View>
 
             {/* SVG Cardiogram Wave */}
-            <View style={styles.graphContainer}>
-              <Svg height={CHART_HEIGHT} width="100%">
-                <Defs>
-                  <LinearGradient id="hrGradient" x1="0" y1="0" x2="0" y2="1">
-                    <Stop offset="0%" stopColor="#12A5B5" stopOpacity="0.2" />
-                    <Stop offset="100%" stopColor="#12A5B5" stopOpacity="0.0" />
-                  </LinearGradient>
-                </Defs>
-                <Path d={buildFillPath(heartHistory)} fill="url(#hrGradient)" />
-                <Path
-                  d={buildChartPoints(heartHistory)}
-                  fill="none"
-                  stroke="#12A5B5"
-                  strokeWidth="2"
-                />
-              </Svg>
+            <View style={styles.graphWrapper}>
+              <View style={styles.graphContainer}>
+                <Svg height={CHART_HEIGHT} width="100%">
+                  <Defs>
+                    <LinearGradient id="hrGradient" x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0%" stopColor="#12A5B5" stopOpacity="0.2" />
+                      <Stop
+                        offset="100%"
+                        stopColor="#12A5B5"
+                        stopOpacity="0.0"
+                      />
+                    </LinearGradient>
+                  </Defs>
+                  <Path
+                    d={buildFillPath(heartHistory)}
+                    fill="url(#hrGradient)"
+                  />
+                  <Path
+                    d={buildChartPoints(heartHistory)}
+                    fill="none"
+                    stroke="#12A5B5"
+                    strokeWidth="2"
+                  />
+                </Svg>
+              </View>
+              <View style={styles.graphTicks}>
+                {getChartTicks(heartHistory).map((tick, index) => (
+                  <Text key={index} style={styles.tickLabel}>
+                    {formatTickValue(tick, "heart")}
+                  </Text>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -261,25 +343,44 @@ export default function Home() {
             </View>
 
             {/* SVG Temperature Wave */}
-            <View style={styles.graphContainer}>
-              <Svg height={CHART_HEIGHT} width="100%">
-                <Defs>
-                  <LinearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
-                    <Stop offset="0%" stopColor="#F16A66" stopOpacity="0.2" />
-                    <Stop offset="100%" stopColor="#F16A66" stopOpacity="0.0" />
-                  </LinearGradient>
-                </Defs>
-                <Path
-                  d={buildFillPath(tempHistory)}
-                  fill="url(#tempGradient)"
-                />
-                <Path
-                  d={buildChartPoints(tempHistory)}
-                  fill="none"
-                  stroke="#F16A66"
-                  strokeWidth="2"
-                />
-              </Svg>
+            <View style={styles.graphWrapper}>
+              <View style={styles.graphContainer}>
+                <Svg height={CHART_HEIGHT} width="100%">
+                  <Defs>
+                    <LinearGradient
+                      id="tempGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <Stop offset="0%" stopColor="#F16A66" stopOpacity="0.2" />
+                      <Stop
+                        offset="100%"
+                        stopColor="#F16A66"
+                        stopOpacity="0.0"
+                      />
+                    </LinearGradient>
+                  </Defs>
+                  <Path
+                    d={buildFillPath(tempHistory)}
+                    fill="url(#tempGradient)"
+                  />
+                  <Path
+                    d={buildChartPoints(tempHistory)}
+                    fill="none"
+                    stroke="#F16A66"
+                    strokeWidth="2"
+                  />
+                </Svg>
+              </View>
+              <View style={styles.graphTicks}>
+                {getChartTicks(tempHistory).map((tick, index) => (
+                  <Text key={index} style={styles.tickLabel}>
+                    {formatTickValue(tick, "temp")}
+                  </Text>
+                ))}
+              </View>
             </View>
           </View>
         </View>
@@ -600,8 +701,25 @@ const styles = StyleSheet.create({
     color: "#A0AEC0",
     marginTop: 2,
   },
-  graphContainer: {
+  graphWrapper: {
+    flexDirection: "row",
+    alignItems: "flex-end",
     marginTop: 10,
+  },
+  graphTicks: {
+    width: 25,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingVertical: 4,
+    marginLeft: 8,
+    right: 5,
+  },
+  tickLabel: {
+    fontSize: 10,
+    color: "#718096",
+  },
+  graphContainer: {
+    flex: 1,
     height: 50,
   },
   patientStatusCard: {
