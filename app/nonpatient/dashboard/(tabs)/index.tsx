@@ -1,7 +1,6 @@
-import { emitPatientVitals, initSocket, onPatientVitals } from "@/lib/socket";
-import { useEffect, useState } from "react";
-import { getUser } from "@/services/token";
+import { initSocket, onPatientVitals } from "@/lib/socket";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
   Image,
   Platform,
@@ -13,11 +12,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
-  Circle,
   Defs,
   LinearGradient,
   Path,
-  Stop,
+  Stop
 } from "react-native-svg";
 
 const CHART_WIDTH = 140;
@@ -289,7 +287,7 @@ export default function Home() {
           <View style={styles.patientStatusLeft}>
             <View style={styles.smileIconContainer}>
               <Image
-                source={require("@/assets/icons/smile.png")}
+                source={require("@/assets/icons/satisfied.png")}
                 style={styles.smileIcon}
                 resizeMode="contain"
               />

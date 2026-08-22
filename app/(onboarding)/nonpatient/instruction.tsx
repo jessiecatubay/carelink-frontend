@@ -14,26 +14,26 @@ export default function Screen3() {
 
   const firstRow = [
     {
-      icon: require("@/assets/images/foodlogo.png"),
+      icon: require("@/assets/icons/food.png"),
       label: "Food",
     },
     {
-      icon: require("@/assets/images/waterlogo.png"),
+      icon: require("@/assets/icons/water.png"),
       label: "Water",
     },
     {
-      icon: require("@/assets/images/assistancelogo.png"),
+      icon: require("@/assets/icons/assistance.png"),
       label: "Assistance",
     },
   ];
 
   const secondRow = [
     {
-      icon: require("@/assets/images/emergencylogo.png"),
+      icon: require("@/assets/icons/emergency.png"),
       label: "Emergency",
     },
     {
-      icon: require("@/assets/images/satisfiedlogo.png"),
+      icon: require("@/assets/icons/satisfied.png"),
       label: "Satisfied",
     },
   ];

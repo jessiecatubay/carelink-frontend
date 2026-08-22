@@ -47,8 +47,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   paginationWrap: {
-    marginTop: 20,
+    marginTop: 100,
     alignItems: "center",
+    marginBottom: 40,
   },
   content: {
     flex: 1,

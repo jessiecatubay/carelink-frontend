@@ -24,7 +24,7 @@ export default function TermsCard() {
       return;
     }
 
-    router.push("/(onboarding)/non-patient/instruction");
+    router.push("/(onboarding)/nonpatient/instruction");
   };
 
   return (

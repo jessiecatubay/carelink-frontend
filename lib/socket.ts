@@ -23,11 +23,11 @@ export function initSocket() {
     console.log("Socket connected", socket?.id);
   });
 
-  socket.on("connect_error", (err) => {
+  socket.on("connect_error", (err: Error) => {
     console.warn("Socket connect_error", err);
   });
 
-  socket.on("disconnect", (reason) => {
+  socket.on("disconnect", (reason: string) => {
     console.log("Socket disconnected", reason);
   });
 
@@ -40,6 +40,13 @@ export function emitPatientVitals(payload: Record<string, any>) {
 
   // Emit a clear event name for server to handle. Backend can map to router.post if it bridges sockets.
   socket.emit("patient:vitals", payload);
+}
+
+export function emitPatientAlert(alertType: string) {
+  if (!socket) initSocket();
+  if (!socket) return;
+
+  socket.emit("patient:alert", { alertType, timestamp: new Date().toISOString() });
 }
 
 export function onPatientVitals(callback: (payload: any) => void) {
