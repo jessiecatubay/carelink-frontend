@@ -13,7 +13,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
+import Svg, {
+  Defs,
+  LinearGradient,
+  Path,
+  Stop
+} from "react-native-svg";
 
 const CHART_WIDTH = 140;
 const CHART_HEIGHT = 40;
@@ -390,7 +395,7 @@ export default function Home() {
           <View style={styles.patientStatusLeft}>
             <View style={styles.smileIconContainer}>
               <Image
-                source={require("@/assets/icons/smile.png")}
+                source={require("@/assets/icons/satisfied.png")}
                 style={styles.smileIcon}
                 resizeMode="contain"
               />
