@@ -2,14 +2,21 @@ import { useState, useEffect } from "react";
 import { StyleSheet, Text, View, Animated } from "react-native";
 import RemoteButton from "./RemoteButton";
 import { emitPatientAlert } from "@/lib/socket";
+import { patientCommand } from "@/services/monitor";
 
 export default function PatientRemote() {
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
 
-  const handlePress = (label: string) => {
+  const handlePress = async (label: string) => {
     setActiveAlert(label);
     emitPatientAlert(label);
+
+    try {
+      await patientCommand("ESP32-001", label.toUpperCase());
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
