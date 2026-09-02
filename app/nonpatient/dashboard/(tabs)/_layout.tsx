@@ -1,7 +1,6 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -34,23 +33,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="alerts"
         options={{
-          title: 'History',
+          title: 'Alerts',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "time" : "time-outline"} size={24} color={color} />
+            <Ionicons name={focused ? "notifications" : "notifications-outline"} size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="remote"
+        name="ai-help"
         options={{
-          title: 'Remote',
+          title: 'AI Help',
           tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons 
-              name={focused ? "remote" : "remote-off"} 
-              size={24} 
-              color={color} 
+            <MaterialCommunityIcons
+              name={focused ? "robot" : "robot-outline"}
+              size={24}
+              color={color}
             />
           ),
         }}
@@ -62,6 +61,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "settings" : "settings-outline"} size={24} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="remote"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
