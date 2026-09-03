@@ -1,3 +1,8 @@
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+
 import axiosInstance from "@/lib/axios";
 import { initSocket, onPatientVitals } from "@/lib/socket";
 import { Vital } from "@/types/user";
@@ -19,55 +24,19 @@ const CHART_WIDTH = 140;
 const CHART_HEIGHT = 40;
 const MAX_HISTORY = 8;
 
-const buildChartPoints = (
-  values: number[],
-  width = CHART_WIDTH,
-  height = CHART_HEIGHT,
-) => {
-  if (!values.length) return "";
+import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
+import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
+import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
+import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
+import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/PatientCurrentStatus";
+import LastUpdatedCard from "@/components/feature/nonpatient/dashboard/LastUpdatedCard";
+import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
+import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max === min ? Math.max(1, max) : max - min;
-  const step = width / Math.max(values.length - 1, 1);
-
-  return values
-    .map((value, index) => {
-      const x = index * step;
-      const y = height - ((value - min) / range) * height;
-      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-    })
-    .join(" ");
-};
-
-const buildFillPath = (
-  values: number[],
-  width = CHART_WIDTH,
-  height = CHART_HEIGHT,
-) => {
-  const points = buildChartPoints(values, width, height);
-  if (!points) return "";
-  return `${points} L ${width.toFixed(1)} ${height.toFixed(1)} L 0 ${height.toFixed(
-    1,
-  )} Z`;
-};
-
-const getChartTicks = (values: number[], count = 4) => {
-  if (!values.length) return Array.from({ length: count }, () => 0);
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min;
-  const step = count > 1 ? range / (count - 1) : 0;
-
-  return Array.from({ length: count }, (_, index) => max - index * step);
-};
-
-const formatTickValue = (value: number, type: "heart" | "temp") => {
-  return type === "heart" ? Math.round(value).toString() : value.toFixed(1);
-};
+const MAX_HISTORY = 8;
 
 export default function Home() {
+  const router = useRouter();
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -92,7 +61,6 @@ export default function Home() {
 
       const formatLastUpdated = (dateString: string): string => {
         const date = new Date(dateString);
-
         const now = new Date();
 
         const time = date
@@ -119,7 +87,7 @@ export default function Home() {
         return `${datePH} ${time}`;
       };
 
-      const formattedTime = formatLastUpdated(lastUpdated[0]);
+      const formattedTime = formatLastUpdated(lastUpdatedList[0]);
 
       const reversedTemps = [...temperatures].reverse();
       const reversedHeartRates = [...heartRates].reverse();
@@ -187,65 +155,19 @@ export default function Home() {
       off?.();
     };
   }, []);
+
   return (
     <SafeAreaView style={styles.screen}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require("@/assets/images/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Image
-              source={require("@/assets/icons/bell.png")}
-              style={styles.bellIcon}
-              resizeMode="contain"
-            />
-            <View style={styles.badge} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}>
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <DashboardHeader />
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Patient Status Card */}
-        <View style={styles.patientCard}>
-          <View style={styles.patientCardLeft}>
-            <Image
-              source={require("@/assets/users/zayn.png")}
-              style={styles.avatar}
-            />
-            <View style={styles.patientInfo}>
-              <Text style={styles.patientName}>Patient: Zayn Malik</Text>
-              <View style={styles.statusRow}>
-                <Text style={styles.statusLabel}>Status:</Text>
-                <Text style={styles.statusValue}>Connected</Text>
-                <View style={styles.statusDot} />
-              </View>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#718096" />
-        </View>
+        <PatientCard />
 
-        {/* Current Vitals Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Current Vitals</Text>
-          <TouchableOpacity style={styles.viewHistoryButton}>
-            <Text style={styles.viewHistoryText}>View History </Text>
-            <Ionicons name="chevron-forward" size={14} color="#12A5B5" />
-          </TouchableOpacity>
-        </View>
+        <CurrentVitals />
 
-        {/* Vitals Column/Grid */}
         <View style={styles.vitalsGrid}>
           {/* Heart Rate Card */}
           <View style={[styles.vitalCard, { backgroundColor: "#F0FCFD" }]}>
@@ -401,91 +323,16 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Patient Current Status Card (Smile replacing water) */}
-        <View style={styles.patientStatusCard}>
-          <View style={styles.patientStatusLeft}>
-            <View style={styles.smileIconContainer}>
-              <Image
-                source={require("@/assets/icons/satisfied.png")}
-                style={styles.smileIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.statusTextContainer}>
-              <Text style={styles.statusTitle}>Patient Current Status</Text>
-              <Text style={styles.statusSubtitle}>No Patients Need</Text>
-            </View>
-          </View>
-          <View style={styles.patientStatusRight}>
-            <Image
-              source={require("@/assets/icons/family.png")}
-              style={styles.familyIcon}
-              resizeMode="contain"
-            />
-            <View style={styles.checkBadge}>
-              <Image
-                source={require("@/assets/icons/check.png")}
-                style={styles.checkIcon}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
+        <PatientCurrentStatus />
 
-        {/* Sync / Watch Row */}
-        <View style={styles.syncRow}>
-          <View style={styles.syncCol}>
-            <Image
-              source={require("@/assets/icons/belt.png")}
-              style={styles.beltIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.syncText}>Last updated: {lastUpdated}</Text>
-          </View>
-          <View style={styles.syncDivider} />
-          <View style={styles.syncCol}>
-            <Image
-              source={require("@/assets/icons/belt.png")}
-              style={styles.beltIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.syncText}>From CareLink Wrist</Text>
-          </View>
-          <View style={styles.signalContainer}>
-            <View style={[styles.signalBar, { height: 5 }]} />
-            <View style={[styles.signalBar, { height: 9 }]} />
-            <View style={[styles.signalBar, { height: 13 }]} />
-          </View>
-        </View>
+        <LastUpdatedCard lastUpdated={lastUpdated} />
 
-        {/* Quick Actions */}
-        <Text style={styles.actionsTitle}>Quick Actions</Text>
-        <View style={styles.actionsRow}>
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
-            <Image
-              source={require("@/assets/icons/bell.png")}
-              style={styles.actionIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.actionButtonText}>Notification</Text>
-          </TouchableOpacity>
+        <QuickActions
+          onNotificationPress={() => router.push("/nonpatient/dashboard/alerts")}
+          onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
+        />
 
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
-            <Image
-              source={require("@/assets/icons/ai.png")}
-              style={styles.actionIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.actionButtonText}>AI Help</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Recent Activity (Empty state) */}
-        <Text style={styles.recentActivityTitle}>Recent Activity</Text>
-        <View style={styles.emptyActivityCard}>
-          <Ionicons name="chatbox-ellipses-outline" size={32} color="#A0AEC0" />
-          <Text style={styles.emptyActivityText}>No recent activity today</Text>
-        </View>
+        <RecentActivity />
       </ScrollView>
     </SafeAreaView>
   );
@@ -496,448 +343,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FAFBFD",
   },
-  header: {
-    height: 60,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F4F8",
-  },
-  logo: {
-    height: 32,
-    width: 120,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconButton: {
-    position: "relative",
-    marginRight: 16,
-    padding: 4,
-  },
-  bellIcon: {
-    width: 24,
-    height: 24,
-  },
-  badge: {
-    position: "absolute",
-    top: 3,
-    right: 3,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#F16A66",
-  },
-  menuButton: {
-    width: 24,
-    height: 16,
-    justifyContent: "space-between",
-    paddingVertical: 1,
-  },
-  menuLine: {
-    height: 2,
-    backgroundColor: "#1A202C",
-    borderRadius: 1,
-  },
   scrollContainer: {
     padding: 20,
     paddingBottom: 40,
-  },
-  patientCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  patientCardLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#E2E8F0",
-  },
-  patientInfo: {
-    marginLeft: 12,
-  },
-  patientName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1A202C",
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  statusLabel: {
-    fontSize: 14,
-    color: "#718096",
-  },
-  statusValue: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#48BB78",
-    marginLeft: 4,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#48BB78",
-    marginLeft: 6,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1A202C",
-  },
-  viewHistoryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  viewHistoryText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#12A5B5",
   },
   vitalsGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
-  },
-  vitalCard: {
-    width: "48%",
-    borderRadius: 16,
-    paddingTop: 16,
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  vitalTop: {
-    paddingHorizontal: 14,
-  },
-  vitalIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  vitalIcon: {
-    width: 20,
-    height: 20,
-  },
-  vitalLabelContainer: {
-    marginTop: 10,
-  },
-  vitalLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#4A5568",
-  },
-  vitalValueRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginTop: 4,
-  },
-  vitalValue: {
-    fontSize: 28,
-    fontWeight: "700",
-  },
-  vitalUnit: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  rangeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
-  },
-  rangeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
-  },
-  rangeText: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#718096",
-  },
-  rangeDetail: {
-    fontSize: 11,
-    color: "#A0AEC0",
-    marginTop: 2,
-  },
-  graphWrapper: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    marginTop: 10,
-  },
-  graphTicks: {
-    width: 25,
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    paddingVertical: 4,
-    marginLeft: 8,
-    right: 5,
-  },
-  tickLabel: {
-    fontSize: 10,
-    color: "#718096",
-  },
-  graphContainer: {
-    flex: 1,
-    height: 50,
-  },
-  patientStatusCard: {
-    backgroundColor: "#EBF8FA",
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  patientStatusLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  syncButton: {
-    backgroundColor: "#12A5B5",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignSelf: "center",
-    marginLeft: 12,
-  },
-  syncButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  smileIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  smileIcon: {
-    width: 70,
-    height: 70,
-  },
-  statusTextContainer: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  statusTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#12A5B5",
-  },
-  statusSubtitle: {
-    fontSize: 14,
-    color: "#718096",
-    marginTop: 2,
-  },
-  patientStatusRight: {
-    position: "relative",
-    width: 60,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  familyIcon: {
-    width: 50,
-    height: 35,
-    opacity: 0.3,
-  },
-  checkBadge: {
-    position: "absolute",
-    bottom: -2,
-    right: 4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#12A5B5",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#EBF8FA",
-  },
-  checkIcon: {
-    width: 9,
-    height: 9,
-    tintColor: "#FFFFFF",
-  },
-  syncRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: "#EDF2F7",
-  },
-  syncCol: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  beltIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 6,
-    tintColor: "#718096",
-  },
-  syncText: {
-    fontSize: 11,
-    color: "#718096",
-    fontWeight: "500",
-  },
-  syncDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: "#E2E8F0",
-    marginHorizontal: 12,
-  },
-  signalContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    marginLeft: 8,
-  },
-  signalBar: {
-    width: 2.5,
-    backgroundColor: "#48BB78",
-    marginHorizontal: 0.75,
-    borderRadius: 0.5,
-  },
-  actionsTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1A202C",
-    marginBottom: 12,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  actionButton: {
-    width: "48%",
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#12A5B5",
-    backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
-  actionIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#12A5B5",
-  },
-  recentActivityTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1A202C",
-    marginBottom: 12,
-  },
-  emptyActivityCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#EDF2F7",
-    paddingVertical: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyActivityText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#A0AEC0",
-    fontWeight: "500",
   },
 });
