@@ -13,12 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, {
-  Defs,
-  LinearGradient,
-  Path,
-  Stop
-} from "react-native-svg";
+import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
 const CHART_WIDTH = 140;
 const CHART_HEIGHT = 40;
@@ -77,6 +72,7 @@ export default function Home() {
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
+  const [sensorContact, setSensorContact] = useState<boolean>(false);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
 
   useEffect(() => {
@@ -92,6 +88,7 @@ export default function Home() {
       const temperatures = vitals.map((vital: Vital) => vital.temperature);
       const heartRates = vitals.map((vital: Vital) => vital.heartRate);
       const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
+      const sensorContact = vitals.map((vital: Vital) => vital.sensorContact);
 
       const formatLastUpdated = (dateString: string): string => {
         const date = new Date(dateString);
@@ -129,6 +126,7 @@ export default function Home() {
 
       setTemperature(reversedTemps[4]);
       setHeartRate(reversedHeartRates[4]);
+      setSensorContact(sensorContact[0]);
 
       setTempHistory(reversedTemps);
       setHeartHistory(reversedHeartRates);
@@ -261,15 +259,28 @@ export default function Home() {
               </View>
               <View style={styles.vitalLabelContainer}>
                 <Text style={styles.vitalLabel}>Heart Rate</Text>
-                <View style={styles.vitalValueRow}>
-                  <Text style={[styles.vitalValue, { color: "#12A5B5" }]}>
-                    {heartRate}
+
+                {sensorContact ? (
+                  <View style={styles.vitalValueRow}>
+                    <Text style={[styles.vitalValue, { color: "#12A5B5" }]}>
+                      {heartRate}
+                    </Text>
+                    <Text style={[styles.vitalUnit, { color: "#12A5B5" }]}>
+                      {" "}
+                      BPM
+                    </Text>
+                  </View>
+                ) : (
+                  <Text
+                    style={[
+                      styles.vitalUnit,
+                      { color: "#12A5B5", fontSize: 16.5 },
+                    ]}
+                  >
+                    Sensor not in contact
                   </Text>
-                  <Text style={[styles.vitalUnit, { color: "#12A5B5" }]}>
-                    {" "}
-                    BPM
-                  </Text>
-                </View>
+                )}
+
                 <View style={styles.rangeRow}>
                   <View
                     style={[styles.rangeDot, { backgroundColor: "#48BB78" }]}

@@ -12,5 +12,6 @@ export interface Vital {
   deviceId: string;
   temperature: number;
   heartRate: number;
+  sensorContact: boolean;
   recordedAt: string;
 }
