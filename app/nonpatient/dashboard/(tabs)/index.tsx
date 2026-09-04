@@ -1,3 +1,8 @@
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+
 import axiosInstance from "@/lib/axios";
 import { initSocket, onPatientAlert, onPatientVitals } from "@/lib/socket";
 import { Vital } from "@/types/user";
@@ -21,55 +26,19 @@ const CHART_WIDTH = 140;
 const CHART_HEIGHT = 40;
 const MAX_HISTORY = 8;
 
-const buildChartPoints = (
-  values: number[],
-  width = CHART_WIDTH,
-  height = CHART_HEIGHT,
-) => {
-  if (!values.length) return "";
+import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
+import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
+import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
+import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
+import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/PatientCurrentStatus";
+import LastUpdatedCard from "@/components/feature/nonpatient/dashboard/LastUpdatedCard";
+import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
+import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max === min ? Math.max(1, max) : max - min;
-  const step = width / Math.max(values.length - 1, 1);
-
-  return values
-    .map((value, index) => {
-      const x = index * step;
-      const y = height - ((value - min) / range) * height;
-      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-    })
-    .join(" ");
-};
-
-const buildFillPath = (
-  values: number[],
-  width = CHART_WIDTH,
-  height = CHART_HEIGHT,
-) => {
-  const points = buildChartPoints(values, width, height);
-  if (!points) return "";
-  return `${points} L ${width.toFixed(1)} ${height.toFixed(1)} L 0 ${height.toFixed(
-    1,
-  )} Z`;
-};
-
-const getChartTicks = (values: number[], count = 4) => {
-  if (!values.length) return Array.from({ length: count }, () => 0);
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min;
-  const step = count > 1 ? range / (count - 1) : 0;
-
-  return Array.from({ length: count }, (_, index) => max - index * step);
-};
-
-const formatTickValue = (value: number, type: "heart" | "temp") => {
-  return type === "heart" ? Math.round(value).toString() : value.toFixed(1);
-};
+const MAX_HISTORY = 8;
 
 export default function Home() {
+  const router = useRouter();
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -113,7 +82,6 @@ export default function Home() {
 
       const formatLastUpdated = (dateString: string): string => {
         const date = new Date(dateString);
-
         const now = new Date();
 
         const time = date
@@ -140,7 +108,7 @@ export default function Home() {
         return `${datePH} ${time}`;
       };
 
-      const formattedTime = formatLastUpdated(lastUpdated[0]);
+      const formattedTime = formatLastUpdated(lastUpdatedList[0]);
 
       const reversedTemps = [...temperatures].reverse();
       const reversedHeartRates = [...heartRates].reverse();
@@ -208,65 +176,19 @@ export default function Home() {
       off?.();
     };
   }, []);
+
   return (
     <SafeAreaView style={styles.screen}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require("@/assets/images/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Image
-              source={require("@/assets/icons/bell.png")}
-              style={styles.bellIcon}
-              resizeMode="contain"
-            />
-            <View style={styles.badge} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}>
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <DashboardHeader />
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Patient Status Card */}
-        <View style={styles.patientCard}>
-          <View style={styles.patientCardLeft}>
-            <Image
-              source={require("@/assets/users/zayn.png")}
-              style={styles.avatar}
-            />
-            <View style={styles.patientInfo}>
-              <Text style={styles.patientName}>Patient: Zayn Malik</Text>
-              <View style={styles.statusRow}>
-                <Text style={styles.statusLabel}>Status:</Text>
-                <Text style={styles.statusValue}>Connected</Text>
-                <View style={styles.statusDot} />
-              </View>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#718096" />
-        </View>
+        <PatientCard />
 
-        {/* Current Vitals Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Current Vitals</Text>
-          <TouchableOpacity style={styles.viewHistoryButton}>
-            <Text style={styles.viewHistoryText}>View History </Text>
-            <Ionicons name="chevron-forward" size={14} color="#12A5B5" />
-          </TouchableOpacity>
-        </View>
+        <CurrentVitals />
 
-        {/* Vitals Column/Grid */}
         <View style={styles.vitalsGrid}>
           {/* Heart Rate Card */}
           <View style={[styles.vitalCard, { backgroundColor: "#F0FCFD" }]}>
@@ -422,6 +344,16 @@ export default function Home() {
           </View>
         </View>
 
+        <PatientCurrentStatus />
+
+        <LastUpdatedCard lastUpdated={lastUpdated} />
+
+        <QuickActions
+          onNotificationPress={() => router.push("/nonpatient/dashboard/alerts")}
+          onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
+        />
+
+        <RecentActivity />
         {/* Patient Current Status Card (Smile replacing water) */}
         <View style={styles.patientStatusCard}>
           <View style={styles.patientStatusLeft}>
@@ -521,136 +453,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FAFBFD",
   },
-  header: {
-    height: 60,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F4F8",
-  },
-  logo: {
-    height: 32,
-    width: 120,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconButton: {
-    position: "relative",
-    marginRight: 16,
-    padding: 4,
-  },
-  bellIcon: {
-    width: 24,
-    height: 24,
-  },
-  badge: {
-    position: "absolute",
-    top: 3,
-    right: 3,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#F16A66",
-  },
-  menuButton: {
-    width: 24,
-    height: 16,
-    justifyContent: "space-between",
-    paddingVertical: 1,
-  },
-  menuLine: {
-    height: 2,
-    backgroundColor: "#1A202C",
-    borderRadius: 1,
-  },
   scrollContainer: {
     padding: 20,
     paddingBottom: 40,
-  },
-  patientCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  patientCardLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#E2E8F0",
-  },
-  patientInfo: {
-    marginLeft: 12,
-  },
-  patientName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1A202C",
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  statusLabel: {
-    fontSize: 14,
-    color: "#718096",
-  },
-  statusValue: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#48BB78",
-    marginLeft: 4,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#48BB78",
-    marginLeft: 6,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1A202C",
-  },
-  viewHistoryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  viewHistoryText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#12A5B5",
   },
   vitalsGrid: {
     flexDirection: "row",
