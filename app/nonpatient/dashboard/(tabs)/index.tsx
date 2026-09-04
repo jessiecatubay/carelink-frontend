@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import { initSocket, onPatientVitals } from "@/lib/socket";
+import { initSocket, onPatientAlert, onPatientVitals } from "@/lib/socket";
 import { Vital } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
+
+import { CommandData } from "@/lib/CommandData";
 
 const CHART_WIDTH = 140;
 const CHART_HEIGHT = 40;
@@ -74,6 +76,25 @@ export default function Home() {
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
   const [sensorContact, setSensorContact] = useState<boolean>(false);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
+  const [latestCommand, setLatestCommand] = useState<string | null>("SATISFIED");
+
+  useEffect(() => {
+    initSocket();
+
+    const off = onPatientAlert((payload: any) => {
+      const command = payload?.command ?? payload?.alertType;
+      console.log(command)
+      if (typeof command !== "string") return;
+
+      const normalizedCommand = command.toUpperCase();
+      setLatestCommand(normalizedCommand);
+      console.log("Latest command:", normalizedCommand);
+    });
+
+    return () => {
+      off?.();
+    };
+  }, []);
 
   useEffect(() => {
     const getPatientVitalsHistory = async () => {
@@ -406,19 +427,23 @@ export default function Home() {
           <View style={styles.patientStatusLeft}>
             <View style={styles.smileIconContainer}>
               <Image
-                source={require("@/assets/icons/satisfied.png")}
-                style={styles.smileIcon}
+                source={CommandData[latestCommand as keyof typeof CommandData].icon}
+                style={styles.statusIcon}
                 resizeMode="contain"
               />
             </View>
             <View style={styles.statusTextContainer}>
               <Text style={styles.statusTitle}>Patient Current Status</Text>
-              <Text style={styles.statusSubtitle}>No Patients Need</Text>
+              <Text style={styles.statusSubtitle}>
+                {latestCommand
+                  ? `${latestCommand}`
+                  : "No Patients Need"}
+              </Text>
             </View>
           </View>
           <View style={styles.patientStatusRight}>
             <Image
-              source={require("@/assets/icons/family.png")}
+              source={CommandData[latestCommand as keyof typeof CommandData].icon}
               style={styles.familyIcon}
               resizeMode="contain"
             />
@@ -794,9 +819,9 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  smileIcon: {
-    width: 70,
-    height: 70,
+  statusIcon: {
+    width: 40,
+    height: 50,
   },
   statusTextContainer: {
     marginLeft: 12,

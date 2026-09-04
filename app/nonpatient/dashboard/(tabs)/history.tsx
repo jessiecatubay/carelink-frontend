@@ -1,69 +1,23 @@
 import axiosInstance from "@/lib/axios";
+import { CommandData } from "@/lib/CommandData";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-type NotificationType = "Emergency" | "Requests";
-type NotificationStatus = "Pending" | "Satisfied";
-
-type Notification = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  type: NotificationType;
-  status: NotificationStatus;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
-  iconBackground: string;
-};
-
-type RemoteCommand = {
-  command: "FOOD" | "WATER" | "ASSISTANCE" | "EMERGENCY";
-  id: string;
-  recordedAt: string;
-  status: "Pending" | "Satisfied";
-};
+import { Notification, RemoteCommand } from "@/types/command";
 
 const commandDetails: Record<
   RemoteCommand["command"],
   Omit<Notification, "id" | "time" | "status">
-> = {
-  FOOD: {
-    title: "Needs Food",
-    description: "Patient requested food",
-    type: "Requests",
-    icon: "restaurant",
-    iconColor: "#FF6D2E",
-    iconBackground: "#FFF1E9",
-  },
-  WATER: {
-    title: "Needs Water",
-    description: "Patient requested water",
-    type: "Requests",
-    icon: "water",
-    iconColor: "#159FE8",
-    iconBackground: "#E6F5FF",
-  },
-  ASSISTANCE: {
-    title: "Needs Assistance",
-    description: "Patient requested assistance",
-    type: "Requests",
-    icon: "help",
-    iconColor: "#0BA2A8",
-    iconBackground: "#E5F8F8",
-  },
-  EMERGENCY: {
-    title: "Emergency Alert",
-    description: "Patient pressed emergency",
-    type: "Emergency",
-    icon: "warning",
-    iconColor: "#FFFFFF",
-    iconBackground: "#FF5753",
-  },
-};
+> = CommandData
 
 const formatRecordedTime = (recordedAt: string) => {
   const date = new Date(recordedAt);
@@ -95,8 +49,8 @@ export default function HistoryScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const getAllRemoteData = async () => {
-      const result = await axiosInstance.get("/api/remote/v1/get-all-commands");
+    const getAllCommandData = async () => {
+      const result = await axiosInstance.get("/api/command/v1/get-all-commands");
       console.log("Remote Data", result.data.data);
 
       const commands = result.data.data as RemoteCommand[];
@@ -107,7 +61,7 @@ export default function HistoryScreen() {
       );
     };
 
-    getAllRemoteData();
+    getAllCommandData();
   }, []);
 
   const visibleNotifications = notifications.filter((notification) => {
@@ -180,10 +134,10 @@ export default function HistoryScreen() {
                   { backgroundColor: notification.iconBackground },
                 ]}
               >
-                <Ionicons
-                  name={notification.icon}
-                  size={22}
-                  color={notification.iconColor}
+                <Image
+                  source={notification.icon}
+                  style={styles.cardIcon}
+                  resizeMode="contain"
                 />
               </View>
               <View style={styles.notificationCopy}>
@@ -302,6 +256,10 @@ const styles = StyleSheet.create({
     height: 42,
     justifyContent: "center",
     width: 42,
+  },
+  cardIcon: {
+    height: 24,
+    width: 24,
   },
   notificationCopy: {
     flex: 1,
