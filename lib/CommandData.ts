@@ -13,7 +13,7 @@ export const CommandData = {
     type: "Requests",
     icon: require("@/assets/icons/water.png"),
     iconColor: "#159FE8",
-    iconBackground: "#E6F5FF",
+    iconBackground: "#ffffff",
   },
   ASSISTANCE: {
     title: "Needs Assistance",
@@ -21,7 +21,7 @@ export const CommandData = {
     type: "Requests",
     icon: require("@/assets/icons/assistance.png"),
     iconColor: "#0BA2A8",
-    iconBackground: "#E5F8F8",
+    iconBackground: "#ffffff",
   },
   EMERGENCY: {
     title: "Emergency Alert",
@@ -29,6 +29,14 @@ export const CommandData = {
     type: "Emergency",
     icon: require("@/assets/icons/emergency.png"),
     iconColor: "#FFFFFF",
-    iconBackground: "#FF5753",
+    iconBackground: "#f80000",
+  },
+  SATISFIED: {
+    title: "Satisfied",
+    description: "Needs satisfied",
+    type: "Satisfied",
+    icon: require("@/assets/icons/satisfied.png"),
+    iconColor: "#2cb16e",
+    iconBackground: "#ffffff",
   },
 } as const;

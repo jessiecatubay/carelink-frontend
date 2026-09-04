@@ -1,13 +1,13 @@
 import { ImageSourcePropType } from "react-native";
 
 export interface RemoteCommand {
-  command: "FOOD" | "WATER" | "ASSISTANCE" | "EMERGENCY";
+  command: "FOOD" | "WATER" | "ASSISTANCE" | "EMERGENCY" | "SATISFIED";
   id: string;
   recordedAt: string;
   status: "Pending" | "Satisfied";
 };
 
-type NotificationType = "Emergency" | "Requests";
+type NotificationType = "Emergency" | "Requests" | "Satisfied";
 type NotificationStatus = "Pending" | "Satisfied";
 
 

@@ -1,5 +1,7 @@
 import axiosInstance from "@/lib/axios";
 import { CommandData } from "@/lib/CommandData";
+import { initSocket, onPatientAlert } from "@/lib/socket";
+import { Notification, RemoteCommand } from "@/types/command";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -12,12 +14,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Notification, RemoteCommand } from "@/types/command";
 
 const commandDetails: Record<
   RemoteCommand["command"],
   Omit<Notification, "id" | "time" | "status">
-> = CommandData
+> = CommandData;
 
 const formatRecordedTime = (recordedAt: string) => {
   const date = new Date(recordedAt);
@@ -32,9 +33,16 @@ const formatRecordedTime = (recordedAt: string) => {
 };
 
 const mapRemoteCommand = (command: RemoteCommand): Notification | null => {
+  const commandKey = String(
+    command.command,
+  ).toUpperCase() as RemoteCommand["command"];
+  const details = commandDetails[commandKey];
+
+  if (!details) return null;
+
   return {
     id: command.id,
-    ...commandDetails[command.command],
+    ...details,
     status: command.status,
     time: formatRecordedTime(command.recordedAt),
   };
@@ -49,20 +57,52 @@ export default function HistoryScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const getAllCommandData = async () => {
-      const result = await axiosInstance.get("/api/command/v1/get-all-commands");
+  initSocket();
+
+  const off = onPatientAlert((payload: RemoteCommand) => {
+    const command = payload?.command
+
+    if (typeof command !== "string") return;
+
+    const normalizedCommand = command.toUpperCase() as RemoteCommand["command"];
+
+    const notification = mapRemoteCommand({
+      ...payload,
+      command: normalizedCommand,
+    });
+
+    if (!notification) return;
+
+    setNotifications((prev) => [notification, ...prev]);
+  });
+
+  const getAllCommandData = async () => {
+    try {
+      const result = await axiosInstance.get(
+        "/api/command/v1/get-all-commands",
+      );
+
       console.log("Remote Data", result.data.data);
 
       const commands = result.data.data as RemoteCommand[];
+
       setNotifications(
         commands
           .map(mapRemoteCommand)
-          .filter((notification) => notification !== null),
+          .filter((notification) => notification !== null)
+          .reverse(),
       );
-    };
+    } catch (error) {
+      console.error("Failed to get commands:", error);
+    }
+  };
 
-    getAllCommandData();
-  }, []);
+  getAllCommandData();
+
+  return () => {
+    off?.();
+  };
+}, []);
 
   const visibleNotifications = notifications.filter((notification) => {
     if (activeFilter === "All") return true;
@@ -155,7 +195,7 @@ export default function HistoryScreen() {
                       : styles.resolved,
                   ]}
                 >
-                  {notification.status}
+                  {notification.status || "Pending"}
                 </Text>
               </View>
               <Text style={styles.time}>{notification.time}</Text>
