@@ -1,28 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import axiosInstance from "@/lib/axios";
-import { initSocket, onPatientVitals } from "@/lib/socket";
+import { initSocket, onPatientAlert, onPatientVitals } from "@/lib/socket";
 import { Vital } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
 import {
   Image,
   Platform,
-  ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
+import { useState, useEffect } from "react"
 
-const CHART_WIDTH = 140;
-const CHART_HEIGHT = 40;
-const MAX_HISTORY = 8;
+import { CommandData } from "@/lib/CommandData";
 
 import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
 import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
@@ -87,7 +80,7 @@ export default function Home() {
         return `${datePH} ${time}`;
       };
 
-      const formattedTime = formatLastUpdated(lastUpdatedList[0]);
+      const formattedTime = formatLastUpdated(lastUpdated[0]);
 
       const reversedTemps = [...temperatures].reverse();
       const reversedHeartRates = [...heartRates].reverse();
@@ -169,158 +162,30 @@ export default function Home() {
         <CurrentVitals />
 
         <View style={styles.vitalsGrid}>
-          {/* Heart Rate Card */}
-          <View style={[styles.vitalCard, { backgroundColor: "#F0FCFD" }]}>
-            <View style={styles.vitalTop}>
-              <View style={styles.vitalIconContainer}>
-                <Image
-                  source={require("@/assets/icons/cardiogram.png")}
-                  style={styles.vitalIcon}
-                  resizeMode="contain"
-                />
-              </View>
-              <View style={styles.vitalLabelContainer}>
-                <Text style={styles.vitalLabel}>Heart Rate</Text>
-
-                {sensorContact ? (
-                  <View style={styles.vitalValueRow}>
-                    <Text style={[styles.vitalValue, { color: "#12A5B5" }]}>
-                      {heartRate}
-                    </Text>
-                    <Text style={[styles.vitalUnit, { color: "#12A5B5" }]}>
-                      {" "}
-                      BPM
-                    </Text>
-                  </View>
-                ) : (
-                  <Text
-                    style={[
-                      styles.vitalUnit,
-                      { color: "#12A5B5", fontSize: 16.5 },
-                    ]}
-                  >
-                    Sensor not in contact
-                  </Text>
-                )}
-
-                <View style={styles.rangeRow}>
-                  <View
-                    style={[styles.rangeDot, { backgroundColor: "#48BB78" }]}
-                  />
-                  <Text style={styles.rangeText}>Normal Range</Text>
-                </View>
-                <Text style={styles.rangeDetail}>60 - 100 BPM</Text>
-              </View>
-            </View>
-
-            {/* SVG Cardiogram Wave */}
-            <View style={styles.graphWrapper}>
-              <View style={styles.graphContainer}>
-                <Svg height={CHART_HEIGHT} width="100%">
-                  <Defs>
-                    <LinearGradient id="hrGradient" x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="0%" stopColor="#12A5B5" stopOpacity="0.2" />
-                      <Stop
-                        offset="100%"
-                        stopColor="#12A5B5"
-                        stopOpacity="0.0"
-                      />
-                    </LinearGradient>
-                  </Defs>
-                  <Path
-                    d={buildFillPath(heartHistory)}
-                    fill="url(#hrGradient)"
-                  />
-                  <Path
-                    d={buildChartPoints(heartHistory)}
-                    fill="none"
-                    stroke="#12A5B5"
-                    strokeWidth="2"
-                  />
-                </Svg>
-              </View>
-              <View style={styles.graphTicks}>
-                {getChartTicks(heartHistory).map((tick, index) => (
-                  <Text key={index} style={styles.tickLabel}>
-                    {formatTickValue(tick, "heart")}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          </View>
-
-          {/* Temperature Card */}
-          <View style={[styles.vitalCard, { backgroundColor: "#FFF5F5" }]}>
-            <View style={styles.vitalTop}>
-              <View style={styles.vitalIconContainer}>
-                <Image
-                  source={require("@/assets/icons/temperature.png")}
-                  style={styles.vitalIcon}
-                  resizeMode="contain"
-                />
-              </View>
-              <View style={styles.vitalLabelContainer}>
-                <Text style={styles.vitalLabel}>Temperature</Text>
-                <View style={styles.vitalValueRow}>
-                  <Text style={[styles.vitalValue, { color: "#F16A66" }]}>
-                    {temperature}
-                  </Text>
-                  <Text style={[styles.vitalUnit, { color: "#F16A66" }]}>
-                    {" "}
-                    °C
-                  </Text>
-                </View>
-                <View style={styles.rangeRow}>
-                  <View
-                    style={[styles.rangeDot, { backgroundColor: "#48BB78" }]}
-                  />
-                  <Text style={styles.rangeText}>Normal Range</Text>
-                </View>
-                <Text style={styles.rangeDetail}>36.0 - 37.5 °C</Text>
-              </View>
-            </View>
-
-            {/* SVG Temperature Wave */}
-            <View style={styles.graphWrapper}>
-              <View style={styles.graphContainer}>
-                <Svg height={CHART_HEIGHT} width="100%">
-                  <Defs>
-                    <LinearGradient
-                      id="tempGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <Stop offset="0%" stopColor="#F16A66" stopOpacity="0.2" />
-                      <Stop
-                        offset="100%"
-                        stopColor="#F16A66"
-                        stopOpacity="0.0"
-                      />
-                    </LinearGradient>
-                  </Defs>
-                  <Path
-                    d={buildFillPath(tempHistory)}
-                    fill="url(#tempGradient)"
-                  />
-                  <Path
-                    d={buildChartPoints(tempHistory)}
-                    fill="none"
-                    stroke="#F16A66"
-                    strokeWidth="2"
-                  />
-                </Svg>
-              </View>
-              <View style={styles.graphTicks}>
-                {getChartTicks(tempHistory).map((tick, index) => (
-                  <Text key={index} style={styles.tickLabel}>
-                    {formatTickValue(tick, "temp")}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          </View>
+          <VitalCard
+            label="Heart Rate"
+            value={heartRate}
+            unit=" BPM"
+            icon={require("@/assets/icons/cardiogram.png")}
+            color="#12A5B5"
+            backgroundColor="#F0FCFD"
+            rangeDetail="60 - 100 BPM"
+            history={heartHistory}
+            chartGradientId="hrGradient"
+            tickType="heart"
+          />
+          <VitalCard
+            label="Temperature"
+            value={temperature}
+            unit=" °C"
+            icon={require("@/assets/icons/temperature.png")}
+            color="#F16A66"
+            backgroundColor="#FFF5F5"
+            rangeDetail="36.0 - 37.5 °C"
+            history={tempHistory}
+            chartGradientId="tempGradient"
+            tickType="temp"
+          />
         </View>
 
         <PatientCurrentStatus />

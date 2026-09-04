@@ -1,0 +1,42 @@
+export const CommandData = {
+  FOOD: {
+    title: "Needs Food",
+    description: "Patient requested food",
+    type: "Requests",
+    icon: require("@/assets/icons/food.png"),
+    iconColor: "#FF6D2E",
+    iconBackground: "#FFF1E9",
+  },
+  WATER: {
+    title: "Needs Water",
+    description: "Patient requested water",
+    type: "Requests",
+    icon: require("@/assets/icons/water.png"),
+    iconColor: "#159FE8",
+    iconBackground: "#ffffff",
+  },
+  ASSISTANCE: {
+    title: "Needs Assistance",
+    description: "Patient requested assistance",
+    type: "Requests",
+    icon: require("@/assets/icons/assistance.png"),
+    iconColor: "#0BA2A8",
+    iconBackground: "#ffffff",
+  },
+  EMERGENCY: {
+    title: "Emergency Alert",
+    description: "Patient pressed emergency",
+    type: "Emergency",
+    icon: require("@/assets/icons/emergency.png"),
+    iconColor: "#FFFFFF",
+    iconBackground: "#f80000",
+  },
+  SATISFIED: {
+    title: "Satisfied",
+    description: "Needs satisfied",
+    type: "Satisfied",
+    icon: require("@/assets/icons/satisfied.png"),
+    iconColor: "#2cb16e",
+    iconBackground: "#ffffff",
+  },
+} as const;

@@ -46,7 +46,10 @@ export function emitPatientAlert(alertType: string) {
   if (!socket) initSocket();
   if (!socket) return;
 
-  socket.emit("patient:alert", { alertType, timestamp: new Date().toISOString() });
+  socket.emit("patient:alert", {
+    alertType,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 export function onPatientVitals(callback: (payload: any) => void) {
@@ -57,6 +60,17 @@ export function onPatientVitals(callback: (payload: any) => void) {
 
   return () => {
     socket?.off("patientVitals", callback);
+  };
+}
+
+export function onPatientAlert(callback: (payload: any) => void) {
+  if (!socket) initSocket();
+  if (!socket) return () => {};
+
+  socket.on("patientAlert", callback);
+
+  return () => {
+    socket?.off("patientAlert", callback);
   };
 }
 
