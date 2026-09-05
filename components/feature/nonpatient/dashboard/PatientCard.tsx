@@ -9,9 +9,9 @@ interface PatientCardProps {
 }
 
 export default function PatientCard({
-  name = "Zayn Malik",
-  status = "Connected",
-  avatar = require("@/assets/users/zayn.png"),
+  name,
+  status,
+  avatar,
 }: PatientCardProps) {
   return (
     <View style={styles.patientCard}>

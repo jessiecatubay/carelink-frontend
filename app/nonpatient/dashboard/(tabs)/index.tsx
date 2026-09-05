@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 
 import axiosInstance from "@/lib/axios";
 import { initSocket, onPatientAlert, onPatientVitals } from "@/lib/socket";
-import { Vital } from "@/types/user";
+import { User, Vital } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Image,
@@ -25,17 +25,23 @@ import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/Pati
 import LastUpdatedCard from "@/components/feature/nonpatient/dashboard/LastUpdatedCard";
 import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
 import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
+import { getUser } from "@/services/token";
+import { useAuth } from "@/context/AuthContext";
 
 const MAX_HISTORY = 8;
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [patient, setPatient] = useState<User | null>(null);
+  const [connected, setConnected]= useState<string>("DISCONNECTED");
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
   const [sensorContact, setSensorContact] = useState<boolean>(false);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
+  console.log("Current user", JSON.stringify(patient, null ,2));
 
   useEffect(() => {
     const getPatientVitalsHistory = async () => {
@@ -149,6 +155,17 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const getUserById = async () => {
+      const result = await axiosInstance.post("/api/user/v1/get-user-by-id", { id: user?.id })
+
+      setPatient(result.data.data.nonPatientConnections[0].patient);
+      setConnected(result.data.data.nonPatientConnections[0].status);
+    }
+
+    getUserById();
+  },[])
+
   return (
     <SafeAreaView style={styles.screen}>
       <DashboardHeader />
@@ -157,7 +174,7 @@ export default function Home() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <PatientCard />
+        <PatientCard name={`${patient?.firstName} ${patient?.lastName}`} status={connected} />
 
         <CurrentVitals />
 
