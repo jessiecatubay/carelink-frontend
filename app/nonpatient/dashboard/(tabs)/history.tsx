@@ -1,7 +1,7 @@
 import axiosInstance from "@/hooks/lib/axios";
 import { CommandData } from "@/hooks/lib/CommandData";
 import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
-import { Notification, RemoteCommand } from "@/types/command";
+import { Notification, RemoteCommand, CommandType } from "@/types/command";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -15,10 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const commandDetails: Record<
-  RemoteCommand["command"],
-  Omit<Notification, "id" | "time" | "status">
-> = CommandData;
+const commandDetails = CommandData;
 
 const formatRecordedTime = (recordedAt: string) => {
   const date = new Date(recordedAt);
@@ -32,10 +29,11 @@ const formatRecordedTime = (recordedAt: string) => {
   });
 };
 
-const mapRemoteCommand = (command: RemoteCommand): Notification | null => {
-  const commandKey = String(
-    command.command,
-  ).toUpperCase() as RemoteCommand["command"];
+const mapRemoteCommand = (
+  command: RemoteCommand,
+): Notification | null => {
+  const commandKey = command.command.toUpperCase() as CommandType;
+
   const details = commandDetails[commandKey];
 
   if (!details) return null;
@@ -55,7 +53,7 @@ export default function HistoryScreen() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
+  
   useEffect(() => {
     initSocket();
 
@@ -72,9 +70,20 @@ export default function HistoryScreen() {
         command: normalizedCommand,
       });
 
+      console.log("COMMAND ID:", payload.id);
+      console.log("COMMAND:", command);
+
       if (!notification) return;
 
-      setNotifications((prev) => [notification, ...prev]);
+      setNotifications((prev) => {
+        const exists = prev.some((item) => item.id === notification.id);
+
+        if (exists) {
+          return prev;
+        }
+
+        return [notification, ...prev];
+      });
     });
 
     const getAllCommandData = async () => {

@@ -1,4 +1,12 @@
-export const CommandData = {
+import {
+  CommandType,
+  Notification,
+} from "@/types/command";
+
+export const CommandData: Record<
+  CommandType,
+  Omit<Notification, "id" | "time" | "status">
+> = {
   FOOD: {
     title: "Needs Food",
     description: "Patient requested food",
@@ -7,30 +15,34 @@ export const CommandData = {
     iconColor: "#FF6D2E",
     iconBackground: "#FFF1E9",
   },
+
   WATER: {
     title: "Needs Water",
     description: "Patient requested water",
     type: "Requests",
     icon: require("@/assets/icons/water.png"),
-    iconColor: "#159FE8",
-    iconBackground: "#ffffff",
+    iconColor: "#2D9CDB",
+    iconBackground: "#EAF6FF",
   },
+
   ASSISTANCE: {
     title: "Needs Assistance",
     description: "Patient requested assistance",
     type: "Requests",
     icon: require("@/assets/icons/assistance.png"),
-    iconColor: "#0BA2A8",
-    iconBackground: "#ffffff",
+    iconColor: "#F2C94C",
+    iconBackground: "#FFF9E6",
   },
+
   EMERGENCY: {
-    title: "Emergency Alert",
-    description: "Patient pressed emergency",
+    title: "Emergency",
+    description: "Patient triggered an emergency",
     type: "Emergency",
     icon: require("@/assets/icons/emergency.png"),
-    iconColor: "#FFFFFF",
-    iconBackground: "#f80000",
+    iconColor: "#EB5757",
+    iconBackground: "#FFECEC",
   },
+
   SATISFIED: {
     title: "Satisfied",
     description: "Needs satisfied",
@@ -39,4 +51,4 @@ export const CommandData = {
     iconColor: "#2cb16e",
     iconBackground: "#ffffff",
   },
-} as const;
+};
