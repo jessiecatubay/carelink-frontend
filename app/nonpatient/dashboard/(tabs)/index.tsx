@@ -31,7 +31,7 @@ export default function Home() {
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
   const [sensorContact, setSensorContact] = useState<boolean>(false);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
-  console.log("Current user", JSON.stringify(patient, null, 2));
+  console.log("Current user", JSON.stringify(user, null, 2));
 
   useEffect(() => {
     const getPatientVitalsHistory = async () => {
