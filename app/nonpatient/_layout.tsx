@@ -20,7 +20,7 @@ export default function NonPatientLayout() {
         return;
       }
 
-      if (user?.role !== "CAREGIVER") {
+      if (user?.role !== "NON_PATIENT") {
         router.replace("/patient/dashboard/(tabs)");
       }
     }

@@ -1,6 +1,6 @@
-import axiosInstance from "@/lib/axios";
-import { CommandData } from "@/lib/CommandData";
-import { initSocket, onPatientAlert } from "@/lib/socket";
+import axiosInstance from "@/hooks/lib/axios";
+import { CommandData } from "@/hooks/lib/CommandData";
+import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { Notification, RemoteCommand } from "@/types/command";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
@@ -67,9 +67,13 @@ export default function RecentActivity({
 
         if (normalizedCommand === "SATISFIED") {
           const markAsSatisfied = async () => {
-            await axiosInstance.post("/api/command/v1/update-latest", {
-              status: "Satisfied",
-            });
+            const result = await axiosInstance.post(
+              "/api/command/v1/update-latest",
+              {
+                status: "Satisfied",
+              },
+            );
+            console.log("Ceafsdffawecaw", result);
           };
           markAsSatisfied();
           setNotifications((current) => {

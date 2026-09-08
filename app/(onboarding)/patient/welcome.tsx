@@ -20,7 +20,7 @@ export default function Welcome() {
           <Text style={styles.welcomeText}>Welcome to</Text>
           <Logo />
           <Text style={styles.subtitle}>
-            Stay connected and send requests{"\n"}to your caregivers anytime.
+            Stay connected and send requests{"\n"}to your non-patients anytime.
           </Text>
         </View>
 

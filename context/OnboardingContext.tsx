@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from "react";
 
 type OnboardingData = {
   email: string;
-  role?: "PATIENT" | "CAREGIVER";
+  role?: "PATIENT" | "NON_PATIENT";
   onBoarded: boolean
 };
 

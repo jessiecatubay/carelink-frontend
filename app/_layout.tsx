@@ -1,8 +1,7 @@
 import { AuthProvider } from "@/context/AuthContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
+import { initSocket } from "@/hooks/lib/socket";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useEffect } from "react";
-import { initSocket } from "@/lib/socket";
 import {
   DarkTheme,
   DefaultTheme,
@@ -10,6 +9,7 @@ import {
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {

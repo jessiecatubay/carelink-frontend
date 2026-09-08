@@ -27,7 +27,7 @@ export default function SetupCompleteScreen() {
       } else if (user) {
         await updateUser({
           ...user,
-          role: "CAREGIVER",
+          role: "NON_PATIENT",
           onBoarded: true,
         });
       }
@@ -40,7 +40,7 @@ export default function SetupCompleteScreen() {
       if (user) {
         await updateUser({
           ...user,
-          role: "CAREGIVER",
+          role: "NON_PATIENT",
           onBoarded: true,
         });
       }

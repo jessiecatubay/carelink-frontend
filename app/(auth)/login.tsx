@@ -20,7 +20,7 @@ export default function Login() {
   useEffect(() => {
     if (!loading && isAuthenticated) {
       // already authenticated — redirect based on role
-      if (user?.role === "CAREGIVER") {
+      if (user?.role === "NON_PATIENT") {
         router.replace("/nonpatient/dashboard/(tabs)");
         return;
       }

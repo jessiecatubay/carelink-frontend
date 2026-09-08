@@ -3,18 +3,16 @@ import { useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function DevicePairingScreen() {
+export default function NonpatientDevicePairingScreen() {
   const router = useRouter();
 
   const handleConnect = (code: string) => {
-    console.log("Connecting to device with code:", code);
-    // On success, navigate to the setup completion page (screen6)
-    router.push("/(onboarding)/patient/setupcomplete");
+    console.log("Connecting to patient with code:", code);
+    router.push("/(onboarding)/nonpatient/emergencycontact");
   };
 
   const handleScanQR = () => {
     console.log("Opening QR scanner...");
-    // For now, mockup a successful scan by connecting
     handleConnect("MOCK-QR-CODE-123");
   };
 

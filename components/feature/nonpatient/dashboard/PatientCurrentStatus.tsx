@@ -1,6 +1,6 @@
-import axiosInstance from "@/lib/axios";
-import { CommandData } from "@/lib/CommandData";
-import { initSocket, onPatientAlert } from "@/lib/socket";
+import axiosInstance from "@/hooks/lib/axios";
+import { CommandData } from "@/hooks/lib/CommandData";
+import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { useEffect, useState } from "react";
 import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
@@ -26,15 +26,17 @@ export default function PatientCurrentStatus() {
     });
 
     const getLatestCommand = async () => {
-      const result = await axiosInstance.get("/api/command/v1/get-latest-command");
+      const result = await axiosInstance.get(
+        "/api/command/v1/get-latest-command",
+      );
 
       const command = result.data.data;
-      if(command.status === "Satisfied") {
-        setLatestCommand("SATISFIED")
+      if (command.status === "Satisfied") {
+        setLatestCommand("SATISFIED");
       } else {
         setLatestCommand(result.data.data.command);
       }
-    }
+    };
     getLatestCommand();
 
     return () => {
@@ -45,16 +47,25 @@ export default function PatientCurrentStatus() {
   return (
     <View style={styles.patientStatusCard}>
       <View style={styles.patientStatusLeft}>
-        <View style={{...styles.statusIconContainer, backgroundColor: commandDetails?.iconBackground}}>
+        <View
+          style={{
+            ...styles.statusIconContainer,
+            backgroundColor: commandDetails?.iconBackground,
+          }}
+        >
           <Image
-            source={commandDetails?.icon || require("@/assets/icons/satisfied.png")}
+            source={
+              commandDetails?.icon || require("@/assets/icons/satisfied.png")
+            }
             style={styles.statusIcon}
             resizeMode="contain"
           />
         </View>
         <View style={styles.statusTextContainer}>
           <Text style={styles.statusTitle}>{commandDetails?.title}</Text>
-          <Text style={styles.statusSubtitle}>{commandDetails?.description}</Text>
+          <Text style={styles.statusSubtitle}>
+            {commandDetails?.description}
+          </Text>
         </View>
       </View>
       <View style={styles.patientStatusRight}>

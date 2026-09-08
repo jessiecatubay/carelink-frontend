@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { closeSocket, initSocket } from "@/hooks/lib/socket";
 import { login } from "@/services/auth";
 import {
   clearAuthTokens,
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           persistedAuth.user,
         );
         setUser(persistedAuth.user);
+        initSocket();
       } else {
         console.log("AuthContext: no persisted user found");
       }
@@ -66,6 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await setAuthTokens({ accessToken, refreshToken }, apiUser, rememberMe);
     console.log("AuthContext: tokens saved to storage");
     setUser(apiUser);
+    closeSocket();
+    initSocket();
 
     console.log(apiUser);
 
@@ -74,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (apiUser.role === "CAREGIVER") {
+    if (apiUser.role === "NON_PATIENT") {
       router.replace("/nonpatient/dashboard/(tabs)");
       return;
     }
@@ -89,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await clearAuthTokens();
+    closeSocket();
     setUser(null);
     await router.replace("/login");
   };

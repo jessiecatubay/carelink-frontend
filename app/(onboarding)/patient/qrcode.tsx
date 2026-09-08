@@ -1,44 +1,74 @@
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
+import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "@/hooks/lib/axios";
 import { useRouter } from "expo-router";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import QRCode from "react-qr-code";
 
-export default function Screen4() {
+export default function DevicePairingScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [code, setCode] = useState<string>("");
+
+  useEffect(() => {
+    const getGeneratedCode = async () => {
+      const response = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+        id: user?.id,
+      });
+      console.log(
+        "ofiwjefoaisdofij",
+        JSON.stringify(response.data.data, null, 2),
+      );
+
+      const codeGenerated = response.data.data.patientProfile.connectionCode;
+
+      if (codeGenerated) {
+        setCode(codeGenerated);
+        return;
+      }
+
+      const result = await axiosInstance.post(
+        "/api/patient-profile/v1/generate-connection-code",
+        { id: user?.id },
+      );
+      console.log("user", user);
+
+      setCode(result.data.data.generatedCode);
+    };
+
+    getGeneratedCode();
+  }, []);
+
+  const qrData = JSON.stringify({
+    connectionCode: code,
+  });
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Progress */}
         <View style={styles.paginationWrap}>
           <PaginationDots currentIndex={3} total={8} />
         </View>
 
-        {/* Centered Content */}
         <View style={styles.content}>
-          {/* Title */}
           <Text style={styles.title}>Device Pairing</Text>
 
-          {/* QR Card */}
           <View style={styles.qrCard}>
-            <Image
-              source={require("@/assets/icons/qr-code.png")}
-              style={styles.qrImage}
-            />
-
-            <Text style={styles.code}>X12345</Text>
+            <QRCode value={qrData} size={250} />
+            <Text style={styles.code}>{code}</Text>
           </View>
 
-          {/* Description */}
           <Text style={styles.subtitle}>
-            Connect your device
+            Let your non-patient scan this code
           </Text>
         </View>
 
         <Button
           title="Continue"
-          onPress={() => router.push("/(onboarding)/nonpatient/emergencycontact")}
+          onPress={() => router.push("/(onboarding)/patient/setupcomplete")}
           style={styles.button}
         />
       </View>

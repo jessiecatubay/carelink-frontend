@@ -13,14 +13,14 @@ import {
 } from "react-native";
 
 const COLOR_PATIENT = "#12A5B5";
-const COLOR_CAREGIVER = "#F16A66";
+const COLOR_NONPATIENT = "#F16A66";
 
 export default function SelectRole() {
   const router = useRouter();
   const { setData } = useOnboarding();
 
   const [selectedRole, setSelectedRole] = useState<
-    "patient" | "caregiver" | null
+    "patient" | "nonpatient" | null
   >(null);
 
   const handleContinue = () => {
@@ -28,7 +28,7 @@ export default function SelectRole() {
 
     setData((prev) => ({
       ...prev,
-      role: selectedRole === "patient" ? "PATIENT" : "CAREGIVER",
+      role: selectedRole === "patient" ? "PATIENT" : "NON_PATIENT",
     }));
 
     if (selectedRole === "patient") {
@@ -71,10 +71,10 @@ export default function SelectRole() {
         />
       </Pressable>
 
-      {/* Family / Caregiver Card */}
+      {/* Non-patient Card */}
       <Pressable
         style={styles.card}
-        onPress={() => setSelectedRole("caregiver")}
+        onPress={() => setSelectedRole("nonpatient")}
       >
         <Image
           source={require("@/assets/icons/family.png")}
@@ -82,15 +82,15 @@ export default function SelectRole() {
         />
 
         <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>Family / Caregiver</Text>
+          <Text style={styles.cardTitle}>Non-patient</Text>
           <Text style={styles.cardSubtitle}>
             Monitor and assist the patient
           </Text>
         </View>
 
         <RadioButton
-          selected={selectedRole === "caregiver"}
-          selectedColor={COLOR_CAREGIVER}
+          selected={selectedRole === "nonpatient"}
+          selectedColor={COLOR_NONPATIENT}
         />
       </Pressable>
 

@@ -1,6 +1,6 @@
-import axiosInstance from "@/lib/axios";
-import { CommandData } from "@/lib/CommandData";
-import { initSocket, onPatientAlert } from "@/lib/socket";
+import axiosInstance from "@/hooks/lib/axios";
+import { CommandData } from "@/hooks/lib/CommandData";
+import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { Notification, RemoteCommand } from "@/types/command";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -57,52 +57,53 @@ export default function HistoryScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-  initSocket();
+    initSocket();
 
-  const off = onPatientAlert((payload: RemoteCommand) => {
-    const command = payload?.command
+    const off = onPatientAlert((payload: RemoteCommand) => {
+      const command = payload?.command;
 
-    if (typeof command !== "string") return;
+      if (typeof command !== "string") return;
 
-    const normalizedCommand = command.toUpperCase() as RemoteCommand["command"];
+      const normalizedCommand =
+        command.toUpperCase() as RemoteCommand["command"];
 
-    const notification = mapRemoteCommand({
-      ...payload,
-      command: normalizedCommand,
+      const notification = mapRemoteCommand({
+        ...payload,
+        command: normalizedCommand,
+      });
+
+      if (!notification) return;
+
+      setNotifications((prev) => [notification, ...prev]);
     });
 
-    if (!notification) return;
+    const getAllCommandData = async () => {
+      try {
+        const result = await axiosInstance.get(
+          "/api/command/v1/get-all-commands",
+        );
 
-    setNotifications((prev) => [notification, ...prev]);
-  });
+        console.log("Remote Data", result.data.data);
 
-  const getAllCommandData = async () => {
-    try {
-      const result = await axiosInstance.get(
-        "/api/command/v1/get-all-commands",
-      );
+        const commands = result.data.data as RemoteCommand[];
 
-      console.log("Remote Data", result.data.data);
+        setNotifications(
+          commands
+            .map(mapRemoteCommand)
+            .filter((notification) => notification !== null)
+            .reverse(),
+        );
+      } catch (error) {
+        console.error("Failed to get commands:", error);
+      }
+    };
 
-      const commands = result.data.data as RemoteCommand[];
+    getAllCommandData();
 
-      setNotifications(
-        commands
-          .map(mapRemoteCommand)
-          .filter((notification) => notification !== null)
-          .reverse(),
-      );
-    } catch (error) {
-      console.error("Failed to get commands:", error);
-    }
-  };
-
-  getAllCommandData();
-
-  return () => {
-    off?.();
-  };
-}, []);
+    return () => {
+      off?.();
+    };
+  }, []);
 
   const visibleNotifications = notifications.filter((notification) => {
     if (activeFilter === "All") return true;

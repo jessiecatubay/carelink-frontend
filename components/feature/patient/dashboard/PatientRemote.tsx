@@ -1,19 +1,32 @@
-import { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Animated } from "react-native";
-import RemoteButton from "./RemoteButton";
-import { emitPatientAlert } from "@/lib/socket";
+import { useAuth } from "@/context/AuthContext";
+import { emitPatientAlert, initSocket } from "@/hooks/lib/socket";
 import { patientCommand } from "@/services/monitor";
+import { useEffect, useState } from "react";
+import { Animated, StyleSheet, Text, View } from "react-native";
+import RemoteButton from "./RemoteButton";
 
 export default function PatientRemote() {
+  const { user } = useAuth();
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
 
   const handlePress = async (label: string) => {
+    if (!user) {
+      console.log("No authenticated user");
+      return;
+    }
+
+    const userId = user.id;
+    if (!userId) {
+      console.log("No authenticated user id");
+      return;
+    }
+
     setActiveAlert(label);
     emitPatientAlert(label);
 
     try {
-      await patientCommand("ESP32-001", label.toUpperCase());
+      await patientCommand("ESP32-001", label.toUpperCase(), userId);
     } catch (error) {
       console.error(error);
     }
@@ -42,6 +55,20 @@ export default function PatientRemote() {
       return () => clearTimeout(timer);
     }
   }, [activeAlert, fadeAnim]);
+
+  useEffect(() => {
+    const socket = initSocket();
+
+    const handleAlert = (payload: any) => {
+      console.log("🔥 PATIENT ALERT RECEIVED:", payload);
+    };
+
+    socket.on("patientAlert", handleAlert);
+
+    return () => {
+      socket.off("patientAlert", handleAlert);
+    };
+  }, []);
 
   return (
     <View style={styles.container}>

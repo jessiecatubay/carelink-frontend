@@ -1,31 +1,21 @@
+import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 
-import axiosInstance from "@/lib/axios";
-import { initSocket, onPatientAlert, onPatientVitals } from "@/lib/socket";
+import axiosInstance from "@/hooks/lib/axios";
+import { initSocket, onPatientVitals } from "@/hooks/lib/socket";
 import { User, Vital } from "@/types/user";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  Image,
-  Platform,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 
-import { CommandData } from "@/lib/CommandData";
-
-import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
-import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
-import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
-import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/PatientCurrentStatus";
+import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
 import LastUpdatedCard from "@/components/feature/nonpatient/dashboard/LastUpdatedCard";
+import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
+import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/PatientCurrentStatus";
 import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
 import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
-import { getUser } from "@/services/token";
+import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
 import { useAuth } from "@/context/AuthContext";
 
 const MAX_HISTORY = 8;
@@ -34,14 +24,14 @@ export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
   const [patient, setPatient] = useState<User | null>(null);
-  const [connected, setConnected]= useState<string>("DISCONNECTED");
+  const [connected, setConnected] = useState<string>("DISCONNECTED");
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
   const [sensorContact, setSensorContact] = useState<boolean>(false);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
-  console.log("Current user", JSON.stringify(patient, null ,2));
+  console.log("Current user", JSON.stringify(patient, null, 2));
 
   useEffect(() => {
     const getPatientVitalsHistory = async () => {
@@ -156,15 +146,46 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const getUserById = async () => {
-      const result = await axiosInstance.post("/api/user/v1/get-user-by-id", { id: user?.id })
+    if (!user?.id) return;
 
-      setPatient(result.data.data.nonPatientConnections[0].patient);
-      setConnected(result.data.data.nonPatientConnections[0].status);
-    }
+    const getUserById = async () => {
+      try {
+        const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+          id: user.id,
+        });
+
+        const connection = result.data.data.nonPatientConnections[0];
+
+        if (!connection) {
+          console.log("No patient connection found");
+          return;
+        }
+
+        setPatient(connection.patient);
+        setConnected(connection.status);
+
+        console.log("Patient:", connection.patient);
+      } catch (error) {
+        console.error("Failed to get patient:", error);
+      }
+    };
 
     getUserById();
-  },[])
+  }, []);
+
+  useEffect(() => {
+    const socket = initSocket();
+
+    console.log("NON-PATIENT SOCKET:", socket.id);
+
+    socket.on("patientAlert", (payload) => {
+      console.log("🔥 NON-PATIENT RECEIVED:", payload);
+    });
+
+    return () => {
+      socket.off("patientAlert");
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -174,7 +195,10 @@ export default function Home() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <PatientCard name={`${patient?.firstName} ${patient?.lastName}`} status={connected} />
+        <PatientCard
+          name={`${patient?.firstName} ${patient?.lastName}`}
+          status={connected}
+        />
 
         <CurrentVitals />
 
@@ -210,7 +234,9 @@ export default function Home() {
         <LastUpdatedCard lastUpdated={lastUpdated} />
 
         <QuickActions
-          onNotificationPress={() => router.push("/nonpatient/dashboard/alerts")}
+          onNotificationPress={() =>
+            router.push("/nonpatient/dashboard/alerts")
+          }
           onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
         />
 

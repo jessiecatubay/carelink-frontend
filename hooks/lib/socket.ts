@@ -12,6 +12,8 @@ export function initSocket() {
   const token = getAccessToken();
   const backend = getBackendUrl();
 
+  console.log("Connecting to:", backend);
+
   socket = io(backend, {
     transports: ["websocket"],
     auth: {
@@ -20,15 +22,20 @@ export function initSocket() {
   });
 
   socket.on("connect", () => {
-    console.log("Socket connected", socket?.id);
+    console.log("🟢 Socket connected:", socket?.id);
   });
 
-  socket.on("connect_error", (err: Error) => {
-    console.warn("Socket connect_error", err);
+  socket.on("connect_error", (err) => {
+    console.warn("🔴 Socket connect_error:", err.message);
   });
 
-  socket.on("disconnect", (reason: string) => {
-    console.log("Socket disconnected", reason);
+  socket.on("disconnect", (reason) => {
+    console.log("🔴 Socket disconnected:", reason);
+  });
+
+  // TEMPORARY DEBUG
+  socket.onAny((event, ...args) => {
+    console.log("📨 SOCKET EVENT:", event, args);
   });
 
   return socket;

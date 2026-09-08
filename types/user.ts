@@ -1,7 +1,7 @@
 export interface AuthUser {
   id?: string;
   email?: string;
-  role?: "PATIENT" | "CAREGIVER" | "USER";
+  role?: "PATIENT" | "NON_PATIENT" | "USER";
   onBoarded?: boolean;
   firstName?: string;
   lastName?: string;
@@ -23,16 +23,16 @@ export interface User {
   createdAt: Date;
   firstName: string;
   lastName: string;
-  role: "PATIENT" | "CAREGIVER" | "USER";
+  role: "PATIENT" | "NON_PATIENT" | "USER";
   onBoarded: boolean;
   updatedAt: Date;
-  caregiverProfile: CaregiverProfile | null;
+  nonPatientProfile: NonPatientProfile | null;
   patientProfile: PatientProfile | null;
-  patientConnections: PatientCaregiver[];
-  caregiverConnections: PatientCaregiver[];
+  patientConnections: PatientNonPatient[];
+  nonPatientConnections: PatientNonPatient[];
 }
 
-export interface CaregiverProfile {
+export interface NonPatientProfile {
   id: string;
   userId: string;
   emergencyNumber: number | null;
@@ -50,11 +50,15 @@ export interface PatientProfile {
   medicalConditions: string | null;
 }
 
-export interface PatientCaregiver {
+export interface PatientNonPatient {
   id: string;
   patientId: string;
-  caregiverId: string;
+  nonPatientId: string;
   status: "CONNECTED" | "DISCONNECTED";
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface QrCodeData {
+  connectionCode: string;
 }

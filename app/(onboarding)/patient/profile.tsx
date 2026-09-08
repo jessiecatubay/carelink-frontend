@@ -9,7 +9,7 @@ export default function PatientProfileScreen() {
   const handleContinue = (profileData: any) => {
     console.log("Saving patient profile data:", profileData);
     // Navigate to step 5 (vitals/button testing screen)
-    router.push("/(onboarding)/patient/device-pairing");
+    router.push("/(onboarding)/patient/qrcode");
   };
 
   return (
