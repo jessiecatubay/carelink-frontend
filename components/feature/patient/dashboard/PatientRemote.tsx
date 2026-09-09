@@ -63,10 +63,10 @@ export default function PatientRemote() {
       console.log("🔥 PATIENT ALERT RECEIVED:", payload);
     };
 
-    socket.on("patientAlert", handleAlert);
+    socket!.on("patientAlert", handleAlert);
 
     return () => {
-      socket.off("patientAlert", handleAlert);
+      socket!.off("patientAlert", handleAlert);
     };
   }, []);
 

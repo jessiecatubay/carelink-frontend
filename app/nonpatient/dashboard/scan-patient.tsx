@@ -53,7 +53,6 @@ export default function ScanPatientScreen() {
       // Parse QR code
       // -----------------------------------------
       const qrData: QrCodeData = JSON.parse(data);
-      console.log(qrData);
 
       // -----------------------------------------
       // Validate QR code

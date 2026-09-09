@@ -30,7 +30,7 @@ const secureSetItem = async (key: string, value: string) => {
       console.log("SecureStore: saving key", key);
       return await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.log(
+      console.error(
         "SecureStore save failed, falling back to localStorage",
         key,
         error,
@@ -51,7 +51,7 @@ const secureGetItem = async (key: string) => {
       console.log("SecureStore: loaded key", key, value != null);
       return value;
     } catch (error) {
-      console.log(
+      console.error(
         "SecureStore load failed, falling back to localStorage",
         key,
         error,
@@ -75,7 +75,7 @@ const secureDeleteItem = async (key: string) => {
       console.log("SecureStore: deleting key", key);
       return await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.log(
+      console.error(
         "SecureStore delete failed, falling back to localStorage",
         key,
         error,

@@ -15,7 +15,7 @@ export default function SetupCompleteScreen() {
     try {
       const payload = {
         ...data,
-        email: data.email || user?.email || "",
+        userId: user?.id,
       };
       
       const response = await userOnboarding(payload);

@@ -4,89 +4,180 @@ import { io, Socket } from "socket.io-client";
 let socket: Socket | null = null;
 
 const getBackendUrl = () =>
-  process.env.EXPO_PUBLIC_BACKEND_URL || "http://192.168.1.10:8000";
+  process.env.EXPO_PUBLIC_BACKEND_URL ||
+  "http://192.168.1.10:8000";
 
+/**
+ * Initialize Socket.IO connection
+ */
 export function initSocket() {
-  if (socket) return socket;
+  if (socket) {
+    return socket;
+  }
 
   const token = getAccessToken();
   const backend = getBackendUrl();
 
-  console.log("Connecting to:", backend);
+  if (!token) {
+    console.warn("⚠️ No access token available for Socket.IO");
+    return null;
+  }
+
+  console.log("🔌 Connecting Socket.IO to:", backend);
 
   socket = io(backend, {
     transports: ["websocket"],
+
     auth: {
       token,
     },
+
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
   });
 
   socket.on("connect", () => {
     console.log("🟢 Socket connected:", socket?.id);
   });
 
-  socket.on("connect_error", (err) => {
-    console.warn("🔴 Socket connect_error:", err.message);
+  socket.on("connect_error", (error) => {
+    console.warn(
+      "🔴 Socket connection error:",
+      error.message
+    );
   });
 
   socket.on("disconnect", (reason) => {
-    console.log("🔴 Socket disconnected:", reason);
+    console.log(
+      "🔴 Socket disconnected:",
+      reason
+    );
   });
 
-  // TEMPORARY DEBUG
   socket.onAny((event, ...args) => {
-    console.log("📨 SOCKET EVENT:", event, args);
+    console.log(
+      "📨 SOCKET EVENT:",
+      event,
+      args
+    );
   });
 
   return socket;
 }
 
-export function emitPatientVitals(payload: Record<string, any>) {
-  if (!socket) initSocket();
-  if (!socket) return;
+/**
+ * Listen for patient vitals
+ */
+export function onPatientVitals(
+  callback: (payload: any) => void
+) {
+  const currentSocket = initSocket();
 
-  // Emit a clear event name for server to handle. Backend can map to router.post if it bridges sockets.
-  socket.emit("patient:vitals", payload);
-}
+  if (!currentSocket) {
+    return () => {};
+  }
 
-export function emitPatientAlert(alertType: string) {
-  if (!socket) initSocket();
-  if (!socket) return;
-
-  socket.emit("patient:alert", {
-    alertType,
-    timestamp: new Date().toISOString(),
-  });
-}
-
-export function onPatientVitals(callback: (payload: any) => void) {
-  if (!socket) initSocket();
-  if (!socket) return () => {};
-
-  socket.on("patientVitals", callback);
+  currentSocket.on(
+    "patientVitals",
+    callback
+  );
 
   return () => {
-    socket?.off("patientVitals", callback);
+    currentSocket.off(
+      "patientVitals",
+      callback
+    );
   };
 }
 
-export function onPatientAlert(callback: (payload: any) => void) {
-  if (!socket) initSocket();
-  if (!socket) return () => {};
+/**
+ * Listen for patient alerts / commands
+ */
+export function onPatientAlert(
+  callback: (payload: any) => void
+) {
+  const currentSocket = initSocket();
 
-  socket.on("patientAlert", callback);
+  if (!currentSocket) {
+    return () => {};
+  }
+
+  currentSocket.on(
+    "patientAlert",
+    callback
+  );
 
   return () => {
-    socket?.off("patientAlert", callback);
+    currentSocket.off(
+      "patientAlert",
+      callback
+    );
   };
 }
 
+/**
+ * Patient -> backend
+ *
+ * Use only when the logged-in user is a PATIENT.
+ */
+export function emitPatientVitals(
+  payload: Record<string, any>
+) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return;
+  }
+
+  currentSocket.emit(
+    "patient:vitals",
+    payload
+  );
+}
+
+/**
+ * Patient -> backend
+ *
+ * Use only when the logged-in user is a PATIENT.
+ */
+export function emitPatientAlert(
+  alertType: string
+) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return;
+  }
+
+  currentSocket.emit(
+    "patient:alert",
+    {
+      alertType,
+      timestamp: new Date().toISOString(),
+    }
+  );
+}
+
+/**
+ * Get current socket
+ */
 export function getSocket() {
   return socket;
 }
 
+/**
+ * Close socket
+ */
 export function closeSocket() {
-  if (!socket) return;
+  if (!socket) {
+    return;
+  }
+
+  console.log("🔌 Closing Socket.IO connection");
+
+  socket.removeAllListeners();
   socket.disconnect();
+
   socket = null;
 }

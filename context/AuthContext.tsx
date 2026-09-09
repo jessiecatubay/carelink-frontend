@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import { closeSocket, initSocket } from "@/hooks/lib/socket";
-import { login } from "@/services/auth";
+import { getMe, login } from "@/services/auth";
 import {
   clearAuthTokens,
   loadAuthTokens,
@@ -40,12 +40,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthContext: persistedAuth=", persistedAuth);
 
       if (persistedAuth?.user) {
-        console.log(
-          "AuthContext: restoring user from persisted auth",
-          persistedAuth.user,
-        );
-        setUser(persistedAuth.user);
-        initSocket();
+        try {
+          console.log(
+            "AuthContext: restoring user from persisted auth",
+            persistedAuth.user,
+          );
+
+          const response = await getMe();
+          if (response.data.code !== 200) {
+            throw new Error("Session invalid");
+          }
+
+          setUser(persistedAuth.user);
+
+          initSocket();
+        } catch (e: any) {
+          const status = e.response?.status;
+          if (status === 401 || status === 403) {
+            setUser(null);
+            clearAuthTokens();
+          }
+        }
       } else {
         console.log("AuthContext: no persisted user found");
       }
