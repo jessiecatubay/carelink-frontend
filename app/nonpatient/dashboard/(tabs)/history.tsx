@@ -70,9 +70,6 @@ export default function HistoryScreen() {
         command: normalizedCommand,
       });
 
-      console.log("COMMAND ID:", payload.id);
-      console.log("COMMAND:", command);
-
       if (!notification) return;
 
       setNotifications((prev) => {

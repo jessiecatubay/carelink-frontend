@@ -18,10 +18,6 @@ export default function DevicePairingScreen() {
       const response = await axiosInstance.post("/api/user/v1/get-user-by-id", {
         id: user?.id,
       });
-      console.log(
-        "ofiwjefoaisdofij",
-        JSON.stringify(response.data.data, null, 2),
-      );
 
       const codeGenerated = response.data.data.patientProfile.connectionCode;
 
@@ -34,7 +30,6 @@ export default function DevicePairingScreen() {
         "/api/patient-profile/v1/generate-connection-code",
         { id: user?.id },
       );
-      console.log("user", user);
 
       setCode(result.data.data.generatedCode);
     };

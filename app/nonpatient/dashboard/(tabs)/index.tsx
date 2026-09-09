@@ -176,14 +176,14 @@ export default function Home() {
   useEffect(() => {
     const socket = initSocket();
 
-    console.log("NON-PATIENT SOCKET:", socket.id);
+    console.log("NON-PATIENT SOCKET:", socket!.id);
 
-    socket.on("patientAlert", (payload) => {
+    socket!.on("patientAlert", (payload) => {
       console.log("🔥 NON-PATIENT RECEIVED:", payload);
     });
 
     return () => {
-      socket.off("patientAlert");
+      socket!.off("patientAlert");
     };
   }, []);
 

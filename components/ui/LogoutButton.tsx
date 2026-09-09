@@ -24,7 +24,7 @@ export default function LogoutButton() {
           try {
             await signOut();
           } catch (e) {
-            console.log("Logout failed", e);
+            console.error("Logout failed", e);
           } finally {
             setLoading(false);
           }

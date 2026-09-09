@@ -37,3 +37,7 @@ export const checkVerification = async () => {
 export const userOnboarding = async (data: AuthUser) => {
   return axiosInstance.post("/api/user/v1/user-onboarding", data);
 };
+
+export const getMe = async () => {
+  return axiosInstance.get("/api/user/v1/me");
+}
