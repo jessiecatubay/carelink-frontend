@@ -17,6 +17,7 @@ export default function SetupCompleteScreen() {
         ...data,
         userId: user?.id,
       };
+      console.log("Onboarding payload", payload);
       
       const response = await userOnboarding(payload);
       const updatedUser = response?.data?.data?.user ?? response?.data?.data;

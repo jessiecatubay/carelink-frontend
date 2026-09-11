@@ -109,7 +109,7 @@ export default function ScanPatientScreen() {
       // Connect caregiver/non-patient to patient
       // -----------------------------------------
       try {
-        const result = await axiosInstance.post("/api/user/v1/connect", {
+        const result = await axiosInstance.post("/api/patient-nonpatient/v1/connect", {
           nonPatientId: user.id,
           connectionCode: qrData.connectionCode,
         });
