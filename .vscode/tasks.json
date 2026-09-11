@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "emu",
+      "type": "shell",
+      "command": "npx react-native start --port 8081",
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "mobile",
+      "type": "shell",
+      "command": "npx react-native start --port 8082",
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "web",
+      "type": "shell",
+      "command": "npx react-native start --port 8083",
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
-import { emitPatientAlert, initSocket } from "@/hooks/lib/socket";
+import axiosInstance from "@/hooks/lib/axios";
+import { initSocket } from "@/hooks/lib/socket";
 import { patientCommand } from "@/services/monitor";
 import { useEffect, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
@@ -23,10 +24,19 @@ export default function PatientRemote() {
     }
 
     setActiveAlert(label);
-    emitPatientAlert(label);
 
     try {
-      await patientCommand("ESP32-001", label.toUpperCase(), userId);
+      const result = await axiosInstance.get(
+        "/api/patient-nonpatient/v1/connected-nonpatients",
+      );
+      const connectedNonpatients = result.data.data;
+      console.log("mga connected nga di pasyente", result);
+      await patientCommand(
+        "ESP32-001",
+        label.toUpperCase(),
+        userId,
+        connectedNonpatients,
+      );
     } catch (error) {
       console.error(error);
     }

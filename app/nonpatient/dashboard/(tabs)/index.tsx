@@ -176,7 +176,9 @@ export default function Home() {
   useEffect(() => {
     const socket = initSocket();
 
-    console.log("NON-PATIENT SOCKET:", socket!.id);
+    if(!socket) {console.log("No socket id", socket); return}
+
+    console.log("NON-PATIENT SOCKET:", socket.id);
 
     socket!.on("patientAlert", (payload) => {
       console.log("🔥 NON-PATIENT RECEIVED:", payload);
