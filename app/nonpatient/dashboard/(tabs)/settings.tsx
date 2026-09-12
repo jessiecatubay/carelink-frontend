@@ -105,7 +105,13 @@ export default function SettingsScreen() {
         <Pressable
           accessibilityLabel="Go back"
           hitSlop={12}
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/nonpatient/dashboard");
+            }
+          }}
         >
           <Ionicons name="arrow-back" size={25} color="#202124" />
         </Pressable>

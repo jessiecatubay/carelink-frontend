@@ -66,16 +66,6 @@ export default function RecentActivity({
         const normalizedCommand = command.toUpperCase();
 
         if (normalizedCommand === "SATISFIED") {
-          const markAsSatisfied = async () => {
-            const result = await axiosInstance.post(
-              "/api/command/v1/update-latest",
-              {
-                status: "Satisfied",
-              },
-            );
-            console.log("Ceafsdffawecaw", result);
-          };
-          markAsSatisfied();
           setNotifications((current) => {
             if (!current.length) return current;
 

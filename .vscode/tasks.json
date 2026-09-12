@@ -4,23 +4,41 @@
     {
       "label": "emu",
       "type": "shell",
-      "command": "npx react-native start --port 8081",
-      "runOptions": { "runOn": "folderOpen" },
-      "presentation": { "reveal": "always", "panel": "dedicated" }
+      "command": "npx expo start --port 8081",
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
     },
     {
       "label": "mobile",
       "type": "shell",
-      "command": "npx react-native start --port 8082",
-      "runOptions": { "runOn": "folderOpen" },
-      "presentation": { "reveal": "always", "panel": "dedicated" }
+      "command": "npx expo start --port 8082",
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
     },
     {
       "label": "web",
       "type": "shell",
-      "command": "npx react-native start --port 8083",
-      "runOptions": { "runOn": "folderOpen" },
-      "presentation": { "reveal": "always", "panel": "dedicated" }
+      "command": "npx expo start --web --port 8083",
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
     }
   ]
 }
