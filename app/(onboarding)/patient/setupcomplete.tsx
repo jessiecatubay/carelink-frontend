@@ -19,7 +19,16 @@ export default function SetupCompleteScreen() {
       };
       console.log("Onboarding payload", payload);
       
-      const response = await userOnboarding(payload);
+      const response = await userOnboarding({
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role,
+        age: payload.age,
+        gender: payload.gender,
+        medicalConditions: payload.medicalConditions,
+        notes: payload.notes,
+        onBoarded: payload.onBoarded
+      });
       const updatedUser = response?.data?.data?.user ?? response?.data?.data;
 
       if (updatedUser) {

@@ -1,7 +1,7 @@
 import axiosInstance from "@/hooks/lib/axios";
 
 interface ConnectedNonpatientData {
-  nonPatientId: string
+  nonPatientId: string;
 }
 
 export const patientCommand = (
@@ -10,15 +10,10 @@ export const patientCommand = (
   patientId: string,
   connectedNonpatients: ConnectedNonpatientData[],
 ) => {
-  const formData = new FormData();
-
-  formData.append("deviceId", deviceId);
-  formData.append("command", command);
-  formData.append("patientId", patientId);
-  formData.append(
-  "connectedNonpatients",
-  JSON.stringify(connectedNonpatients)
-);
-
-  return axiosInstance.post("/api/device/v1/command", formData);
+  return axiosInstance.post("/api/device/v1/command", {
+    deviceId,
+    command,
+    patientId,
+    connectedNonpatients,
+  });
 };

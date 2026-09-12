@@ -1,14 +1,9 @@
+import { UserOnBoardingData } from "@/types/user";
 import { createContext, useContext, useState } from "react";
 
-type OnboardingData = {
-  email: string;
-  role?: "PATIENT" | "NON_PATIENT";
-  onBoarded: boolean
-};
-
 type OnboardingContextType = {
-  data: OnboardingData;
-  setData: React.Dispatch<React.SetStateAction<OnboardingData>>;
+  data: UserOnBoardingData;
+  setData: React.Dispatch<React.SetStateAction<UserOnBoardingData>>;
 };
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
@@ -18,9 +13,14 @@ export function OnboardingProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<UserOnBoardingData>({
+    userId: "",
     email: "",
     role: undefined,
+    age: 0,
+    gender: "",
+    medicalConditions: "",
+    notes: "",
     onBoarded: false,
   });
 

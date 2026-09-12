@@ -1,10 +1,21 @@
 export interface AuthUser {
   id?: string;
   email?: string;
-  role?: "PATIENT" | "NON_PATIENT" | "USER";
+  role?: "PATIENT" | "NON-PATIENT" | "USER";
   onBoarded?: boolean;
   firstName?: string;
   lastName?: string;
+}
+
+export interface UserOnBoardingData {
+  userId?: string;
+  email?: string;
+  role?: "PATIENT" | "NON-PATIENT"
+  age?: number;
+  gender?: string;
+  medicalConditions?: string;
+  notes?: string;
+  onBoarded?: boolean;
 }
 
 export interface Vital {
@@ -23,7 +34,7 @@ export interface User {
   createdAt: Date;
   firstName: string;
   lastName: string;
-  role: "PATIENT" | "NON_PATIENT" | "USER";
+  role: "PATIENT" | "NON-PATIENT" | "USER";
   onBoarded: boolean;
   updatedAt: Date;
   nonPatientProfile: NonPatientProfile | null;

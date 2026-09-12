@@ -1,13 +1,8 @@
 import axiosInstance from "@/hooks/lib/axios";
-import { AuthUser } from "@/types/user";
+import { AuthUser, UserOnBoardingData } from "@/types/user";
 
 export const login = async (email: string, password: string) => {
-  const formData = new FormData();
-
-  formData.append("email", email);
-  formData.append("password", password);
-
-  return axiosInstance.post("/api/user/v1/login", formData);
+  return axiosInstance.post("/api/user/v1/login", { email, password });
 };
 
 export const register = async (
@@ -16,14 +11,12 @@ export const register = async (
   email: string,
   password: string,
 ) => {
-  const formData = new FormData();
-
-  formData.append("firstName", firstName);
-  formData.append("lastName", lastName);
-  formData.append("email", email);
-  formData.append("password", password);
-
-  return axiosInstance.post("/api/user/v1/signup", formData);
+  return axiosInstance.post("/api/user/v1/signup", {
+    firstName,
+    lastName,
+    email,
+    password,
+  });
 };
 
 export const resendVerification = async () => {
@@ -34,10 +27,10 @@ export const checkVerification = async () => {
   return axiosInstance.get("/api/user/v1/check-verification");
 };
 
-export const userOnboarding = async (data: AuthUser) => {
+export const userOnboarding = async (data: UserOnBoardingData) => {
   return axiosInstance.post("/api/user/v1/user-onboarding", data);
 };
 
 export const getMe = async () => {
   return axiosInstance.get("/api/user/v1/me");
-}
+};
