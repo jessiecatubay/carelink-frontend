@@ -1,37 +1,30 @@
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, onPatientVitals } from "@/hooks/lib/socket";
-import { User, Vital } from "@/types/user";
+import { vitalResponseSchema } from "@/schema/api";
+import { Vital } from "@/types/user";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
 import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
 import LastUpdatedCard from "@/components/feature/nonpatient/dashboard/LastUpdatedCard";
-import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
 import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/PatientCurrentStatus";
 import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
 import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
 import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
-import { useAuth } from "@/context/AuthContext";
 
 const MAX_HISTORY = 8;
 
 export default function Home() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [patient, setPatient] = useState<User | null>(null);
-  const [connected, setConnected] = useState<string>("DISCONNECTED");
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
-  const [sensorContact, setSensorContact] = useState<boolean>(false);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
-  console.log("Current user", JSON.stringify(user, null, 2));
 
   useEffect(() => {
     const getPatientVitalsHistory = async () => {
@@ -41,12 +34,19 @@ export default function Home() {
 
       console.log("GetResultData: ", JSON.stringify(result.data.data, null, 2));
 
-      const vitals: Vital[] = result.data.data;
+      const parsedVitals = vitalResponseSchema
+        .array()
+        .safeParse(result.data.data);
+      if (!parsedVitals.success || parsedVitals.data.length === 0) {
+        console.warn("Received invalid or empty patient vitals response");
+        return;
+      }
+
+      const vitals: Vital[] = parsedVitals.data;
 
       const temperatures = vitals.map((vital: Vital) => vital.temperature);
       const heartRates = vitals.map((vital: Vital) => vital.heartRate);
       const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
-      const sensorContact = vitals.map((vital: Vital) => vital.sensorContact);
 
       const formatLastUpdated = (dateString: string): string => {
         const date = new Date(dateString);
@@ -83,8 +83,6 @@ export default function Home() {
 
       setTemperature(reversedTemps[4]);
       setHeartRate(reversedHeartRates[4]);
-      setSensorContact(sensorContact[0]);
-
       setTempHistory(reversedTemps);
       setHeartHistory(reversedHeartRates);
 
@@ -146,37 +144,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!user?.id) return;
-
-    const getUserById = async () => {
-      try {
-        const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
-          id: user.id,
-        });
-
-        const connection = result.data.data.nonPatientConnections[0];
-
-        if (!connection) {
-          console.log("No patient connection found");
-          return;
-        }
-
-        setPatient(connection.patient);
-        setConnected(connection.status);
-
-        console.log("Patient:", connection.patient);
-      } catch (error) {
-        console.error("Failed to get patient:", error);
-      }
-    };
-
-    getUserById();
-  }, []);
-
-  useEffect(() => {
     const socket = initSocket();
 
-    if(!socket) {console.log("No socket id", socket); return}
+    if (!socket) {
+      console.log("No socket id", socket);
+      return;
+    }
 
     console.log("NON-PATIENT SOCKET:", socket.id);
 
@@ -197,11 +170,6 @@ export default function Home() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <PatientCard
-          name={`${patient?.firstName} ${patient?.lastName}`}
-          status={connected}
-        />
-
         <CurrentVitals />
 
         <View style={styles.vitalsGrid}>

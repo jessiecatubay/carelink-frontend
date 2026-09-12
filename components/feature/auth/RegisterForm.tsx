@@ -32,15 +32,30 @@ export default function RegisterForm() {
     });
 
     if (!parsed.success) {
-      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const fieldErrors = parsed.error.issues.reduce<
+        Partial<Record<keyof RegisterFormValues, string>>
+      >((errors, issue) => {
+        const field = issue.path[0];
 
-      setErrors({
-        firstName: fieldErrors.firstName?.[0],
-        lastName: fieldErrors.lastName?.[0],
-        email: fieldErrors.email?.[0],
-        password: fieldErrors.password?.[0],
-        confirmPassword: fieldErrors.confirmPassword?.[0],
-      });
+        if (
+          typeof field === "string" &&
+          field in
+            {
+              firstName: true,
+              lastName: true,
+              email: true,
+              password: true,
+              confirmPassword: true,
+            } &&
+          !errors[field as keyof RegisterFormValues]
+        ) {
+          errors[field as keyof RegisterFormValues] = issue.message;
+        }
+
+        return errors;
+      }, {});
+
+      setErrors(fieldErrors);
 
       return;
     }

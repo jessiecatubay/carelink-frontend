@@ -15,7 +15,7 @@ type PatientProfileProps = {
   onContinue: (profileData: {
     age: string;
     gender: string;
-    illness: string;
+    medicalConditions: string;
     notes: string;
   }) => void;
 };
@@ -23,14 +23,14 @@ type PatientProfileProps = {
 export default function PatientProfile({ onContinue }: PatientProfileProps) {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [illness, setIllness] = useState("");
+  const [medicalConditions, setMedicalConditions] = useState("");
   const [notes, setNotes] = useState("");
 
   const handleContinue = () => {
     onContinue({
       age,
       gender,
-      illness,
+      medicalConditions,
       notes,
     });
   };
@@ -73,10 +73,10 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
 
           <TextInput
             style={styles.input}
-            placeholder="Illness / Condition"
+            placeholder="Illness / Medical Conditions"
             placeholderTextColor="#9CA3AF"
-            value={illness}
-            onChangeText={setIllness}
+            value={medicalConditions}
+            onChangeText={setMedicalConditions}
           />
 
           <TextInput

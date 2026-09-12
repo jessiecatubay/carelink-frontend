@@ -1,6 +1,7 @@
 import axiosInstance from "@/hooks/lib/axios";
 import { CommandData } from "@/hooks/lib/CommandData";
 import { onPatientAlert } from "@/hooks/lib/socket";
+import { remoteCommandSchema, type PatientAlert } from "@/schema/api";
 import { Notification, RemoteCommand } from "@/types/command";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
@@ -39,6 +40,9 @@ const mapCommand = (command: RemoteCommand): Notification | null => {
     CommandData[command.command.toUpperCase() as keyof typeof CommandData];
   if (!details) return null;
 
+  const parsed = remoteCommandSchema.safeParse(command);
+  if (!parsed.success) return null;
+
   return {
     id: command.id,
     ...details,
@@ -50,7 +54,10 @@ const mapCommand = (command: RemoteCommand): Notification | null => {
 const getPageResponse = (data: unknown): PageResponse<RemoteCommand> => {
   if (Array.isArray(data)) {
     return {
-      items: data as RemoteCommand[],
+      items: data.flatMap((item) => {
+        const parsed = remoteCommandSchema.safeParse(item);
+        return parsed.success ? [parsed.data] : [];
+      }),
       hasNext: data.length === PAGE_SIZE,
     };
   }
@@ -94,7 +101,10 @@ const getPageResponse = (data: unknown): PageResponse<RemoteCommand> => {
         : [];
 
   return {
-    items: rawItems as RemoteCommand[],
+    items: rawItems.flatMap((item) => {
+      const parsed = remoteCommandSchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    }),
     page: response.page ?? metadata?.page ?? payload.page,
     totalItems:
       response.totalItems ?? metadata?.totalItems ?? payload.totalItems,
@@ -146,45 +156,38 @@ export default function AlertsScreen() {
   };
 
   useEffect(() => {
-    const off = onPatientAlert(
-      (
-        payload: Partial<RemoteCommand> & {
-          alertType?: string;
-          timestamp?: string;
-        },
-      ) => {
-        const command = payload.command ?? payload.alertType;
-        if (typeof command !== "string") return;
+    const off = onPatientAlert((payload: PatientAlert) => {
+      const command = payload.command ?? payload.alertType;
+      if (typeof command !== "string") return;
 
-        if (command.toUpperCase() === "SATISFIED") {
-          setAlerts((current) =>
-            current.length
-              ? current.map((alert, index) =>
-                  index === 0 ? { ...alert, status: "Satisfied" } : alert,
-                )
-              : current,
-          );
-          return;
-        }
-
-        const alert = mapCommand({
-          command: command.toUpperCase() as RemoteCommand["command"],
-          id: payload.id ?? `${command}-${payload.timestamp ?? Date.now()}`,
-          recordedAt:
-            payload.recordedAt ?? payload.timestamp ?? new Date().toISOString(),
-          status: payload.status ?? "Pending",
-        });
-        if (!alert || pageRef.current !== 1) return;
-
+      if (command.toUpperCase() === "SATISFIED") {
         setAlerts((current) =>
-          [alert, ...current.filter((item) => item.id !== alert.id)].slice(
-            0,
-            PAGE_SIZE,
-          ),
+          current.length
+            ? current.map((alert, index) =>
+                index === 0 ? { ...alert, status: "Satisfied" } : alert,
+              )
+            : current,
         );
-        setTotalItems((current) => current + 1);
-      },
-    );
+        return;
+      }
+
+      const alert = mapCommand({
+        command: command.toUpperCase() as RemoteCommand["command"],
+        id: payload.id ?? `${command}-${payload.timestamp ?? Date.now()}`,
+        recordedAt:
+          payload.recordedAt ?? payload.timestamp ?? new Date().toISOString(),
+        status: payload.status ?? "Pending",
+      });
+      if (!alert || pageRef.current !== 1) return;
+
+      setAlerts((current) =>
+        [alert, ...current.filter((item) => item.id !== alert.id)].slice(
+          0,
+          PAGE_SIZE,
+        ),
+      );
+      setTotalItems((current) => current + 1);
+    });
 
     loadPage(1);
     return () => off?.();

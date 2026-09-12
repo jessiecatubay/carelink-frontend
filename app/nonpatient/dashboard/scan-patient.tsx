@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
-import { QrCodeData } from "@/types/user";
+import { qrCodeSchema } from "@/schema/api";
 import { Ionicons } from "@expo/vector-icons";
 import {
   BarcodeScanningResult,
@@ -27,7 +27,7 @@ export default function ScanPatientScreen() {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>
-          Camera permission is required to scan the patient's QR code.
+          Camera permission is required to scan the patient&apos;s QR code.
         </Text>
 
         <Pressable style={styles.button} onPress={requestPermission}>
@@ -52,34 +52,11 @@ export default function ScanPatientScreen() {
       // -----------------------------------------
       // Parse QR code
       // -----------------------------------------
-      const qrData: QrCodeData = JSON.parse(data);
+      const qrData = qrCodeSchema.parse(JSON.parse(data));
 
       // -----------------------------------------
       // Validate QR code
       // -----------------------------------------
-      if (
-        typeof qrData.connectionCode !== "string" ||
-        !qrData.connectionCode.trim()
-      ) {
-        Alert.alert(
-          "Invalid QR Code",
-          "This is not a valid patient QR code. Please scan again.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                setScannerPaused(false);
-              },
-            },
-          ],
-          {
-            cancelable: false,
-          },
-        );
-
-        return;
-      }
-
       console.log("Connection Code:", qrData.connectionCode);
 
       // -----------------------------------------

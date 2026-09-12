@@ -1,69 +1,40 @@
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
-import { useAuth } from "@/context/AuthContext";
-import axiosInstance from "@/hooks/lib/axios";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import QRCode from "react-qr-code";
 
 export default function DevicePairingScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [code, setCode] = useState<string>("");
-
-  useEffect(() => {
-    const getGeneratedCode = async () => {
-      const response = await axiosInstance.post("/api/user/v1/get-user-by-id", {
-        id: user?.id,
-      });
-
-      const codeGenerated = response.data.data.patientProfile.connectionCode;
-
-      if (codeGenerated) {
-        setCode(codeGenerated);
-        return;
-      }
-
-      const result = await axiosInstance.post(
-        "/api/patient-profile/v1/generate-connection-code",
-        { id: user?.id },
-      );
-
-      setCode(result.data.data.generatedCode);
-    };
-
-    getGeneratedCode();
-  }, []);
-
-  const qrData = JSON.stringify({
-    connectionCode: code,
-  });
 
   return (
+    // pls ko improve sa UI
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={3} total={8} />
+          <PaginationDots currentIndex={4} total={6} />
         </View>
 
         <View style={styles.content}>
           <Text style={styles.title}>Device Pairing</Text>
 
-          <View style={styles.qrCard}>
-            <QRCode value={qrData} size={250} />
-            <Text style={styles.code}>{code}</Text>
-          </View>
+          <View style={styles.instructionCard}>
+            <Text style={styles.instructionTitle}>
+              Let your non-patient scan you
+            </Text>
 
-          <Text style={styles.subtitle}>
-            Let your non-patient scan this code
-          </Text>
+            <Text style={styles.instructionText}>
+              Ask your non-patient to scan your connection QR code using their
+              CareLink app to connect their account to yours.
+            </Text>
+          </View>
         </View>
 
         <Button
           title="Continue"
-          onPress={() => router.push("/(onboarding)/patient/setupcomplete")}
+          onPress={() =>
+            router.push("/(onboarding)/patient/setupcomplete")
+          }
           style={styles.button}
         />
       </View>
@@ -97,33 +68,29 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 40,
   },
-  qrCard: {
+  instructionCard: {
     alignSelf: "center",
-    width: 280,
+    width: "100%",
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#000000",
     backgroundColor: "#FFFFFF",
-    alignItems: "center",
+    paddingHorizontal: 24,
     paddingVertical: 32,
+    alignItems: "center",
   },
-  qrImage: {
-    width: 200,
-    height: 200,
-    resizeMode: "contain",
-  },
-  code: {
-    marginTop: 18,
-    fontSize: 24,
+  instructionTitle: {
+    fontSize: 21,
     fontWeight: "700",
     color: "#000000",
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    marginTop: 22,
     textAlign: "center",
+    marginBottom: 16,
+  },
+  instructionText: {
     fontSize: 16,
+    lineHeight: 24,
     color: "#7A7A7A",
+    textAlign: "center",
   },
   button: {
     width: "100%",

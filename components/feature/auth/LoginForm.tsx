@@ -30,12 +30,19 @@ export default function LoginForm() {
     });
 
     if (!parsed.success) {
-      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const fieldErrors = parsed.error.issues.reduce<
+        Partial<Record<keyof LoginFormValues, string>>
+      >((errors, issue) => {
+        const field = issue.path[0];
 
-      setErrors({
-        email: fieldErrors.email?.[0],
-        password: fieldErrors.password?.[0],
-      });
+        if ((field === "email" || field === "password") && !errors[field]) {
+          errors[field] = issue.message;
+        }
+
+        return errors;
+      }, {});
+
+      setErrors(fieldErrors);
 
       return;
     }
@@ -116,7 +123,8 @@ export default function LoginForm() {
 
       <Pressable onPress={() => router.push("/register")}>
         <Text style={styles.footerText}>
-          Don't have an account? <Text style={styles.linkText}>Register</Text>
+          Don&apos;t have an account?{" "}
+          <Text style={styles.linkText}>Register</Text>
         </Text>
       </Pressable>
     </>

@@ -1,11 +1,16 @@
+import {
+  patientAlertSchema,
+  patientVitalsSchema,
+  type PatientAlert,
+  type PatientVitals,
+} from "@/schema/api";
 import { getAccessToken } from "@/services/token";
 import { io, Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
 
 const getBackendUrl = () =>
-  process.env.EXPO_PUBLIC_BACKEND_URL ||
-  "http://192.168.1.10:8000";
+  process.env.EXPO_PUBLIC_BACKEND_URL || "http://192.168.1.10:8000";
 
 /**
  * Initialize Socket.IO connection
@@ -42,25 +47,15 @@ export function initSocket() {
   });
 
   socket.on("connect_error", (error) => {
-    console.warn(
-      "🔴 Socket connection error:",
-      error.message
-    );
+    console.warn("🔴 Socket connection error:", error.message);
   });
 
   socket.on("disconnect", (reason) => {
-    console.log(
-      "🔴 Socket disconnected:",
-      reason
-    );
+    console.log("🔴 Socket disconnected:", reason);
   });
 
   socket.onAny((event, ...args) => {
-    console.log(
-      "📨 SOCKET EVENT:",
-      event,
-      args
-    );
+    console.log("📨 SOCKET EVENT:", event, args);
   });
 
   return socket;
@@ -69,50 +64,44 @@ export function initSocket() {
 /**
  * Listen for patient vitals
  */
-export function onPatientVitals(
-  callback: (payload: any) => void
-) {
+export function onPatientVitals(callback: (payload: PatientVitals) => void) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
     return () => {};
   }
 
-  currentSocket.on(
-    "patientVitals",
-    callback
-  );
+  const handleVitals = (payload: unknown) => {
+    const parsed = patientVitalsSchema.safeParse(payload);
+    if (parsed.success) callback(parsed.data);
+  };
+
+  currentSocket.on("patientVitals", handleVitals);
 
   return () => {
-    currentSocket.off(
-      "patientVitals",
-      callback
-    );
+    currentSocket.off("patientVitals", handleVitals);
   };
 }
 
 /**
  * Listen for patient alerts / commands
  */
-export function onPatientAlert(
-  callback: (payload: any) => void
-) {
+export function onPatientAlert(callback: (payload: PatientAlert) => void) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
     return () => {};
   }
 
-  currentSocket.on(
-    "patientAlert",
-    callback
-  );
+  const handleAlert = (payload: unknown) => {
+    const parsed = patientAlertSchema.safeParse(payload);
+    if (parsed.success) callback(parsed.data);
+  };
+
+  currentSocket.on("patientAlert", handleAlert);
 
   return () => {
-    currentSocket.off(
-      "patientAlert",
-      callback
-    );
+    currentSocket.off("patientAlert", handleAlert);
   };
 }
 
@@ -121,19 +110,14 @@ export function onPatientAlert(
  *
  * Use only when the logged-in user is a PATIENT.
  */
-export function emitPatientVitals(
-  payload: Record<string, any>
-) {
+export function emitPatientVitals(payload: Record<string, any>) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
     return;
   }
 
-  currentSocket.emit(
-    "patient:vitals",
-    payload
-  );
+  currentSocket.emit("patient:vitals", payload);
 }
 
 /**
@@ -141,22 +125,17 @@ export function emitPatientVitals(
  *
  * Use only when the logged-in user is a PATIENT.
  */
-export function emitPatientAlert(
-  alertType: string
-) {
+export function emitPatientAlert(alertType: string) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
     return;
   }
 
-  currentSocket.emit(
-    "patient:alert",
-    {
-      alertType,
-      timestamp: new Date().toISOString(),
-    }
-  );
+  currentSocket.emit("patient:alert", {
+    alertType,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 /**
