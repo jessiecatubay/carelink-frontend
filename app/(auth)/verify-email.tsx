@@ -27,7 +27,16 @@ export default function VerifyEmailScreen() {
 
         <View style={styles.linkRow}>
           <Text style={styles.linkText}>Resend email</Text>
-          <Text style={styles.changeText} onPress={() => router.back()}>
+          <Text
+            style={styles.changeText}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/nonpatient/dashboard");
+              }
+            }}
+          >
             Change email
           </Text>
         </View>

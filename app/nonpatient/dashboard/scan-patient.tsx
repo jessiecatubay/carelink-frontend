@@ -109,10 +109,13 @@ export default function ScanPatientScreen() {
       // Connect caregiver/non-patient to patient
       // -----------------------------------------
       try {
-        const result = await axiosInstance.post("/api/patient-nonpatient/v1/connect", {
-          nonPatientId: user.id,
-          connectionCode: qrData.connectionCode,
-        });
+        const result = await axiosInstance.post(
+          "/api/patient-nonpatient/v1/connect",
+          {
+            nonPatientId: user.id,
+            connectionCode: qrData.connectionCode,
+          },
+        );
 
         if (result.data.status === "error") {
           Alert.alert(
@@ -201,7 +204,16 @@ export default function ScanPatientScreen() {
 
   return (
     <View style={styles.container}>
-      <Pressable style={styles.closeButton} onPress={() => router.back()}>
+      <Pressable
+        style={styles.closeButton}
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/nonpatient/dashboard");
+          }
+        }}
+      >
         <Ionicons name="close" size={30} color="#fff" />
       </Pressable>
       <CameraView
