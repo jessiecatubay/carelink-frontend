@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, ImageSourcePropType, StyleSheet, Text, TextInput, View } from "react-native";
 
 type InputProps = {
   placeholder?: string;
@@ -6,6 +6,7 @@ type InputProps = {
   onChangeText?: (text: string) => void;
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   error?: string;
+  icon?: ImageSourcePropType;
 };
 
 export default function Input({
@@ -14,12 +15,15 @@ export default function Input({
   onChangeText,
   keyboardType = "default",
   error,
+  icon,
 }: InputProps) {
+  const resolvedIcon = icon || require("@/assets/icons/user.png");
+
   return (
     <View>
       <View style={[styles.container, error ? styles.errorContainer : null]}>
         <Image
-          source={require("@/assets/icons/user.png")}
+          source={resolvedIcon}
           style={styles.icon}
           resizeMode="contain"
         />
@@ -55,6 +59,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
+    tintColor: "#999",
   },
   input: {
     flex: 1,

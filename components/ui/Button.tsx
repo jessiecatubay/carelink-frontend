@@ -1,10 +1,12 @@
 import {
-    ActivityIndicator,
-    StyleProp,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    ViewStyle,
+  ActivityIndicator,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
 } from "react-native";
 
 type ButtonProps = {
@@ -13,6 +15,8 @@ type ButtonProps = {
   loading?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  icon?: React.ReactNode;
 };
 
 export default function Button({
@@ -21,6 +25,8 @@ export default function Button({
   loading = false,
   disabled = false,
   style,
+  textStyle,
+  icon,
 }: ButtonProps) {
   return (
     <TouchableOpacity
@@ -31,7 +37,10 @@ export default function Button({
       {loading ? (
         <ActivityIndicator color="#FFF" />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <View style={styles.contentRow}>
+          {icon}
+          <Text style={[styles.text, textStyle]}>{title}</Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -44,6 +53,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F16A66",
     justifyContent: "center",
     alignItems: "center",
+  },
+  contentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   disabledButton: {
     opacity: 0.6,

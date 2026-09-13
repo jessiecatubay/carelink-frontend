@@ -9,76 +9,76 @@ type PatientInstructionProps = {
 export default function PatientInstruction({ onContinue }: PatientInstructionProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.paginationWrap}>
-        <PaginationDots currentIndex={2} total={6} />
-      </View>
+      <View>
+        <View style={styles.paginationWrap}>
+          <PaginationDots currentIndex={2} total={6} />
+        </View>
 
-      {/* CareLink Works Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>CareLink Works</Text>
-      </View>
+        {/* How CareLink Works Header */}
+        <Text style={styles.title}>How CareLink Works</Text>
 
-      {/* Grid of Alert Buttons */}
-      <View style={styles.grid}>
-        {/* Row 1 */}
-        <View style={styles.row}>
-          <View style={[styles.card, styles.foodCard]}>
-            <Image
-              source={require("@/assets/icons/food.png")}
-              style={styles.cardIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.cardText}>Food</Text>
+        {/* Grid of Alert Buttons */}
+        <View style={styles.grid}>
+          {/* Row 1 */}
+          <View style={styles.row}>
+            <View style={[styles.card, styles.foodCard]}>
+              <Image
+                source={require("@/assets/icons/food.png")}
+                style={styles.cardIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.cardText}>Food</Text>
+            </View>
+
+            <View style={[styles.card, styles.waterCard]}>
+              <Image
+                source={require("@/assets/icons/water.png")}
+                style={styles.cardIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.cardText}>Water</Text>
+            </View>
           </View>
 
-          <View style={[styles.card, styles.waterCard]}>
-            <Image
-              source={require("@/assets/icons/water.png")}
-              style={styles.cardIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.cardText}>Water</Text>
+          {/* Row 2 */}
+          <View style={styles.row}>
+            <View style={[styles.card, styles.assistanceCard]}>
+              <Image
+                source={require("@/assets/icons/assistance.png")}
+                style={styles.cardIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.cardText}>Assistance</Text>
+            </View>
+
+            <View style={[styles.card, styles.emergencyCard]}>
+              <Image
+                source={require("@/assets/icons/emergency.png")}
+                style={[styles.cardIcon, styles.whiteIcon]}
+                resizeMode="contain"
+              />
+              <Text style={[styles.cardText, styles.whiteText]}>Emergency</Text>
+            </View>
+          </View>
+
+          {/* Row 3 - Centered */}
+          <View style={styles.rowCentered}>
+            <View style={[styles.card, styles.satisfiedCard]}>
+              <Image
+                source={require("@/assets/icons/satisfied.png")}
+                style={styles.cardIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.cardText}>Satisfied</Text>
+            </View>
           </View>
         </View>
 
-        {/* Row 2 */}
-        <View style={styles.row}>
-          <View style={[styles.card, styles.assistanceCard]}>
-            <Image
-              source={require("@/assets/icons/assistance.png")}
-              style={styles.cardIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.cardText}>Assistance</Text>
-          </View>
-
-          <View style={[styles.card, styles.emergencyCard]}>
-            <Image
-              source={require("@/assets/icons/emergency.png")}
-              style={[styles.cardIcon, styles.whiteIcon]}
-              resizeMode="contain"
-            />
-            <Text style={[styles.cardText, styles.whiteText]}>Emergency</Text>
-          </View>
-        </View>
-
-        {/* Row 3 - Centered */}
-        <View style={styles.rowCentered}>
-          <View style={[styles.card, styles.satisfiedCard]}>
-            <Image
-              source={require("@/assets/icons/satisfied.png")}
-              style={styles.cardIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.cardText}>Satisfied</Text>
-          </View>
-        </View>
+        {/* Helper Instruction Text */}
+        <Text style={styles.helperText}>
+          Pressing a button sends alerts instantly
+        </Text>
       </View>
-
-      {/* Helper Instruction Text */}
-      <Text style={styles.helperText}>
-        Pressing a button sends alerts instantly
-      </Text>
 
       {/* Bottom Button */}
       <View style={styles.buttonWrap}>
@@ -104,15 +104,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 40,
   },
-  header: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  headerTitle: {
+  title: {
     fontSize: 26,
     fontWeight: "600",
     color: "#12A5B5",
     textAlign: "center",
+    marginBottom: 24,
   },
   grid: {
     alignItems: "center",

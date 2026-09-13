@@ -9,6 +9,7 @@ import RemoteButton from "./RemoteButton";
 export default function PatientRemote() {
   const { user } = useAuth();
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
+  const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
 
   const handlePress = async (label: string) => {
@@ -24,6 +25,12 @@ export default function PatientRemote() {
     }
 
     setActiveAlert(label);
+
+    if (label === "Food" || label === "Water" || label === "Assistance" || label === "Emergency") {
+      setPendingRequest(label);
+    } else if (label === "Satisfied") {
+      setPendingRequest(null);
+    }
 
     try {
       const result = await axiosInstance.post(
@@ -42,28 +49,20 @@ export default function PatientRemote() {
   };
 
   useEffect(() => {
-    if (activeAlert) {
-      // Fade in the alert sent notification
+    if (pendingRequest) {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }).start();
-
-      // Clear the alert notification after 2 seconds
-      const timer = setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          setActiveAlert(null);
-        });
-      }, 2000);
-
-      return () => clearTimeout(timer);
+    } else {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [activeAlert, fadeAnim]);
+  }, [pendingRequest, fadeAnim]);
 
   useEffect(() => {
     const socket = initSocket();
@@ -79,21 +78,38 @@ export default function PatientRemote() {
     };
   }, []);
 
+  const isLocked = Boolean(pendingRequest);
+
+  const getPanelStyle = () => {
+    switch (pendingRequest) {
+      case "Water":
+        return { backgroundColor: "#D4EBFD", borderColor: "#93C5FD" }; // Blue
+      case "Food":
+        return { backgroundColor: "#FCECE9", borderColor: "#FCA5A5" }; // Coral / Peach
+      case "Assistance":
+        return { backgroundColor: "#FDE8C7", borderColor: "#FCD34D" }; // Amber / Yellow
+      case "Emergency":
+        return { backgroundColor: "#FEE2E2", borderColor: "#F87171" }; // Red
+      default:
+        return { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" };
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Dynamic Alert Banner */}
-      {activeAlert && (
+      {pendingRequest && (
         <Animated.View style={[styles.alertBanner, { opacity: fadeAnim }]}>
           <Text style={styles.alertBannerText}>
-            {activeAlert === "Emergency"
+            {pendingRequest === "Emergency"
               ? "🚨 Emergency Alert Broadcasted!"
-              : `✓ Alert Sent: ${activeAlert}`}
+              : `✓ Alert Sent: ${pendingRequest}`}
           </Text>
         </Animated.View>
       )}
 
       {/* Floating Remote Panel */}
-      <View style={styles.remotePanel}>
+      <View style={[styles.remotePanel, getPanelStyle()]}>
         {/* Row 1 */}
         <View style={styles.row}>
           <RemoteButton
@@ -101,12 +117,14 @@ export default function PatientRemote() {
             icon={require("@/assets/icons/food.png")}
             onPress={() => handlePress("Food")}
             cardStyle={styles.foodCard}
+            disabled={isLocked}
           />
           <RemoteButton
             label="Water"
             icon={require("@/assets/icons/water.png")}
             onPress={() => handlePress("Water")}
             cardStyle={styles.waterCard}
+            disabled={isLocked}
           />
         </View>
 
@@ -117,6 +135,7 @@ export default function PatientRemote() {
             icon={require("@/assets/icons/assistance.png")}
             onPress={() => handlePress("Assistance")}
             cardStyle={styles.assistanceCard}
+            disabled={isLocked}
           />
           <RemoteButton
             label="Emergency"

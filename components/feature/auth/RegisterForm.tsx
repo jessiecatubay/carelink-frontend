@@ -117,6 +117,7 @@ export default function RegisterForm() {
       <Input
         placeholder="Email"
         keyboardType="email-address"
+        icon={require("@/assets/icons/email.png")}
         value={email}
         onChangeText={(text) => {
           setEmail(text);

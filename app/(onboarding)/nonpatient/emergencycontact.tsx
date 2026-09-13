@@ -1,3 +1,9 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
 import { useOnboarding } from "@/context/OnboardingContext";
@@ -5,10 +11,6 @@ import {
   nonPatientOnboardingSchema,
   type NonPatientOnboardingInput,
 } from "@/schema/api";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 type FieldName = keyof NonPatientOnboardingInput;
 type FormErrors = Partial<Record<FieldName, string>>;
@@ -74,13 +76,12 @@ export default function EmergencyContactScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Progress */}
-        <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={4} total={7} />
-        </View>
+        <View>
+          {/* Progress */}
+          <View style={styles.paginationWrap}>
+            <PaginationDots currentIndex={4} total={7} />
+          </View>
 
-        {/* Centered Content */}
-        <View style={styles.content}>
           {/* Title */}
           <Text style={styles.title}>Emergency Contact</Text>
 
@@ -120,14 +121,30 @@ export default function EmergencyContactScreen() {
             />
             {renderError("relationship")}
           </View>
+
+          {/* Note */}
+          <View style={styles.noteBox}>
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color="#12A5B5"
+              style={styles.noteIcon}
+            />
+            <Text style={styles.noteText}>
+              <Text style={styles.noteBold}>Note: </Text>
+              In case of an emergency, caregivers and people connected to the patient can access who will be contacted for immediate assistance.
+            </Text>
+          </View>
         </View>
 
         {/* Continue Button */}
-        <Button
-          title="Continue"
-          onPress={handleContinue}
-          style={styles.button}
-        />
+        <View style={styles.buttonWrap}>
+          <Button
+            title="Continue"
+            onPress={handleContinue}
+            style={styles.button}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -140,21 +157,17 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 28,
-    paddingBottom: 30,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
+    paddingHorizontal: 24,
+    justifyContent: "space-between",
   },
   paginationWrap: {
     marginTop: 100,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 40,
   },
   title: {
     fontSize: 26,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#12A5B5",
     textAlign: "center",
     marginBottom: 10,
@@ -164,7 +177,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#7A7A7A",
     lineHeight: 22,
-    marginBottom: 40,
+    marginBottom: 24,
   },
   card: {
     alignSelf: "center",
@@ -173,9 +186,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333333",
     backgroundColor: "#FFFFFF",
-    paddingVertical: 32,
+    paddingVertical: 24,
     paddingHorizontal: 20,
-    gap: 20,
+    gap: 16,
   },
   input: {
     height: 56,
@@ -193,9 +206,37 @@ const styles = StyleSheet.create({
   error: {
     color: "#F16A66",
     fontSize: 13,
-    marginTop: -12,
-    marginBottom: -8,
+    marginTop: -10,
+    marginBottom: -4,
     paddingHorizontal: 4,
+  },
+  noteBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#F0FAFA",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#C5ECEE",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 18,
+    gap: 10,
+  },
+  noteIcon: {
+    marginTop: 1,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#4B5563",
+    lineHeight: 18,
+  },
+  noteBold: {
+    fontWeight: "700",
+    color: "#12A5B5",
+  },
+  buttonWrap: {
+    marginBottom: 40,
   },
   button: {
     width: "100%",
