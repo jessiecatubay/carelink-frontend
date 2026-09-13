@@ -1,20 +1,26 @@
-import React from "react";
-import { Image, Platform, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface PatientCardProps {
   name?: string;
   status?: string;
   avatar?: any;
+  onPress?: () => void;
 }
 
 export default function PatientCard({
   name,
   status,
   avatar,
+  onPress,
 }: PatientCardProps) {
   return (
-    <View style={styles.patientCard}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="View connected patients"
+      onPress={onPress}
+      style={styles.patientCard}
+    >
       <View style={styles.patientCardLeft}>
         <View style={styles.patientInfo}>
           <Text style={styles.patientName}>Patient: {name}</Text>
@@ -26,7 +32,7 @@ export default function PatientCard({
         </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#718096" />
-    </View>
+    </Pressable>
   );
 }
 

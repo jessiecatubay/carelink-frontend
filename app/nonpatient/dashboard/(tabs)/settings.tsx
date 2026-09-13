@@ -144,12 +144,7 @@ export default function SettingsScreen() {
             icon="accessibility"
             title="Manage Patient"
             subtitle="View patient profile, edit illness, notes"
-            onPress={() =>
-              Alert.alert(
-                "Manage Patient",
-                "Patient management is not available yet.",
-              )
-            }
+            onPress={() => router.push("/nonpatient/dashboard/manage-patients")}
           />
           <SettingRow
             icon="qr-code"
