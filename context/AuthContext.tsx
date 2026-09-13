@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
 
 import { closeSocket, initSocket } from "@/hooks/lib/socket";
 import { getMe, login } from "@/services/auth";
@@ -89,21 +90,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("currently logged in", apiUser);
 
     if (apiUser.onBoarded === false && apiUser.role === "USER") {
-      router.replace("/user-onboarding");
+      Alert.alert("Login successful", "Let&apos;s finish setting up your account.", [
+        { text: "Continue", onPress: () => router.replace("/user-onboarding") },
+      ]);
       return;
     }
 
     if (apiUser.role === "NON_PATIENT") {
-      router.replace("/nonpatient/dashboard/(tabs)");
+      Alert.alert("Login successful", "Welcome back to CareLink.", [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/nonpatient/dashboard/(tabs)"),
+        },
+      ]);
       return;
     }
 
     if (apiUser.role === "PATIENT") {
-      router.replace("/patient/dashboard/(tabs)");
+      Alert.alert("Login successful", "Welcome back to CareLink.", [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/patient/dashboard/(tabs)"),
+        },
+      ]);
+      return;
     }
 
-    router.replace("/(auth)/register");
-    return
+    Alert.alert("Login successful", "Please continue setting up your account.", [
+      { text: "Continue", onPress: () => router.replace("/(auth)/register") },
+    ]);
   };
 
   const updateUser = async (updatedUser: AuthUser) => {

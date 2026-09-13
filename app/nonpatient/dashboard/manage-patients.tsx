@@ -101,7 +101,11 @@ export default function ManagePatientsScreen() {
         currentPatient: true,
       });
 
-      router.replace("/nonpatient/dashboard/(tabs)");
+      Alert.alert(
+        "Patient selected",
+        "The dashboard will now show this patient&apos;s information.",
+        [{ text: "Continue", onPress: () => router.replace("/nonpatient/dashboard/(tabs)") }],
+      );
     } catch (error) {
       console.error("Failed to select current patient:", error);
       Alert.alert("Unable to select patient", "Please try again later.");
