@@ -1,26 +1,75 @@
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
 import { useOnboarding } from "@/context/OnboardingContext";
+import {
+  nonPatientOnboardingSchema,
+  type NonPatientOnboardingInput,
+} from "@/schema/api";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type FieldName = keyof NonPatientOnboardingInput;
+type FormErrors = Partial<Record<FieldName, string>>;
+
+const initialForm: NonPatientOnboardingInput = {
+  phoneNumber: "",
+  relationship: "",
+};
+
+function getFormErrors(form: NonPatientOnboardingInput): FormErrors {
+  const result = nonPatientOnboardingSchema.safeParse(form);
+
+  if (result.success) {
+    return {};
+  }
+
+  return result.error.issues.reduce<FormErrors>((errors, issue) => {
+    const field = issue.path[0] as FieldName;
+    if (!errors[field]) {
+      errors[field] = issue.message;
+    }
+    return errors;
+  }, {});
+}
+
 export default function EmergencyContactScreen() {
   const router = useRouter();
   const { setData } = useOnboarding();
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [relationship, setRelationship] = useState("");
+  const [form, setForm] = useState(initialForm);
+  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>(
+    {},
+  );
+
+  const errors = getFormErrors(form);
+
+  const updateField = (field: FieldName, value: string) => {
+    setForm((currentForm) => ({ ...currentForm, [field]: value }));
+    setTouched((currentTouched) => ({ ...currentTouched, [field]: true }));
+  };
 
   const handleContinue = () => {
+    const result = nonPatientOnboardingSchema.safeParse(form);
+    setTouched({ phoneNumber: true, relationship: true });
+
+    if (!result.success) {
+      return;
+    }
+
     setData((prev) => ({
       ...prev,
-      emergencyContact: phoneNumber,
-      relationship: relationship,
+      emergencyContact: result.data.phoneNumber,
+      relationship: result.data.relationship,
     }));
     // Navigate to notification setup
     router.push("/(onboarding)/nonpatient/notificationsetup");
   };
+
+  const renderError = (field: FieldName) =>
+    touched[field] && errors[field] ? (
+      <Text style={styles.error}>{errors[field]}</Text>
+    ) : null;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -43,21 +92,33 @@ export default function EmergencyContactScreen() {
           {/* Form Card */}
           <View style={styles.card}>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                touched.phoneNumber && errors.phoneNumber
+                  ? styles.inputError
+                  : null,
+              ]}
               placeholder="Phone Number"
               placeholderTextColor="#8E8E93"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              value={form.phoneNumber}
+              onChangeText={(value) => updateField("phoneNumber", value)}
               keyboardType="phone-pad"
             />
+            {renderError("phoneNumber")}
 
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                touched.relationship && errors.relationship
+                  ? styles.inputError
+                  : null,
+              ]}
               placeholder="Relationship"
               placeholderTextColor="#8E8E93"
-              value={relationship}
-              onChangeText={setRelationship}
+              value={form.relationship}
+              onChangeText={(value) => updateField("relationship", value)}
             />
+            {renderError("relationship")}
           </View>
         </View>
 
@@ -125,6 +186,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     fontSize: 16,
     color: "#111111",
+  },
+  inputError: {
+    borderColor: "#F16A66",
+  },
+  error: {
+    color: "#F16A66",
+    fontSize: 13,
+    marginTop: -12,
+    marginBottom: -8,
+    paddingHorizontal: 4,
   },
   button: {
     width: "100%",

@@ -3,6 +3,7 @@ import { CommandData } from "@/hooks/lib/CommandData";
 import { onPatientAlert } from "@/hooks/lib/socket";
 import { remoteCommandSchema, type PatientAlert } from "@/schema/api";
 import { Notification, RemoteCommand } from "@/types/command";
+import { formatPhilippineDateTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -27,14 +28,6 @@ type PageResponse<T> = {
   hasNext?: boolean;
 };
 
-const formatTime = (value: string) =>
-  new Date(value).toLocaleString("en-PH", {
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    month: "short",
-  });
-
 const mapCommand = (command: RemoteCommand): Notification | null => {
   const details =
     CommandData[command.command.toUpperCase() as keyof typeof CommandData];
@@ -47,7 +40,7 @@ const mapCommand = (command: RemoteCommand): Notification | null => {
     id: command.id,
     ...details,
     status: command.status,
-    time: formatTime(command.recordedAt),
+    time: formatPhilippineDateTime(command.recordedAt),
   };
 };
 
@@ -122,11 +115,13 @@ export default function AlertsScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const pageRef = useRef(1);
 
   const loadPage = async (pageNumber: number) => {
     pageRef.current = pageNumber;
     setLoading(true);
+    setLoadError(false);
 
     try {
       const result = await axiosInstance.get(
@@ -150,6 +145,7 @@ export default function AlertsScreen() {
       );
     } catch (error) {
       console.error("Failed to get alerts:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -239,6 +235,19 @@ export default function AlertsScreen() {
         </View>
         {loading ? (
           <Text style={styles.empty}>Loading alerts...</Text>
+        ) : loadError ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Alerts are unavailable</Text>
+            <Text style={styles.emptyDescription}>
+              Check your connection and try loading them again.
+            </Text>
+            <Pressable
+              style={styles.retryButton}
+              onPress={() => loadPage(page)}
+            >
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+          </View>
         ) : visibleAlerts.length === 0 ? (
           <Text style={styles.empty}>No patient alerts</Text>
         ) : (
@@ -359,6 +368,26 @@ const styles = StyleSheet.create({
   resolved: { backgroundColor: "#DDF7F3", color: "#159F96" },
   time: { alignSelf: "flex-start", color: "#777B7D", fontSize: 10 },
   empty: { color: "#A0AEC0", paddingTop: 60, textAlign: "center" },
+  emptyState: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 50,
+  },
+  emptyTitle: { color: "#17191B", fontSize: 16, fontWeight: "700" },
+  emptyDescription: {
+    color: "#777B7D",
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#0BA2A8",
+    borderRadius: 8,
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  retryText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
   pagination: {
     alignItems: "center",
     flexDirection: "row",
