@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { CommandData } from "@/hooks/lib/CommandData";
 import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
@@ -10,6 +11,7 @@ const MAX_RECENT_ACTIVITIES = 5;
 
 interface RecentActivityProps {
   emptyText?: string;
+  patientId?: string;
 }
 
 const commandDetails: Record<
@@ -47,10 +49,13 @@ const mapRemoteCommand = (command: RemoteCommand): Notification | null => {
 
 export default function RecentActivity({
   emptyText = "No recent activity today",
+  patientId
 }: RecentActivityProps) {
+  const {user} = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
+    console.log("user napud", user);
     initSocket();
 
     const off = onPatientAlert(
@@ -98,9 +103,10 @@ export default function RecentActivity({
     );
 
     const getAllCommandData = async () => {
-      const result = await axiosInstance.get(
-        "/api/command/v1/get-recent-commands",
+      const result = await axiosInstance.post(
+        "/api/command/v1/get-recent-commands", { nonPatientId: user?.id, patientId: patientId }
       );
+      console.log("karun rani", user?.id, patientId);
       console.log("Remote Data", result.data.data);
 
       const commands = result.data.data as RemoteCommand[];
@@ -117,7 +123,7 @@ export default function RecentActivity({
     return () => {
       off?.();
     };
-  }, []);
+  }, [patientId, user?.id]);
 
   const visibleNotifications = notifications.filter((notification) => {
     return notification.type;

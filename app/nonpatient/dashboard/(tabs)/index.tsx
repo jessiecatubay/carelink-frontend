@@ -156,12 +156,24 @@ export default function Home() {
         const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
           id: user.id,
         });
-        const connection = result.data.data.nonPatientConnections[0];
+        const connections = result.data.data.nonPatientConnections;
 
-        if (!connection) return;
+        console.log(
+          "lafdsjhfoaweflsfkeasd",
+          JSON.stringify(connections, null, 2),
+        );
 
-        setPatient(connection.patient);
-        setConnected(connection.status);
+        if (!connections) return;
+
+        for (const connection of connections) {
+          if (!connection.currentPatient) {
+            continue;
+          }
+
+          setPatient(connection.patient);
+          setConnected(connection.status);
+          break;
+        }
       } catch (error) {
         console.error("Failed to get patient:", error);
       }
@@ -200,6 +212,7 @@ export default function Home() {
         <PatientCard
           name={`${patient?.firstName ?? ""} ${patient?.lastName ?? ""}`.trim()}
           status={connected}
+          onPress={() => router.push("/nonpatient/dashboard/manage-patients")}
         />
         <CurrentVitals />
 
@@ -241,7 +254,7 @@ export default function Home() {
           onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
         />
 
-        <RecentActivity />
+        <RecentActivity patientId={patient?.id}/>
       </ScrollView>
     </SafeAreaView>
   );

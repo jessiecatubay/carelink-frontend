@@ -13,7 +13,7 @@ import PaginationDots from "@/components/ui/PaginationDots";
 
 type PatientProfileProps = {
   onContinue: (profileData: {
-    age: string;
+    age: number;
     gender: string;
     medicalConditions: string;
     notes: string;
@@ -28,7 +28,7 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
 
   const handleContinue = () => {
     onContinue({
-      age,
+      age: Number(age),
       gender,
       medicalConditions,
       notes,
