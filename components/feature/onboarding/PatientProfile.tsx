@@ -1,3 +1,9 @@
+import Button from "@/components/ui/Button";
+import PaginationDots from "@/components/ui/PaginationDots";
+import {
+  patientOnboardingSchema,
+  type PatientOnboardingInput,
+} from "@/schema/api";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -8,8 +14,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Button from "@/components/ui/Button";
-import PaginationDots from "@/components/ui/PaginationDots";
 
 type PatientProfileProps = {
   onContinue: (profileData: {
@@ -20,20 +24,65 @@ type PatientProfileProps = {
   }) => void;
 };
 
+type FieldName = keyof PatientOnboardingInput;
+type FormErrors = Partial<Record<FieldName, string>>;
+
+const initialForm: PatientOnboardingInput = {
+  age: "",
+  gender: "",
+  medicalConditions: "",
+  notes: "",
+};
+
+function getFormErrors(form: PatientOnboardingInput): FormErrors {
+  const result = patientOnboardingSchema.safeParse(form);
+
+  if (result.success) {
+    return {};
+  }
+
+  return result.error.issues.reduce<FormErrors>((errors, issue) => {
+    const field = issue.path[0] as FieldName;
+    if (!errors[field]) {
+      errors[field] = issue.message;
+    }
+    return errors;
+  }, {});
+}
+
 export default function PatientProfile({ onContinue }: PatientProfileProps) {
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  const [medicalConditions, setMedicalConditions] = useState("");
-  const [notes, setNotes] = useState("");
+  const [form, setForm] = useState(initialForm);
+  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>(
+    {},
+  );
+
+  const errors = getFormErrors(form);
+
+  const updateField = (field: FieldName, value: string) => {
+    setForm((currentForm) => ({ ...currentForm, [field]: value }));
+    setTouched((currentTouched) => ({ ...currentTouched, [field]: true }));
+  };
 
   const handleContinue = () => {
-    onContinue({
-      age: Number(age),
-      gender,
-      medicalConditions,
-      notes,
+    const result = patientOnboardingSchema.safeParse(form);
+    setTouched({
+      age: true,
+      gender: true,
+      medicalConditions: true,
+      notes: true,
     });
+
+    if (!result.success) {
+      return;
+    }
+
+    onContinue(result.data);
   };
+
+  const renderError = (field: FieldName) =>
+    touched[field] && errors[field] ? (
+      <Text style={styles.error}>{errors[field]}</Text>
+    ) : null;
 
   return (
     <KeyboardAvoidingView
@@ -55,39 +104,58 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
         {/* Form Card */}
         <View style={styles.card}>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              touched.age && errors.age ? styles.inputError : null,
+            ]}
             placeholder="Age"
             placeholderTextColor="#9CA3AF"
             keyboardType="numeric"
-            value={age}
-            onChangeText={setAge}
+            value={form.age}
+            onChangeText={(value) => updateField("age", value)}
           />
+          {renderError("age")}
 
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              touched.gender && errors.gender ? styles.inputError : null,
+            ]}
             placeholder="Gender"
             placeholderTextColor="#9CA3AF"
-            value={gender}
-            onChangeText={setGender}
+            value={form.gender}
+            onChangeText={(value) => updateField("gender", value)}
           />
+          {renderError("gender")}
 
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              touched.medicalConditions && errors.medicalConditions
+                ? styles.inputError
+                : null,
+            ]}
             placeholder="Illness / Medical Conditions"
             placeholderTextColor="#9CA3AF"
-            value={medicalConditions}
-            onChangeText={setMedicalConditions}
+            value={form.medicalConditions}
+            onChangeText={(value) => updateField("medicalConditions", value)}
           />
+          {renderError("medicalConditions")}
 
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[
+              styles.input,
+              styles.textArea,
+              touched.notes && errors.notes ? styles.inputError : null,
+            ]}
             placeholder="Notes / Optional"
             placeholderTextColor="#9CA3AF"
             multiline
             numberOfLines={4}
-            value={notes}
-            onChangeText={setNotes}
+            value={form.notes}
+            onChangeText={(value) => updateField("notes", value)}
           />
+          {renderError("notes")}
         </View>
 
         <View style={styles.buttonWrap}>
@@ -148,12 +216,22 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     marginBottom: 16,
   },
+  inputError: {
+    borderColor: "#F16A66",
+  },
   textArea: {
     height: 140,
     textAlignVertical: "top",
     paddingTop: 14,
     paddingBottom: 14,
     marginBottom: 0,
+  },
+  error: {
+    color: "#DC2626",
+    fontSize: 13,
+    marginTop: -10,
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
   buttonWrap: {
     marginBottom: 40,
