@@ -78,8 +78,8 @@ export default function SettingsScreen() {
   const [alertSoundEnabled, setAlertSoundEnabled] = useState(true);
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    "Kathryn Bernardo";
-  const email = user?.email || "kathryn@gmail.com";
+    "User User";
+  const email = user?.email || "sample@example.com";
 
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
@@ -126,7 +126,7 @@ export default function SettingsScreen() {
           <SettingRow
             icon="person"
             title="Profile"
-            subtitle={`${fullName}\n${email}\n+639 636 938 171`}
+            subtitle={`${fullName}\n${email}`}
           />
           <SettingRow
             icon="lock-closed"

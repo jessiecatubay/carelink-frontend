@@ -6,7 +6,7 @@ import { registerSchema, type RegisterFormValues } from "@/schema/auth";
 import { register } from "@/services/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -70,7 +70,11 @@ export default function RegisterForm() {
         email,
       }));
 
-      router.replace("/login");
+      Alert.alert(
+        "Registration successful",
+        "Your account has been created. Please log in to continue.",
+        [{ text: "Continue", onPress: () => router.replace("/login") }],
+      );
     } catch (error) {
       console.log(error);
     }
