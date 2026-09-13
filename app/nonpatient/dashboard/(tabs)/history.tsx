@@ -1,6 +1,7 @@
 import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, onPatientVitals } from "@/hooks/lib/socket";
 import { Vital } from "@/types/user";
+import { formatPhilippineDateTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -13,18 +14,6 @@ type PageResponse<T> = {
   totalItems?: number;
   totalPages?: number;
   hasNext?: boolean;
-};
-
-const formatRecordedTime = (recordedAt: string) => {
-  const date = new Date(recordedAt);
-  if (Number.isNaN(date.getTime())) return "Unknown time";
-
-  return date.toLocaleString("en-PH", {
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    month: "short",
-  });
 };
 
 const getPageResponse = (data: unknown): PageResponse<Vital> => {
@@ -183,7 +172,7 @@ export default function HistoryScreen() {
               <View key={vital.id} style={styles.vitalCard}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.recordedAt}>
-                    {formatRecordedTime(vital.recordedAt)}
+                    {formatPhilippineDateTime(vital.recordedAt)}
                   </Text>
                   <Text
                     style={[

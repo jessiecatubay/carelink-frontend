@@ -5,7 +5,9 @@ import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { useEffect, useState } from "react";
 import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
-export default function PatientCurrentStatus(patientId: {patientId?: string;}) {
+export default function PatientCurrentStatus(patientId: {
+  patientId?: string;
+}) {
   const [latestCommand, setLatestCommand] = useState<string | null>(
     "SATISFIED",
   );
@@ -15,6 +17,8 @@ export default function PatientCurrentStatus(patientId: {patientId?: string;}) {
   const { user } = useAuth();
 
   useEffect(() => {
+    if (!patientId.patientId) return;
+
     initSocket();
 
     const off = onPatientAlert((payload: any) => {
@@ -29,7 +33,8 @@ export default function PatientCurrentStatus(patientId: {patientId?: string;}) {
 
     const getLatestCommand = async () => {
       const result = await axiosInstance.post(
-        "/api/command/v1/get-latest-command", { nonPatient: user?.id, patientId: patientId }
+        "/api/command/v1/get-latest-command",
+        { nonPatient: user?.id, patientId: patientId.patientId },
       );
 
       console.log("mga commands ni", JSON.stringify(result.data.data));
@@ -46,7 +51,7 @@ export default function PatientCurrentStatus(patientId: {patientId?: string;}) {
     return () => {
       off?.();
     };
-  }, [latestCommand]);
+  }, [patientId.patientId, user?.id]);
 
   return (
     <View style={styles.patientStatusCard}>
@@ -66,9 +71,15 @@ export default function PatientCurrentStatus(patientId: {patientId?: string;}) {
           />
         </View>
         <View style={styles.statusTextContainer}>
-          <Text style={styles.statusTitle}>{commandDetails?.title}</Text>
+          <Text style={styles.statusTitle}>
+            {patientId.patientId
+              ? commandDetails?.title
+              : "No patient data yet"}
+          </Text>
           <Text style={styles.statusSubtitle}>
-            {commandDetails?.description}
+            {patientId.patientId
+              ? commandDetails?.description
+              : "Connect a patient to view their latest request."}
           </Text>
         </View>
       </View>

@@ -3,6 +3,7 @@ import axiosInstance from "@/hooks/lib/axios";
 import { CommandData } from "@/hooks/lib/CommandData";
 import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { Notification, RemoteCommand } from "@/types/command";
+import { formatPhilippineDateTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -19,18 +20,6 @@ const commandDetails: Record<
   Omit<Notification, "id" | "time" | "status">
 > = CommandData;
 
-const formatRecordedTime = (recordedAt: string) => {
-  const date = new Date(recordedAt);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date.toLocaleString("en-PH", {
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    month: "short",
-  });
-};
-
 const mapRemoteCommand = (command: RemoteCommand): Notification | null => {
   const commandKey = String(
     command.command,
@@ -43,19 +32,18 @@ const mapRemoteCommand = (command: RemoteCommand): Notification | null => {
     id: command.id,
     ...details,
     status: command.status,
-    time: formatRecordedTime(command.recordedAt),
+    time: formatPhilippineDateTime(command.recordedAt),
   };
 };
 
 export default function RecentActivity({
   emptyText = "No recent activity today",
-  patientId
+  patientId,
 }: RecentActivityProps) {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    console.log("user napud", user);
     initSocket();
 
     const off = onPatientAlert(
@@ -103,8 +91,11 @@ export default function RecentActivity({
     );
 
     const getAllCommandData = async () => {
+      if (!patientId) return;
+
       const result = await axiosInstance.post(
-        "/api/command/v1/get-recent-commands", { nonPatientId: user?.id, patientId: patientId }
+        "/api/command/v1/get-recent-commands",
+        { nonPatientId: user?.id, patientId: patientId },
       );
       console.log("karun rani", user?.id, patientId);
       console.log("Remote Data", result.data.data);

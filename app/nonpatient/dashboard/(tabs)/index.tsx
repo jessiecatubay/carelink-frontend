@@ -7,6 +7,11 @@ import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, onPatientVitals } from "@/hooks/lib/socket";
 import { vitalResponseSchema } from "@/schema/api";
 import { User, Vital } from "@/types/user";
+import {
+  formatPhilippineDate,
+  formatPhilippineTime,
+  isSamePhilippineDay,
+} from "@/utils/date";
 import { useEffect, useState } from "react";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
@@ -30,72 +35,62 @@ export default function Home() {
   const [tempHistory, setTempHistory] = useState<number[]>([]);
   const [patient, setPatient] = useState<User>();
   const [connected, setConnected] = useState<string>("DISCONNECTED");
+  const [patientLoading, setPatientLoading] = useState(true);
 
   useEffect(() => {
+    if (!patient) return;
+
     const getPatientVitalsHistory = async () => {
-      const result = await axiosInstance.get(
-        "/api/device/v1/get-recent-vitals",
-      );
+      try {
+        const result = await axiosInstance.get(
+          "/api/device/v1/get-recent-vitals",
+        );
 
-      console.log("GetResultData: ", JSON.stringify(result.data.data, null, 2));
+        console.log(
+          "GetResultData: ",
+          JSON.stringify(result.data.data, null, 2),
+        );
 
-      const parsedVitals = vitalResponseSchema
-        .array()
-        .safeParse(result.data.data);
-      if (!parsedVitals.success || parsedVitals.data.length === 0) {
-        console.warn("Received invalid or empty patient vitals response");
-        return;
-      }
-
-      const vitals: Vital[] = parsedVitals.data;
-
-      const temperatures = vitals.map((vital: Vital) => vital.temperature);
-      const heartRates = vitals.map((vital: Vital) => vital.heartRate);
-      const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
-
-      const formatLastUpdated = (dateString: string): string => {
-        const date = new Date(dateString);
-        const now = new Date();
-
-        const time = date
-          .toLocaleTimeString("en-PH", {
-            timeZone: "Asia/Manila",
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-          })
-          .toLowerCase();
-
-        const datePH = date.toLocaleDateString("en-PH", {
-          timeZone: "Asia/Manila",
-        });
-
-        const todayPH = now.toLocaleDateString("en-PH", {
-          timeZone: "Asia/Manila",
-        });
-
-        if (datePH === todayPH) {
-          return `Today ${time}`;
+        const parsedVitals = vitalResponseSchema
+          .array()
+          .safeParse(result.data.data);
+        if (!parsedVitals.success || parsedVitals.data.length === 0) {
+          console.warn("Received invalid or empty patient vitals response");
+          return;
         }
 
-        return `${datePH} ${time}`;
-      };
+        const vitals: Vital[] = parsedVitals.data;
 
-      const formattedTime = formatLastUpdated(lastUpdated[0]);
+        const temperatures = vitals.map((vital: Vital) => vital.temperature);
+        const heartRates = vitals.map((vital: Vital) => vital.heartRate);
+        const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
 
-      const reversedTemps = [...temperatures].reverse();
-      const reversedHeartRates = [...heartRates].reverse();
+        const formatLastUpdated = (dateString: string): string => {
+          if (isSamePhilippineDay(dateString, new Date().toISOString())) {
+            return `Today ${formatPhilippineTime(dateString)}`;
+          }
 
-      setTemperature(reversedTemps[4]);
-      setHeartRate(reversedHeartRates[4]);
-      setTempHistory(reversedTemps);
-      setHeartHistory(reversedHeartRates);
+          return `${formatPhilippineDate(dateString)} ${formatPhilippineTime(dateString)}`;
+        };
 
-      setLastUpdated(formattedTime);
+        const formattedTime = formatLastUpdated(lastUpdated[0]);
+
+        const reversedTemps = [...temperatures].reverse();
+        const reversedHeartRates = [...heartRates].reverse();
+
+        setTemperature(reversedTemps[4] ?? reversedTemps[0]);
+        setHeartRate(reversedHeartRates[4] ?? reversedHeartRates[0]);
+        setTempHistory(reversedTemps);
+        setHeartHistory(reversedHeartRates);
+
+        setLastUpdated(formattedTime);
+      } catch (error) {
+        console.error("Failed to get patient vitals:", error);
+      }
     };
 
     getPatientVitalsHistory();
-  }, [heartRate, temperature]);
+  }, [patient]);
 
   useEffect(() => {
     initSocket();
@@ -120,23 +115,10 @@ export default function Home() {
       }
 
       if (payload.receivedAt) {
-        const date = new Date(payload.receivedAt);
-        const today = new Date();
-        const sameDay =
-          date.getFullYear() === today.getFullYear() &&
-          date.getMonth() === today.getMonth() &&
-          date.getDate() === today.getDate();
-
-        const formattedTime = date.toLocaleTimeString("en-PH", {
-          timeZone: "Asia/Manila",
-          hour: "numeric",
-          minute: "2-digit",
-        });
-
         setLastUpdated(
-          sameDay
-            ? `Today, ${formattedTime}`
-            : `${date.toLocaleDateString()} ${formattedTime}`,
+          isSamePhilippineDay(payload.receivedAt, new Date().toISOString())
+            ? `Today, ${formatPhilippineTime(payload.receivedAt)}`
+            : `${formatPhilippineDate(payload.receivedAt)} ${formatPhilippineTime(payload.receivedAt)}`,
         );
       }
 
@@ -152,6 +134,9 @@ export default function Home() {
     if (!user?.id) return;
 
     const getUserById = async () => {
+      setPatientLoading(true);
+      setPatient(undefined);
+
       try {
         const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
           id: user.id,
@@ -163,7 +148,7 @@ export default function Home() {
           JSON.stringify(connections, null, 2),
         );
 
-        if (!connections) return;
+        if (!Array.isArray(connections)) return;
 
         for (const connection of connections) {
           if (!connection.currentPatient) {
@@ -176,6 +161,8 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Failed to get patient:", error);
+      } finally {
+        setPatientLoading(false);
       }
     };
 
@@ -210,10 +197,17 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       >
         <PatientCard
-          name={`${patient?.firstName ?? ""} ${patient?.lastName ?? ""}`.trim()}
-          status={connected}
+          name={
+            patient
+              ? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim()
+              : patientLoading
+                ? "Loading patient..."
+                : "No patient connected"
+          }
+          status={patient ? connected : "Connect a patient to begin"}
           onPress={() => router.push("/nonpatient/dashboard/manage-patients")}
         />
+
         <CurrentVitals />
 
         <View style={styles.vitalsGrid}>
@@ -244,17 +238,14 @@ export default function Home() {
         </View>
 
         <PatientCurrentStatus patientId={patient?.id} />
-
         <LastUpdatedCard lastUpdated={lastUpdated} />
-
         <QuickActions
           onNotificationPress={() =>
             router.push("/nonpatient/dashboard/alerts")
           }
           onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
         />
-
-        <RecentActivity patientId={patient?.id}/>
+        <RecentActivity patientId={patient?.id} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -273,5 +264,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
+  },
+  connectionFallback: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#DCEFF1",
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 24,
+    padding: 28,
+  },
+  fallbackTitle: {
+    color: "#1A202C",
+    fontSize: 17,
+    fontWeight: "700",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  fallbackText: {
+    color: "#718096",
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  emptyButton: {
+    backgroundColor: "#12A5B5",
+    borderRadius: 10,
+    marginTop: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  emptyButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
