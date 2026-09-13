@@ -243,7 +243,7 @@ export default function Home() {
           />
         </View>
 
-        <PatientCurrentStatus />
+        <PatientCurrentStatus patientId={patient?.id} />
 
         <LastUpdatedCard lastUpdated={lastUpdated} />
 

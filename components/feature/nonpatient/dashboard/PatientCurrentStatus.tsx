@@ -1,16 +1,18 @@
+import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { CommandData } from "@/hooks/lib/CommandData";
 import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { useEffect, useState } from "react";
 import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
-export default function PatientCurrentStatus() {
+export default function PatientCurrentStatus(patientId: {patientId?: string;}) {
   const [latestCommand, setLatestCommand] = useState<string | null>(
     "SATISFIED",
   );
   const commandDetails = latestCommand
     ? CommandData[latestCommand as keyof typeof CommandData]
     : undefined;
+  const { user } = useAuth();
 
   useEffect(() => {
     initSocket();
@@ -26,9 +28,11 @@ export default function PatientCurrentStatus() {
     });
 
     const getLatestCommand = async () => {
-      const result = await axiosInstance.get(
-        "/api/command/v1/get-latest-command",
+      const result = await axiosInstance.post(
+        "/api/command/v1/get-latest-command", { nonPatient: user?.id, patientId: patientId }
       );
+
+      console.log("mga commands ni", JSON.stringify(result.data.data));
 
       const command = result.data.data;
       if (command.status === "Satisfied") {
@@ -42,7 +46,7 @@ export default function PatientCurrentStatus() {
     return () => {
       off?.();
     };
-  }, []);
+  }, [latestCommand]);
 
   return (
     <View style={styles.patientStatusCard}>

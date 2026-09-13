@@ -30,7 +30,6 @@ export default function PatientRemote() {
         "/api/patient-nonpatient/v1/connected-nonpatients", { userId: user.id }
       );
       const connectedNonpatients = result.data.data;
-      console.log("mga connected nga di pasyente", result);
       await patientCommand(
         "ESP32-001",
         label.toUpperCase(),
