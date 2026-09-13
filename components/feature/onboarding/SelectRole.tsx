@@ -4,13 +4,7 @@ import RadioButton from "@/components/ui/RadioButton";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 const COLOR_PATIENT = "#12A5B5";
 const COLOR_NONPATIENT = "#F16A66";
@@ -28,7 +22,7 @@ export default function SelectRole() {
 
     setData((prev) => ({
       ...prev,
-      role: selectedRole === "patient" ? "PATIENT" : "NON_PATIENT",
+      role: selectedRole === "patient" ? "PATIENT" : "NON-PATIENT",
     }));
 
     if (selectedRole === "patient") {
@@ -44,15 +38,10 @@ export default function SelectRole() {
 
       <Logo />
 
-      <Text style={styles.subtitle}>
-        Select your role to continue
-      </Text>
+      <Text style={styles.subtitle}>Select your role to continue</Text>
 
       {/* Patient Card */}
-      <Pressable
-        style={styles.card}
-        onPress={() => setSelectedRole("patient")}
-      >
+      <Pressable style={styles.card} onPress={() => setSelectedRole("patient")}>
         <Image
           source={require("@/assets/icons/disabled.png")}
           style={styles.icon}
@@ -60,9 +49,7 @@ export default function SelectRole() {
 
         <View style={styles.textContainer}>
           <Text style={styles.cardTitle}>Patient</Text>
-          <Text style={styles.cardSubtitle}>
-            Send requests using remote
-          </Text>
+          <Text style={styles.cardSubtitle}>Send requests using remote</Text>
         </View>
 
         <RadioButton
@@ -109,7 +96,9 @@ export default function SelectRole() {
             source={require("@/assets/icons/padlock.png")}
             style={styles.lockIcon}
           />
-          <Text style={styles.helperText}>Please select a role to continue</Text>
+          <Text style={styles.helperText}>
+            Please select a role to continue
+          </Text>
         </View>
       )}
     </View>
@@ -195,4 +184,3 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
   },
 });
-

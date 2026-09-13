@@ -1,26 +1,21 @@
-import { useEffect, useState } from "react";
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
 
 type DevicePairingProps = {
-  onConnect: (code: string) => void;
-  onScanQR: () => void;
+  onContinue: () => void;
 };
 
-export default function DevicePairing({ onConnect, onScanQR }: DevicePairingProps) {
-  const [pairingCode, setPairingCode] = useState("");
-
+export default function DevicePairing({
+  onContinue,
+}: DevicePairingProps) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -29,57 +24,83 @@ export default function DevicePairing({ onConnect, onScanQR }: DevicePairingProp
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={4} total={6} />
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>Device Pairing</Text>
-
-        {/* Card Container */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Enter Pairing Code</Text>
-          
-          <TextInput
-            style={styles.input}
-            placeholder=""
-            placeholderTextColor="#9CA3AF"
-            value={pairingCode}
-            onChangeText={setPairingCode}
-            keyboardType="default"
-            autoCapitalize="characters"
-          />
-
-          {/* Divider Row */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or</Text>
-            <View style={styles.dividerLine} />
+        <View>
+          <View style={styles.paginationWrap}>
+            <PaginationDots currentIndex={3} total={7} />
           </View>
 
-          {/* Scan QR Code Outline Button */}
-          <TouchableOpacity style={styles.qrButton} onPress={onScanQR} activeOpacity={0.8}>
-            <Image
-              source={require("@/assets/icons/qr-code.png")}
-              style={styles.qrIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.qrButtonText}>Scan QR Code</Text>
-          </TouchableOpacity>
+          <Text style={styles.title}>Connect to a Patient</Text>
 
-          <Text style={styles.helperText}>
-            Use the code shown on the device
-          </Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Scan the Patient's QR Code
+            </Text>
+
+            <Text style={styles.description}>
+              To connect your account to a patient, ask the patient to open
+              their CareLink QR code.
+            </Text>
+
+            <View style={styles.instructions}>
+              <View style={styles.instructionRow}>
+                <View style={styles.numberCircle}>
+                  <Text style={styles.number}>1</Text>
+                </View>
+
+                <View style={styles.instructionContent}>
+                  <Text style={styles.instructionTitle}>
+                    Ask the patient to open their QR code
+                  </Text>
+
+                  <Text style={styles.instructionText}>
+                    The patient can display their QR code from their CareLink
+                    account.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.instructionRow}>
+                <View style={styles.numberCircle}>
+                  <Text style={styles.number}>2</Text>
+                </View>
+
+                <View style={styles.instructionContent}>
+                  <Text style={styles.instructionTitle}>
+                    Keep the QR code ready
+                  </Text>
+
+                  <Text style={styles.instructionText}>
+                    Make sure the patient's QR code is visible when you are
+                    ready to connect.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.instructionRow}>
+                <View style={styles.numberCircle}>
+                  <Text style={styles.number}>3</Text>
+                </View>
+
+                <View style={styles.instructionContent}>
+                  <Text style={styles.instructionTitle}>
+                    Scan from your dashboard
+                  </Text>
+
+                  <Text style={styles.instructionText}>
+                    After completing setup, you can scan the patient's QR code
+                    from the scanner in your dashboard.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* Bottom Button */}
         <View style={styles.buttonWrap}>
           <Button
-            title="Connect Device"
-            onPress={() => onConnect(pairingCode)}
-            disabled={!pairingCode.trim()}
+            title="Continue"
+            onPress={onContinue}
             style={styles.button}
           />
         </View>
@@ -117,71 +138,60 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#FFFFFF",
     marginBottom: 40,
-    // Soft shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  label: {
-    fontSize: 16,
-    color: "#4B5563",
-    marginBottom: 12,
-  },
-  input: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#4B5563",
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    fontSize: 18,
-    fontWeight: "500",
+  cardTitle: {
+    fontSize: 19,
+    fontWeight: "600",
     color: "#1F2937",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  dividerRow: {
+  description: {
+    fontSize: 15,
+    lineHeight: 23,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 28,
+  },
+  instructions: {
+    gap: 24,
+  },
+  instructionRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
+    alignItems: "flex-start",
+    gap: 14,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#D1D5DB",
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: "#9CA3AF",
-    fontSize: 14,
-  },
-  qrButton: {
-    flexDirection: "row",
-    height: 52,
-    borderWidth: 1.5,
-    borderColor: "#12A5B5",
-    borderRadius: 18,
+  numberCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#12A5B5",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    marginBottom: 16,
   },
-  qrIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-    tintColor: "#12A5B5",
+  number: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
-  qrButtonText: {
-    fontSize: 16,
+  instructionContent: {
+    flex: 1,
+  },
+  instructionTitle: {
+    fontSize: 15,
     fontWeight: "600",
-    color: "#12A5B5",
+    color: "#1F2937",
+    marginBottom: 4,
   },
-  helperText: {
-    textAlign: "center",
-    color: "#9CA3AF",
-    fontSize: 13,
+  instructionText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#6B7280",
   },
   buttonWrap: {
     marginBottom: 40,

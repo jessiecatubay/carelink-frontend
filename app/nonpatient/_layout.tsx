@@ -15,7 +15,7 @@ export default function NonPatientLayout() {
         return;
       }
 
-      if(user?.role === "USER" && user?.onBoarded === false) {
+      if (user?.role === "USER" && user?.onBoarded === false) {
         router.replace("/(auth)/user-onboarding");
         return;
       }

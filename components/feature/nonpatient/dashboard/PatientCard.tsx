@@ -16,10 +16,6 @@ export default function PatientCard({
   return (
     <View style={styles.patientCard}>
       <View style={styles.patientCardLeft}>
-        <Image
-          source={avatar}
-          style={styles.avatar}
-        />
         <View style={styles.patientInfo}>
           <Text style={styles.patientName}>Patient: {name}</Text>
           <View style={styles.statusRow}>

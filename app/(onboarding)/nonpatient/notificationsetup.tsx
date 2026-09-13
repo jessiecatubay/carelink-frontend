@@ -17,7 +17,7 @@ export default function NotificationSetupScreen() {
             <View style={styles.container}>
                 {/* Progress */}
                 <View style={styles.paginationWrap}>
-                    <PaginationDots currentIndex={6} total={8} />
+                    <PaginationDots currentIndex={5} total={7} />
                 </View>
 
                 {/* Centered Content */}

@@ -20,7 +20,7 @@ export default function TermsPage() {
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={1} total={8} />
+          <PaginationDots currentIndex={1} total={7} />
         </View>
 
         {/* Centered Content */}

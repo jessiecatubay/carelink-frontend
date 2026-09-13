@@ -43,7 +43,7 @@ export default function Screen3() {
       <View style={styles.container}>
         {/* Progress */}
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={2} total={8} />
+          <PaginationDots currentIndex={2} total={7} />
         </View>
 
         {/* Centered Content */}

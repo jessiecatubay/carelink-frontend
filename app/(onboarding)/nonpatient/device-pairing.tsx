@@ -6,19 +6,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function NonpatientDevicePairingScreen() {
   const router = useRouter();
 
-  const handleConnect = (code: string) => {
-    console.log("Connecting to patient with code:", code);
+  const handleContinue = () => {
     router.push("/(onboarding)/nonpatient/emergencycontact");
-  };
-
-  const handleScanQR = () => {
-    console.log("Opening QR scanner...");
-    handleConnect("MOCK-QR-CODE-123");
   };
 
   return (
     <SafeAreaView style={styles.screen}>
-      <DevicePairing onConnect={handleConnect} onScanQR={handleScanQR} />
+      <DevicePairing onContinue={handleContinue} />
     </SafeAreaView>
   );
 }

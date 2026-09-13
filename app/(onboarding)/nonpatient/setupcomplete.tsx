@@ -16,7 +16,7 @@ export default function SetupCompleteScreen() {
     try {
       const payload = {
         ...data,
-        userId: user?.id
+        userId: user?.id,
       };
 
       const response = await userOnboarding(payload);
@@ -54,7 +54,7 @@ export default function SetupCompleteScreen() {
       <View style={styles.container}>
         {/* Progress */}
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={7} total={8} />
+          <PaginationDots currentIndex={7} total={7} />
         </View>
 
         {/* Centered Content */}
