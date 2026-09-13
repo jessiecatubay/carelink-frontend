@@ -57,17 +57,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeText: {
-    fontSize: 54,
+    fontSize: 70,
     color: "#14A3A5",
     fontFamily: "Italianno-Regular",
     textAlign: "center",
-    marginBottom: -10, // Pulls the logo closer to "Welcome to" like the mockup
+    marginBottom: -50,
   },
   subtitle: {
     textAlign: "center",
     color: "#6B7280",
     fontSize: 16,
-    marginTop: 24,
+    marginTop: 20,
     lineHeight: 24,
   },
   buttonWrap: {

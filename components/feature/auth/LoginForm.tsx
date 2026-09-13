@@ -2,7 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { loginSchema, type LoginFormValues } from "@/schema/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
@@ -43,7 +43,6 @@ export default function LoginForm() {
       }, {});
 
       setErrors(fieldErrors);
-
       return;
     }
 
@@ -64,33 +63,26 @@ export default function LoginForm() {
     <>
       <Input
         placeholder="Email"
+        keyboardType="email-address"
         value={email}
         onChangeText={(text) => {
           setEmail(text);
-
           if (errors.email) {
-            setErrors((prev) => ({
-              ...prev,
-              email: undefined,
-            }));
+            setErrors((prev) => ({ ...prev, email: undefined }));
           }
         }}
-        keyboardType="email-address"
         error={errors.email}
       />
 
       <View style={styles.spacing} />
 
       <PasswordInput
+        placeholder="Password"
         value={password}
         onChangeText={(text) => {
           setPassword(text);
-
           if (errors.password) {
-            setErrors((prev) => ({
-              ...prev,
-              password: undefined,
-            }));
+            setErrors((prev) => ({ ...prev, password: undefined }));
           }
         }}
         error={errors.password}
@@ -108,7 +100,7 @@ export default function LoginForm() {
           <Text style={styles.checkboxText}>Remember me</Text>
         </Pressable>
 
-        <Pressable>
+        <Pressable onPress={() => router.push("/(auth)/forgot-password" as any)}>
           <Text style={styles.linkText}>Forgot Password?</Text>
         </Pressable>
       </View>
@@ -119,7 +111,18 @@ export default function LoginForm() {
 
       <Divider text="Or" />
 
-      <Button title="Sign In with Google" />
+      <Button
+        title="Sign In with Google"
+        icon={
+          <Image
+            source={require("@/assets/icons/google.png")}
+            style={styles.googleIcon}
+            resizeMode="contain"
+          />
+        }
+        style={styles.googleButton}
+        textStyle={styles.googleButtonText}
+      />
 
       <Pressable onPress={() => router.push("/register")}>
         <Text style={styles.footerText}>
@@ -171,6 +174,28 @@ const styles = StyleSheet.create({
     color: "#F16A66",
     fontWeight: "600",
     fontSize: 14,
+  },
+
+  googleButton: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+
+  googleIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 10,
+  },
+
+  googleButtonText: {
+    color: "#374151",
+    fontWeight: "600",
   },
 
   footerText: {

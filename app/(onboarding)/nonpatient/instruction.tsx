@@ -29,7 +29,7 @@ export default function Screen3() {
 
   const secondRow = [
     {
-      icon: require("@/assets/icons/emergency.png"),
+      icon: require("@/assets/icons/red-emergency.png"),
       label: "Emergency",
     },
     {
@@ -46,13 +46,11 @@ export default function Screen3() {
           <PaginationDots currentIndex={2} total={7} />
         </View>
 
+        {/* Title */}
+        <Text style={styles.title}>How CareLink Works</Text>
+
         {/* Centered Content */}
         <View style={styles.content}>
-          {/* Title */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.titleText}>How CareLink Works</Text>
-          </View>
-
           {/* Illustration */}
           <Image
             source={require("@/assets/images/instructionlogo.png")}
@@ -134,20 +132,14 @@ const styles = StyleSheet.create({
   paginationWrap: {
     marginTop: 100,
     alignItems: "center",
-    marginBottom: 1,
+    marginBottom: 40,
   },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 24,
-    marginBottom: 20,
-  },
-  titleText: {
+  title: {
     fontSize: 26,
     fontWeight: "600",
     color: "#12A5B5",
     textAlign: "center",
+    marginBottom: 24,
   },
   hero: {
     width: "100%",

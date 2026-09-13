@@ -1,9 +1,4 @@
-import Button from "@/components/ui/Button";
-import PaginationDots from "@/components/ui/PaginationDots";
-import {
-  patientOnboardingSchema,
-  type PatientOnboardingInput,
-} from "@/schema/api";
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -14,6 +9,13 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import Button from "@/components/ui/Button";
+import PaginationDots from "@/components/ui/PaginationDots";
+import {
+  patientOnboardingSchema,
+  type PatientOnboardingInput,
+} from "@/schema/api";
 
 type PatientProfileProps = {
   onContinue: (profileData: {
@@ -76,7 +78,12 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
       return;
     }
 
-    onContinue(result.data);
+    onContinue({
+      age: Number(result.data.age),
+      gender: result.data.gender,
+      medicalConditions: result.data.medicalConditions,
+      notes: result.data.notes,
+    });
   };
 
   const renderError = (field: FieldName) =>
@@ -94,68 +101,84 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={3} total={6} />
-        </View>
+        <View>
+          <View style={styles.paginationWrap}>
+            <PaginationDots currentIndex={3} total={6} />
+          </View>
 
-        {/* Title */}
-        <Text style={styles.title}>Patient Profile</Text>
+          {/* Title */}
+          <Text style={styles.title}>Patient Profile</Text>
 
-        {/* Form Card */}
-        <View style={styles.card}>
-          <TextInput
-            style={[
-              styles.input,
-              touched.age && errors.age ? styles.inputError : null,
-            ]}
-            placeholder="Age"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="numeric"
-            value={form.age}
-            onChangeText={(value) => updateField("age", value)}
-          />
-          {renderError("age")}
+          {/* Form Card */}
+          <View style={styles.card}>
+            <TextInput
+              style={[
+                styles.input,
+                touched.age && errors.age ? styles.inputError : null,
+              ]}
+              placeholder="Age"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+              value={form.age}
+              onChangeText={(value) => updateField("age", value)}
+            />
+            {renderError("age")}
 
-          <TextInput
-            style={[
-              styles.input,
-              touched.gender && errors.gender ? styles.inputError : null,
-            ]}
-            placeholder="Gender"
-            placeholderTextColor="#9CA3AF"
-            value={form.gender}
-            onChangeText={(value) => updateField("gender", value)}
-          />
-          {renderError("gender")}
+            <TextInput
+              style={[
+                styles.input,
+                touched.gender && errors.gender ? styles.inputError : null,
+              ]}
+              placeholder="Gender"
+              placeholderTextColor="#9CA3AF"
+              value={form.gender}
+              onChangeText={(value) => updateField("gender", value)}
+            />
+            {renderError("gender")}
 
-          <TextInput
-            style={[
-              styles.input,
-              touched.medicalConditions && errors.medicalConditions
-                ? styles.inputError
-                : null,
-            ]}
-            placeholder="Illness / Medical Conditions"
-            placeholderTextColor="#9CA3AF"
-            value={form.medicalConditions}
-            onChangeText={(value) => updateField("medicalConditions", value)}
-          />
-          {renderError("medicalConditions")}
+            <TextInput
+              style={[
+                styles.input,
+                touched.medicalConditions && errors.medicalConditions
+                  ? styles.inputError
+                  : null,
+              ]}
+              placeholder="Illness / Medical Conditions"
+              placeholderTextColor="#9CA3AF"
+              value={form.medicalConditions}
+              onChangeText={(value) => updateField("medicalConditions", value)}
+            />
+            {renderError("medicalConditions")}
 
-          <TextInput
-            style={[
-              styles.input,
-              styles.textArea,
-              touched.notes && errors.notes ? styles.inputError : null,
-            ]}
-            placeholder="Notes / Optional"
-            placeholderTextColor="#9CA3AF"
-            multiline
-            numberOfLines={4}
-            value={form.notes}
-            onChangeText={(value) => updateField("notes", value)}
-          />
-          {renderError("notes")}
+            <TextInput
+              style={[
+                styles.input,
+                styles.textArea,
+                touched.notes && errors.notes ? styles.inputError : null,
+              ]}
+              placeholder="Notes / Optional"
+              placeholderTextColor="#9CA3AF"
+              multiline
+              numberOfLines={4}
+              value={form.notes}
+              onChangeText={(value) => updateField("notes", value)}
+            />
+            {renderError("notes")}
+          </View>
+
+          {/* Note */}
+          <View style={styles.noteBox}>
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color="#12A5B5"
+              style={styles.noteIcon}
+            />
+            <Text style={styles.noteText}>
+              <Text style={styles.noteBold}>Note: </Text>
+              This profile is used by CareLink's AI to provide personalized care recommendations, monitor health context, and assist in daily care.
+            </Text>
+          </View>
         </View>
 
         <View style={styles.buttonWrap}>
@@ -198,7 +221,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
     backgroundColor: "#FFFFFF",
-    marginBottom: 40,
+    marginBottom: 16,
     // Soft shadow for premium look
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -232,6 +255,31 @@ const styles = StyleSheet.create({
     marginTop: -10,
     marginBottom: 12,
     paddingHorizontal: 4,
+  },
+  noteBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#F0FAFA",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#C5ECEE",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 24,
+    gap: 10,
+  },
+  noteIcon: {
+    marginTop: 1,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#4B5563",
+    lineHeight: 18,
+  },
+  noteBold: {
+    fontWeight: "700",
+    color: "#12A5B5",
   },
   buttonWrap: {
     marginBottom: 40,

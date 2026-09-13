@@ -7,6 +7,7 @@ type RemoteButtonProps = {
   onPress: () => void;
   cardStyle?: ViewStyle;
   isEmergency?: boolean;
+  disabled?: boolean;
 };
 
 export default function RemoteButton({
@@ -15,8 +16,10 @@ export default function RemoteButton({
   onPress,
   cardStyle,
   isEmergency = false,
+  disabled = false,
 }: RemoteButtonProps) {
   const handlePress = () => {
+    if (disabled) return;
     // Premium haptic feedback to mimic a physical remote button click
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
@@ -28,9 +31,11 @@ export default function RemoteButton({
         styles.card,
         cardStyle,
         isEmergency ? styles.emergencyCard : styles.defaultCard,
+        disabled && styles.disabledCard,
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
+      disabled={disabled}
     >
       <Image
         source={icon}
@@ -58,6 +63,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
+  },
+  disabledCard: {
+    opacity: 0.35,
   },
   defaultCard: {
     backgroundColor: "#F7F7F7",

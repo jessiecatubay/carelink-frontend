@@ -19,14 +19,16 @@ export default function TermsPage() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
+        {/* Progress */}
         <View style={styles.paginationWrap}>
           <PaginationDots currentIndex={1} total={7} />
         </View>
 
-        {/* Centered Content */}
-        <View style={styles.content}>
-          <Text style={styles.title}>Terms and Conditions</Text>
+        {/* Title */}
+        <Text style={styles.title}>Terms and Conditions</Text>
 
+        {/* Content */}
+        <View style={styles.content}>
           <View style={styles.card}>
             <ScrollView showsVerticalScrollIndicator>
               <Text style={styles.heading}>CareLink Terms and Conditions</Text>
@@ -78,14 +80,12 @@ export default function TermsPage() {
           </View>
         </View>
 
-        <View style={styles.buttonWrap}>
-          <Button
-            title="Continue"
-            onPress={handleContinue}
-            disabled={!checked}
-            style={styles.button}
-          />
-        </View>
+        <Button
+          title="Continue"
+          onPress={handleContinue}
+          disabled={!checked}
+          style={styles.button}
+        />
       </View>
     </SafeAreaView>
   );
@@ -101,30 +101,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-  },
   paginationWrap: {
     marginTop: 100,
     alignItems: "center",
     marginBottom: 40,
   },
   title: {
-    marginBottom: 20,
-    textAlign: "center",
     fontSize: 26,
     fontWeight: "600",
     color: "#12A5B5",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  content: {
+    flex: 1,
+    marginBottom: 16,
   },
   card: {
-    height: 350,
+    flex: 1,
     borderWidth: 1,
     borderColor: "#D1D1D6",
     borderRadius: 16,
     padding: 16,
     backgroundColor: "#FFF",
-    marginBottom: 20,
+    marginBottom: 16,
     // Subtle shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -153,16 +153,12 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
     paddingHorizontal: 4,
   },
   checkboxText: {
     marginLeft: 10,
     color: "#6B7280",
     fontSize: 14,
-  },
-  buttonWrap: {
-    marginBottom: 10,
   },
   button: {
     width: "100%",

@@ -34,3 +34,11 @@ export const userOnboarding = async (data: UserOnBoardingData) => {
 export const getMe = async () => {
   return axiosInstance.get("/api/user/v1/me");
 };
+
+export const forgotPassword = async (email: string) => {
+  return axiosInstance.post("/api/user/v1/forgot-password", { email });
+};
+
+export const resetPassword = async (password: string, token?: string) => {
+  return axiosInstance.post("/api/user/v1/reset-password", { password, token });
+};

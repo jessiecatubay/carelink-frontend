@@ -52,13 +52,12 @@ export default function SetupCompleteScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Progress */}
-        <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={7} total={7} />
-        </View>
+        <View>
+          {/* Progress */}
+          <View style={styles.paginationWrap}>
+            <PaginationDots currentIndex={6} total={7} />
+          </View>
 
-        {/* Centered Content */}
-        <View style={styles.content}>
           {/* Header Title */}
           <Text style={styles.title}>Setup Complete</Text>
 
@@ -82,11 +81,13 @@ export default function SetupCompleteScreen() {
         </View>
 
         {/* Action Button */}
-        <Button
-          title="Go to Dashboard"
-          onPress={handlePress}
-          style={styles.button}
-        />
+        <View style={styles.buttonWrap}>
+          <Button
+            title="Go to Dashboard"
+            onPress={handlePress}
+            style={styles.button}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -99,22 +100,17 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 28,
-    paddingBottom: 30,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 24,
+    justifyContent: "space-between",
   },
   paginationWrap: {
     marginTop: 100,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 40,
   },
   title: {
     fontSize: 26,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#12A5B5",
     textAlign: "center",
     marginBottom: 10,
@@ -124,15 +120,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#7A7A7A",
     lineHeight: 22,
-    marginBottom: 40,
+    marginBottom: 32,
   },
   checkCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     backgroundColor: "#F16A66",
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "center",
     marginBottom: 32,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -141,14 +138,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   checkIcon: {
-    width: 64,
-    height: 64,
+    width: 96,
+    height: 96,
     tintColor: "#FFFFFF",
   },
   congratsTitle: {
     fontSize: 26,
-    fontWeight: "600",
-    color: "#12A5B5",
+    fontWeight: "700",
+    color: "#F16A66",
     textAlign: "center",
     marginBottom: 12,
   },
@@ -157,6 +154,9 @@ const styles = StyleSheet.create({
     color: "#7A7A7A",
     textAlign: "center",
     lineHeight: 22,
+  },
+  buttonWrap: {
+    marginBottom: 40,
   },
   button: {
     width: "100%",

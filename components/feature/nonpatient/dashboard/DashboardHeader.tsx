@@ -1,7 +1,6 @@
-import { Image, StyleSheet, View } from "react-native";
-import { Pressable, Text } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import ScanIcon from "@/components/common/ScanIcon";
 
 export default function DashboardHeader() {
   return (
@@ -12,13 +11,12 @@ export default function DashboardHeader() {
         resizeMode="contain"
       />
       <Pressable
-            onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
-            style={{
-              marginRight: 15,
-            }}
-          >
-            <Ionicons name="qr-code-outline" size={25} color="#000" />
-          </Pressable>
+        onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
+        style={styles.scanButton}
+        hitSlop={8}
+      >
+        <ScanIcon size={24} color="#12A5B5" />
+      </Pressable>
     </View>
   );
 }
@@ -28,7 +26,7 @@ const styles = StyleSheet.create({
     height: 68,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
@@ -36,7 +34,17 @@ const styles = StyleSheet.create({
   },
   logo: {
     height: 58,
-    width: 220,
-    marginLeft: -25,
+    width: 200,
+    marginLeft: -20,
+  },
+  scanButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#F0FCFD",
+    borderWidth: 1,
+    borderColor: "#D4F4F6",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
