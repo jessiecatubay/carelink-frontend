@@ -2,15 +2,17 @@ import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, onPatientVitals } from "@/hooks/lib/socket";
 import { vitalResponseSchema } from "@/schema/api";
-import { Vital } from "@/types/user";
+import { User, Vital } from "@/types/user";
 import { useEffect, useState } from "react";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
 import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
 import LastUpdatedCard from "@/components/feature/nonpatient/dashboard/LastUpdatedCard";
+import PatientCard from "@/components/feature/nonpatient/dashboard/PatientCard";
 import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/PatientCurrentStatus";
 import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
 import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
@@ -20,11 +22,14 @@ const MAX_HISTORY = 8;
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuth();
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
+  const [patient, setPatient] = useState<User>();
+  const [connected, setConnected] = useState<string>("DISCONNECTED");
 
   useEffect(() => {
     const getPatientVitalsHistory = async () => {
@@ -144,6 +149,28 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!user?.id) return;
+
+    const getUserById = async () => {
+      try {
+        const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+          id: user.id,
+        });
+        const connection = result.data.data.nonPatientConnections[0];
+
+        if (!connection) return;
+
+        setPatient(connection.patient);
+        setConnected(connection.status);
+      } catch (error) {
+        console.error("Failed to get patient:", error);
+      }
+    };
+
+    getUserById();
+  }, [user?.id]);
+
+  useEffect(() => {
     const socket = initSocket();
 
     if (!socket) {
@@ -170,6 +197,10 @@ export default function Home() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
+        <PatientCard
+          name={`${patient?.firstName ?? ""} ${patient?.lastName ?? ""}`.trim()}
+          status={connected}
+        />
         <CurrentVitals />
 
         <View style={styles.vitalsGrid}>

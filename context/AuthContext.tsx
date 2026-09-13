@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     closeSocket();
     initSocket();
 
-    console.log(apiUser);
+    console.log("currently logged in", apiUser);
 
     if (apiUser.onBoarded === false && apiUser.role === "USER") {
       router.replace("/user-onboarding");
@@ -98,7 +98,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    router.replace("/patient/dashboard/(tabs)");
+    if (apiUser.role === "PATIENT") {
+      router.replace("/patient/dashboard/(tabs)");
+    }
+
+    router.replace("/(auth)/register");
+    return
   };
 
   const updateUser = async (updatedUser: AuthUser) => {
