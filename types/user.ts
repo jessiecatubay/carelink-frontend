@@ -5,6 +5,7 @@ export interface AuthUser {
   onBoarded?: boolean;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
 }
 
 export interface UserOnBoardingData {

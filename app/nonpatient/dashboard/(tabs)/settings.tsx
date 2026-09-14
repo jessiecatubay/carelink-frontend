@@ -127,6 +127,7 @@ export default function SettingsScreen() {
             icon="person"
             title="Profile"
             subtitle={`${fullName}\n${email}\n+639 636 938 171`}
+            onPress={() => router.push("/nonpatient/dashboard/profile")}
           />
           <SettingRow
             icon="lock-closed"
