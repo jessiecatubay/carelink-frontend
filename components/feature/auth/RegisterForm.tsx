@@ -18,11 +18,15 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
+
   const [errors, setErrors] = useState<
     Partial<Record<keyof RegisterFormValues, string>>
   >({});
 
   const handleRegister = async () => {
+    setGeneralError(null);
     const parsed = registerSchema.safeParse({
       firstName,
       lastName,
@@ -61,6 +65,7 @@ export default function RegisterForm() {
     }
 
     setErrors({});
+    setLoading(true);
 
     try {
       await register(firstName, lastName, email, password);
@@ -71,13 +76,28 @@ export default function RegisterForm() {
       }));
 
       router.replace("/login");
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      const serverMessage =
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors)
+          ? error.response.data.errors.map((e: any) => e.message).join(", ")
+          : null) ||
+        "Registration failed. Please check the provided information.";
+      setGeneralError(serverMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
+      {generalError ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{generalError}</Text>
+        </View>
+      ) : null}
+
       <Input
         placeholder="First Name"
         value={firstName}
@@ -89,6 +109,9 @@ export default function RegisterForm() {
               ...prev,
               firstName: undefined,
             }));
+          }
+          if (generalError) {
+            setGeneralError(null);
           }
         }}
         error={errors.firstName}
@@ -170,7 +193,7 @@ export default function RegisterForm() {
 
       <View style={styles.space} />
 
-      <Button title="Register" onPress={handleRegister} />
+      <Button title="Register" loading={loading} onPress={handleRegister} />
 
       <Pressable onPress={() => router.push("/login")}>
         <Text style={styles.footer}>
@@ -197,5 +220,20 @@ const styles = StyleSheet.create({
   link: {
     color: "#F16A66",
     fontWeight: "600",
+  },
+
+  errorBanner: {
+    backgroundColor: "#FEE2E2",
+    borderColor: "#FCA5A5",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    color: "#DC2626",
+    fontSize: 14,
+    fontFamily: "Inter-Medium",
+    textAlign: "center",
   },
 });

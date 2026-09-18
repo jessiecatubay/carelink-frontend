@@ -22,35 +22,38 @@ export default function ProfileScreen() {
 
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    "Zayn Malik";
-  const email = user?.email || "zaynmalik@gmail.com";
-  const phoneNumber = user?.phoneNumber || "+63 936 936 938 171";
+    (user?.role === "PATIENT" ? "Patient Resident" : "Caregiver / Family");
+  const email = user?.email || "user@carelink.com";
+  const phoneNumber = user?.phoneNumber || "+63 900 000 0000";
   const roleTitle =
     user?.role === "NON_PATIENT"
       ? "Family / Caregiver"
       : user?.role === "PATIENT"
         ? "Patient"
-        : "Family / Caregiver";
+        : "User";
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/nonpatient/dashboard/(tabs)/settings");
+      if (user?.role === "PATIENT") {
+        router.replace("/(protected)/(patient)/settings");
+      } else {
+        router.replace("/(protected)/(non-patient)/settings");
+      }
     }
   };
 
   const handleEditProfile = () => {
     Alert.alert(
       "Edit Profile",
-      "Edit profile functionality will be available in the next update.",
+      "Edit profile functionality will be available in the upcoming update.",
       [{ text: "OK" }],
     );
   };
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
-      {/* Decorative subtle curved background element */}
       <View style={styles.backgroundAccent} pointerEvents="none" />
 
       {/* Header */}
@@ -81,9 +84,9 @@ export default function ProfileScreen() {
           fullName={fullName}
           email={email}
           phoneNumber={phoneNumber}
-          onFullNamePress={() => router.push("/nonpatient/dashboard/edit-name")}
-          onEmailPress={() => router.push("/nonpatient/dashboard/edit-email")}
-          onPhonePress={() => router.push("/nonpatient/dashboard/edit-phone")}
+          onFullNamePress={() => {}}
+          onEmailPress={() => {}}
+          onPhonePress={() => {}}
         />
 
         <RoleInformation
@@ -91,7 +94,7 @@ export default function ProfileScreen() {
           onPress={() =>
             Alert.alert(
               "Account Type",
-              `Your account role is ${roleTitle}.`,
+              `Your account role is currently configured as ${roleTitle}.`,
             )
           }
         />

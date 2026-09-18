@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { loginSchema, type LoginFormValues } from "@/schema/auth";
 import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import ForgotPasswordLink from "./ForgotPasswordLink";
 import GoogleSignInButton from "./GoogleSignInButton";
 import LoginFooter from "./LoginFooter";
@@ -24,8 +24,10 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof LoginFormValues, string>>
   >({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    setGeneralError(null);
     const parsed = loginSchema.safeParse({
       email,
       password,
@@ -55,8 +57,15 @@ export default function LoginForm() {
         ...prev,
         email,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      const serverMessage =
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors)
+          ? error.response.data.errors.map((e: any) => e.message).join(", ")
+          : null) ||
+        "Invalid email or password. Please check your credentials.";
+      setGeneralError(serverMessage);
     } finally {
       setLoading(false);
     }
@@ -64,6 +73,12 @@ export default function LoginForm() {
 
   return (
     <>
+      {generalError ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{generalError}</Text>
+        </View>
+      ) : null}
+
       <Input
         placeholder="Email"
         keyboardType="email-address"
@@ -72,6 +87,9 @@ export default function LoginForm() {
           setEmail(text);
           if (errors.email) {
             setErrors((prev) => ({ ...prev, email: undefined }));
+          }
+          if (generalError) {
+            setGeneralError(null);
           }
         }}
         error={errors.email}
@@ -86,6 +104,9 @@ export default function LoginForm() {
           setPassword(text);
           if (errors.password) {
             setErrors((prev) => ({ ...prev, password: undefined }));
+          }
+          if (generalError) {
+            setGeneralError(null);
           }
         }}
         error={errors.password}
@@ -122,5 +143,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
     marginBottom: 16,
+  },
+  errorBanner: {
+    backgroundColor: "#FEE2E2",
+    borderColor: "#FCA5A5",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    color: "#DC2626",
+    fontSize: 14,
+    fontFamily: "Inter-Medium",
+    textAlign: "center",
   },
 });

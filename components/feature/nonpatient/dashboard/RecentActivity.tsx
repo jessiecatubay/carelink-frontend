@@ -91,22 +91,26 @@ export default function RecentActivity({
     );
 
     const getAllCommandData = async () => {
-      if (!patientId) return;
+      if (!patientId || !user?.id) return;
 
-      const result = await axiosInstance.post(
-        "/api/command/v1/get-recent-commands",
-        { nonPatientId: user?.id, patientId: patientId },
-      );
-      console.log("karun rani", user?.id, patientId);
-      console.log("Remote Data", result.data.data);
+      try {
+        const result = await axiosInstance.post(
+          "/api/command/v1/get-recent-commands",
+          { nonPatientId: user.id, patientId: patientId },
+        );
+        console.log("karun rani", user.id, patientId);
+        console.log("Remote Data", result.data?.data);
 
-      const commands = result.data.data as RemoteCommand[];
-      setNotifications(
-        commands
-          .map(mapRemoteCommand)
-          .filter((notification) => notification !== null)
-          .slice(0, MAX_RECENT_ACTIVITIES),
-      );
+        const commands = (result.data?.data || []) as RemoteCommand[];
+        setNotifications(
+          commands
+            .map(mapRemoteCommand)
+            .filter((notification) => notification !== null)
+            .slice(0, MAX_RECENT_ACTIVITIES),
+        );
+      } catch (error) {
+        console.error("Failed to get recent commands:", error);
+      }
     };
 
     getAllCommandData();
