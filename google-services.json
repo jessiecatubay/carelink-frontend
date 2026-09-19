@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "633909210249",
+    "project_id": "carelink-a0dd0",
+    "storage_bucket": "carelink-a0dd0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633909210249:android:783740f2abc1e4aedfaa58",
+        "android_client_info": {
+          "package_name": "com.cracklings.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMWGtEQPEu3HtE0vzWwC8wp8eN8csjj68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

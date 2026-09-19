@@ -1,5 +1,5 @@
 import Logo from "@/components/common/Logo";
-import LoginForm from "@/components/feature/auth/LoginForm";
+import LoginForm from "@/components/feature/auth/login/LoginForm";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
