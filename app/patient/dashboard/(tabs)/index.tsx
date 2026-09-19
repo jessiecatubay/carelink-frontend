@@ -1,29 +1,44 @@
 import PatientRemote from "@/components/feature/patient/dashboard/PatientRemote";
-import LogoutButton from "@/components/ui/LogoutButton";
-import { Image, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PatientDashboardHome() {
+  const router = useRouter();
+
+  const handleOpenSettings = () => {
+    router.push("/patient/dashboard/settings");
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Header with Centered Large Logo and Settings Icon on Upper Right */}
         <View style={styles.header}>
           <Image
             source={require("@/assets/images/logo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            hitSlop={12}
+            onPress={handleOpenSettings}
+            style={styles.settingsButton}
+          >
+            <Image
+              source={require("@/assets/icons/settings.png")}
+              style={styles.settingsIcon}
+              resizeMode="contain"
+            />
+          </Pressable>
         </View>
 
         {/* Interactive Remote Control */}
         <View style={styles.content}>
           <PatientRemote />
-        </View>
-
-        {/* Bottom Sign Out */}
-        <View style={styles.footer}>
-          <LogoutButton />
         </View>
       </View>
     </SafeAreaView>
@@ -37,16 +52,39 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingVertical: 20,
+    paddingVertical: 10,
     justifyContent: "space-between",
   },
   header: {
     alignItems: "center",
-    paddingTop: 10,
-    marginBottom: 20,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+    minHeight: 85,
+    position: "relative",
+  },
+  settingsButton: {
+    position: "absolute",
+    right: 20,
+    top: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F0FDFA",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    zIndex: 10,
+  },
+  settingsIcon: {
+    width: 24,
+    height: 24,
+    tintColor: "#0AA7A8",
   },
   logo: {
-    width: 500,
+    width: 280,
     height: 80,
   },
   content: {
@@ -54,9 +92,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-  },
-  footer: {
-    marginBottom: 20,
-    paddingHorizontal: 8,
+    paddingBottom: 20,
   },
 });

@@ -42,3 +42,13 @@ export const forgotPassword = async (email: string) => {
 export const resetPassword = async (password: string, token?: string) => {
   return axiosInstance.post("/api/user/v1/reset-password", { password, token });
 };
+
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string,
+) => {
+  return axiosInstance.post("/api/user/v1/change-password", {
+    currentPassword,
+    newPassword,
+  });
+};

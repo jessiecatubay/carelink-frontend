@@ -32,18 +32,24 @@ export default function PatientCurrentStatus(patientId: {
     });
 
     const getLatestCommand = async () => {
-      const result = await axiosInstance.post(
-        "/api/command/v1/get-latest-command",
-        { nonPatient: user?.id, patientId: patientId.patientId },
-      );
+      if (!patientId.patientId || !user?.id) return;
 
-      console.log("mga commands ni", JSON.stringify(result.data.data));
+      try {
+        const result = await axiosInstance.post(
+          "/api/command/v1/get-latest-command",
+          { nonPatientId: user.id, patientId: patientId.patientId },
+        );
 
-      const command = result.data.data;
-      if (command.status === "Satisfied") {
-        setLatestCommand("SATISFIED");
-      } else {
-        setLatestCommand(result.data.data.command);
+        console.log("mga commands ni", JSON.stringify(result.data.data));
+
+        const command = result.data.data;
+        if (!command || command.status === "Satisfied") {
+          setLatestCommand("SATISFIED");
+        } else {
+          setLatestCommand(command.command);
+        }
+      } catch (error) {
+        console.error("Failed to get latest command:", error);
       }
     };
     getLatestCommand();

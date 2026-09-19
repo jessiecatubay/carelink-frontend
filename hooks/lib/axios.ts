@@ -79,7 +79,9 @@ axiosInstance.interceptors.response.use(
 
     // Only refresh on 401
     if (status !== 401) {
-      if (!status || status >= 500) {
+      if (error.response) {
+        console.warn(`[API ${status} Error] ${originalRequest.method?.toUpperCase()} ${originalRequest.url}:`, error.response.data);
+      } else if (!status || status >= 500) {
         console.error("[API System Error]", {
           method: originalRequest.method?.toUpperCase(),
           url: originalRequest.url,
