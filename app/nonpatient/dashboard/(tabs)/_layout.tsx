@@ -1,8 +1,21 @@
+import { registerForPushNotificationsAsync } from "@/hooks/lib/notifications";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useEffect } from "react";
 import { Platform } from "react-native";
 
 export default function TabLayout() {
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        if (token) {
+          console.log("Non-patient push token:", token);
+        }
+      })
+      .catch((error) => {
+        console.error("Push notification registration error:", error);
+      });
+  }, []);
   return (
     <Tabs
       screenOptions={{

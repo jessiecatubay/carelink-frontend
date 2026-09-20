@@ -14,6 +14,16 @@ import { AuthProvider } from "@/context/AuthContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
 import { initSocket } from "@/hooks/lib/socket";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 SplashScreen.preventAutoHideAsync();
 
