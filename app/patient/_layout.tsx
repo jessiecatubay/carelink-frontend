@@ -1,11 +1,9 @@
 import { Slot, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useAuth } from "@/context/AuthContext";
 
 export default function PatientLayout() {
-  usePushNotifications();
   const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
 
