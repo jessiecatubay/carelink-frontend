@@ -21,7 +21,7 @@ export default function EditPhoneScreen() {
   const { user, updateUser } = useAuth();
 
   const [phoneNumber, setPhoneNumber] = useState(
-    user?.phoneNumber || "+63 936 936 938 171",
+    user?.emergencyContact || "+63 936 936 938 171",
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -54,7 +54,7 @@ export default function EditPhoneScreen() {
       if (user) {
         await updateUser({
           ...user,
-          phoneNumber: trimmedPhone,
+          emergencyContact: trimmedPhone,
         });
       }
 

@@ -41,7 +41,8 @@ export default function ChangePasswordScreen() {
     setServerError(null);
 
     try {
-      await changePassword(values.currentPassword, values.newPassword);
+      if(!user?.id) return;
+      await changePassword(user?.id, values.currentPassword, values.newPassword);
       setIsSuccess(true);
     } catch (error: any) {
       console.error("Change password error:", error);
