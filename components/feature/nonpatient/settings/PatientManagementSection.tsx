@@ -17,7 +17,7 @@ export default function PatientManagementSection() {
       <SettingsItem
         icon="qr-code-outline"
         title="Device Pairing"
-        subtitle="Show QR code, generate new code, or scan"
+        subtitle="Scan or Input QR code"
         onPress={() => router.push("/(protected)/device-pairing")}
       />
     </SettingsSection>
