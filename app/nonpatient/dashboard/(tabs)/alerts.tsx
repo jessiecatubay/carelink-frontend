@@ -205,8 +205,22 @@ export default function AlertsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Alerts</Text>
-        <Text style={styles.count}>{totalItems} alerts</Text>
+        <View>
+          <Text style={styles.title}>Alerts</Text>
+          <Text style={styles.count}>{totalItems} alerts</Text>
+        </View>
+
+        <Pressable
+          accessibilityLabel="Refresh alerts"
+          disabled={loading}
+          onPress={() => loadPage(page)}
+        >
+          <Ionicons
+            name="refresh-outline"
+            size={23}
+            color={loading ? "#C7D0D5" : "#079BA8"}
+          />
+        </Pressable>
       </View>
       <ScrollView contentContainerStyle={styles.list}>
         <View style={styles.filterRow}>

@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           setUser(persistedAuth.user);
+          console.log("Nonpatient user", persistedAuth.user);
 
           initSocket();
         } catch (e: any) {

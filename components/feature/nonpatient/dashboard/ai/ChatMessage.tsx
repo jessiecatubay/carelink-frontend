@@ -11,9 +11,10 @@ export type Message = {
 
 type ChatMessageProps = {
   message: Message;
+  isCopyable: boolean
 };
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message, isCopyable }: ChatMessageProps) {
   const isUser = message.sender === "user";
 
   return (
@@ -28,7 +29,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           <AIIcon size={44} />
         </View>
       )}
-      <ChatBubble text={message.text} isUser={isUser} />
+      <ChatBubble text={message.text} isUser={isUser} isCopyable={isCopyable} />
     </View>
   );
 }
@@ -40,12 +41,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: 16,
   },
-  userRow: {
-    justifyContent: "flex-end",
-  },
   aiRow: {
     justifyContent: "flex-start",
   },
+  userRow: {
+    justifyContent: "flex-end",
+  },
+  
   avatarWrap: {
     marginRight: 10,
     marginBottom: 2,

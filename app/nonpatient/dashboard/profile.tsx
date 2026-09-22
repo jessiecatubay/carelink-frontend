@@ -3,10 +3,12 @@ import EditProfileButton from "@/components/feature/nonpatient/settings/profile/
 import ProfileHeader from "@/components/feature/nonpatient/settings/profile/ProfileHeader";
 import RoleInformation from "@/components/feature/nonpatient/settings/profile/RoleInformation";
 import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "@/hooks/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -20,11 +22,24 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
+  const [firstName, setFirstName] = useState(user?.firstName || "");
+  const [lastName, setLastName] = useState(user?.lastName || "");
+  const [phoneNumber, setPhoneNumber] = useState(
+    user?.emergencyContact || "",
+  );
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setFirstName(user?.firstName || "");
+    setLastName(user?.lastName || "");
+    setPhoneNumber(user?.emergencyContact || "");
+  }, [user]);
+
   const fullName =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    "Zayn Malik";
+    [firstName, lastName].filter(Boolean).join(" ") || "Zayn Malik";
+
   const email = user?.email || "zaynmalik@gmail.com";
-  const phoneNumber = user?.phoneNumber || "+63 936 936 938 171";
+
   const roleTitle =
     user?.role === "NON_PATIENT"
       ? "Family / Caregiver"
@@ -40,20 +55,65 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEditProfile = () => {
-    Alert.alert(
-      "Edit Profile",
-      "Edit profile functionality will be available in the next update.",
-      [{ text: "OK" }],
-    );
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      Alert.alert("Error", "User information is unavailable.");
+      return;
+    }
+
+    if (!firstName.trim()) {
+      Alert.alert("Invalid Information", "First name is required.");
+      return;
+    }
+
+    if (!lastName.trim()) {
+      Alert.alert("Invalid Information", "Last name is required.");
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      Alert.alert("Invalid Information", "Phone number is required.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const formData = new FormData();
+
+      formData.append("email", user.email);
+      formData.append("firstName", firstName.trim());
+      formData.append("lastName", lastName.trim());
+      formData.append("emergencyContact", phoneNumber.trim());
+
+      const response = await axiosInstance.put(
+        "/api/user/v1/update-user",
+        formData,
+      );
+
+      console.log("Updated profile:", response.data);
+
+      Alert.alert(
+        "Profile Updated",
+        "Your profile information has been updated successfully.",
+      );
+    } catch (error: any) {
+      console.error("Failed to update profile:", error);
+
+      const message =
+        error?.response?.data?.message ||
+        "Failed to update your profile. Please try again.";
+
+      Alert.alert("Update Failed", message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
-      {/* Decorative subtle curved background element */}
       <View style={styles.backgroundAccent} pointerEvents="none" />
 
-      {/* Header */}
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
@@ -70,7 +130,6 @@ export default function ProfileScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Content */}
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -78,12 +137,13 @@ export default function ProfileScreen() {
         <ProfileHeader name={fullName} roleTitle={roleTitle} />
 
         <AccountInformation
-          fullName={fullName}
+          firstName={firstName}
+          lastName={lastName}
           email={email}
           phoneNumber={phoneNumber}
-          onFullNamePress={() => router.push("/nonpatient/dashboard/edit-name")}
-          onEmailPress={() => router.push("/nonpatient/dashboard/edit-email")}
-          onPhonePress={() => router.push("/nonpatient/dashboard/edit-phone")}
+          onFirstNameChange={setFirstName}
+          onLastNameChange={setLastName}
+          onPhoneNumberChange={setPhoneNumber}
         />
 
         <RoleInformation
@@ -96,7 +156,19 @@ export default function ProfileScreen() {
           }
         />
 
-        <EditProfileButton onPress={handleEditProfile} style={styles.editButton} />
+        <EditProfileButton
+          onPress={handleSaveProfile}
+          style={styles.editButton}
+          disabled={saving}
+        />
+
+        {saving && (
+          <ActivityIndicator
+            size="small"
+            color="#0AA7A8"
+            style={styles.loading}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -148,6 +220,10 @@ const styles = StyleSheet.create({
   },
   editButton: {
     marginTop: 8,
+    marginBottom: 20,
+  },
+  loading: {
+    marginTop: -10,
     marginBottom: 20,
   },
 });

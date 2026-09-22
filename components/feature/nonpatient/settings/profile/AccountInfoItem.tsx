@@ -1,6 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 export type AccountInfoItemProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -10,16 +16,20 @@ export type AccountInfoItemProps = {
   showChevron?: boolean;
   showDivider?: boolean;
   onPress?: () => void;
+  editable?: boolean;
+  onChangeText?: (value: string) => void;
 };
 
 export default function AccountInfoItem({
   icon,
   label,
-  value,
+  value = "",
   trailing,
   showChevron = true,
   showDivider = false,
   onPress,
+  editable = false,
+  onChangeText,
 }: AccountInfoItemProps) {
   const content = (
     <View style={[styles.container, showDivider && styles.divider]}>
@@ -29,13 +39,38 @@ export default function AccountInfoItem({
 
       <View style={styles.textContainer}>
         <Text style={styles.label}>{label}</Text>
-        {value ? <Text style={styles.value}>{value}</Text> : null}
+
+        {editable ? (
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            editable
+            style={styles.input}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            placeholderTextColor="#A0A5A8"
+            autoCapitalize="words"
+          />
+        ) : (
+          <Text
+            style={[
+              styles.value,
+              !value && styles.emptyValue,
+            ]}
+            numberOfLines={1}
+          >
+            {value || "Not provided"}
+          </Text>
+        )}
       </View>
 
       <View style={styles.trailingContainer}>
         {trailing ??
-          (showChevron ? (
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+          (showChevron && !editable ? (
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color="#9CA3AF"
+            />
           ) : null)}
       </View>
     </View>
@@ -86,6 +121,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#707477",
     fontWeight: "400",
+  },
+  emptyValue: {
+    color: "#A0A5A8",
+  },
+  input: {
+    fontSize: 13,
+    color: "#707477",
+    fontWeight: "400",
+    padding: 0,
+    margin: 0,
+    minHeight: 20,
   },
   trailingContainer: {
     marginLeft: 8,

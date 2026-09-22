@@ -12,7 +12,7 @@ export default function AccountSection() {
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "Caregiver / Family";
   const email = user?.email || "caregiver@carelink.com";
-  const phone = user?.phoneNumber || "+63 900 000 0000";
+  const phone = user?.emergencyContact || "+63 900 000 0000";
 
   return (
     <SettingsSection title="ACCOUNT">
