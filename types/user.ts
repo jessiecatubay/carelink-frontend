@@ -1,11 +1,13 @@
 export interface AuthUser {
   id?: string;
-  email?: string;
+  email: string;
   role?: "PATIENT" | "NON_PATIENT" | "USER";
   onBoarded?: boolean;
   firstName?: string;
   lastName?: string;
-  phoneNumber?: string;
+  emergencyContact?: string;
+  nonPatientProfile?: NonPatientProfile | null;
+  patientProfile?: PatientProfile | null;
 }
 
 export interface UserOnBoardingData {
@@ -47,7 +49,7 @@ export interface User {
 export interface NonPatientProfile {
   id: string;
   userId: string;
-  emergencyNumber: number | null;
+  emergencyContact: number | null;
   relationship: string | null;
 }
 

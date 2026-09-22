@@ -3,45 +3,65 @@ import { StyleSheet, Text, View } from "react-native";
 import AccountInfoItem from "./AccountInfoItem";
 
 export type AccountInformationProps = {
-  fullName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phoneNumber?: string;
-  onFullNamePress?: () => void;
-  onEmailPress?: () => void;
-  onPhonePress?: () => void;
+  onFirstNameChange?: (value: string) => void;
+  onLastNameChange?: (value: string) => void;
+  onPhoneNumberChange?: (value: string) => void;
 };
 
 export default function AccountInformation({
-  fullName = "Zayn Malik",
+  firstName = "",
+  lastName = "",
   email = "zaynmalik@gmail.com",
   phoneNumber = "+63 936 936 938 171",
-  onFullNamePress,
-  onEmailPress,
-  onPhonePress,
+  onFirstNameChange,
+  onLastNameChange,
+  onPhoneNumberChange,
 }: AccountInformationProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>ACCOUNT INFORMATION</Text>
+
       <View style={styles.card}>
         <AccountInfoItem
           icon="person"
-          label="Full Name"
-          value={fullName}
+          label="First Name"
+          value={firstName}
+          editable
+          onChangeText={onFirstNameChange}
+          showChevron={false}
           showDivider
-          onPress={onFullNamePress}
         />
+
+        <AccountInfoItem
+          icon="person"
+          label="Last Name"
+          value={lastName}
+          editable
+          onChangeText={onLastNameChange}
+          showChevron={false}
+          showDivider
+        />
+
         <AccountInfoItem
           icon="mail"
           label="Email Address"
           value={email}
+          editable={false}
+          showChevron={false}
           showDivider
-          onPress={onEmailPress}
         />
+
         <AccountInfoItem
           icon="call"
           label="Phone Number"
           value={phoneNumber}
-          onPress={onPhonePress}
+          editable
+          onChangeText={onPhoneNumberChange}
+          showChevron={false}
         />
       </View>
     </View>

@@ -6,7 +6,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,6 +15,10 @@ import ChatMessage, {
   Message,
 } from "@/components/feature/nonpatient/dashboard/ai/ChatMessage";
 import QuickPrompts from "@/components/feature/nonpatient/dashboard/ai/QuickPrompts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ChatBubble from "@/components/feature/nonpatient/dashboard/ai/ChatBubble";
+import { View } from "react-native";
+import AIIcon from "@/components/feature/nonpatient/dashboard/ai/AIIcon";
 
 const DEFAULT_PROMPTS = [
   "What should I do?",
@@ -28,36 +31,26 @@ const DEFAULT_PROMPTS = [
 const INITIAL_MESSAGES: Message[] = [
   {
     id: "1",
-    sender: "user",
-    text: "What should I do?",
-  },
-  {
-    id: "2",
     sender: "ai",
-    text: "If the patient needs help, stay calm and assess the situation first. Check their vital signs, ensure they are safe, and follow the recommended steps.",
-  },
-  {
-    id: "3",
-    sender: "user",
-    text: "Check patient condition",
-  },
-  {
-    id: "4",
-    sender: "ai",
-    text: "Here is the latest patient condition:\n🖤 Heart Rate: 82 bpm (Normal)\n🫁 Oxygen Level: 96% (Normal)\n🌡️ Temperature: 36.7°C (Normal)\n🫡 Mood: Satisfied",
+    text: "Hello! I'm Carelink. I can help you with basic first-aid guidance, emergency-response information, and general elderly-care questions. How can I help?",
   },
 ];
 
+const CHAT_HISTORY_KEY = "carelink_ai_chat_history";
+
 export default function AiHelpScreen() {
   const { user } = useAuth();
-  const [patientName, setPatientName] = useState<string>("Kathryn Bernardo");
+  const [patientName, setPatientName] = useState<string>(
+    "Connect to a patient first",
+  );
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [activePrompt, setActivePrompt] = useState<string | null>(
     "What should I do?",
   );
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [isAIResponding, setIsAIResponding] = useState(false);
 
-  // Fetch current patient name
   useEffect(() => {
     if (!user?.id) return;
 
@@ -66,12 +59,19 @@ export default function AiHelpScreen() {
         const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
           id: user.id,
         });
+
         const connections = result.data.data?.nonPatientConnections;
+
         if (Array.isArray(connections)) {
           for (const conn of connections) {
             if (conn.currentPatient && conn.patient) {
-              const name = `${conn.patient.firstName || ""} ${conn.patient.lastName || ""}`.trim();
-              if (name) setPatientName(name);
+              const name =
+                `${conn.patient.firstName || ""} ${conn.patient.lastName || ""}`.trim();
+
+              if (name) {
+                setPatientName(name);
+              }
+
               break;
             }
           }
@@ -84,55 +84,103 @@ export default function AiHelpScreen() {
     fetchPatient();
   }, [user?.id]);
 
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const storedHistory = await AsyncStorage.getItem(CHAT_HISTORY_KEY);
+
+        if (storedHistory) {
+          const parsedHistory: Message[] = JSON.parse(storedHistory);
+
+          if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+            setMessages(parsedHistory);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load Carelink chat history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, []);
+
+  useEffect(() => {
+    if (isLoadingHistory) return;
+
+    const saveChatHistory = async () => {
+      try {
+        await AsyncStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+      } catch (error) {
+        console.error("Failed to save Carelink chat history:", error);
+      }
+    };
+
+    saveChatHistory();
+  }, [messages, isLoadingHistory]);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
   };
 
-  const getAIResponse = (query: string): string => {
-    const q = query.toLowerCase().trim();
-    if (q.includes("condition") || q.includes("vitals") || q.includes("status")) {
-      return "Here is the latest patient condition:\n🖤 Heart Rate: 82 bpm (Normal)\n🫁 Oxygen Level: 96% (Normal)\n🌡️ Temperature: 36.7°C (Normal)\n🫡 Mood: Satisfied";
-    }
-    if (q.includes("what should i do") || q.includes("help")) {
-      return "If the patient needs help, stay calm and assess the situation first. Check their vital signs, ensure they are safe, and follow the recommended steps.";
-    }
-    if (q.includes("emergency")) {
-      return "Current readings indicate the patient's vitals are stable. If the patient is unresponsive, complaining of acute chest pain, or having severe trouble breathing, press the red Emergency button or contact emergency services immediately.";
-    }
-    if (q.includes("stroke")) {
-      return "Remember the FAST protocol for suspected stroke:\n• Face: Has their face fallen on one side?\n• Arms: Can they raise both arms and keep them there?\n• Speech: Is their speech slurred?\n• Time: Call emergency services immediately if you observe any of these.";
-    }
-    if (q.includes("what does this mean")) {
-      return "Telemetry readings indicate all current biometrics are within safe baseline ranges. Regular monitoring ensures sudden spikes or dips will trigger immediate alerts.";
-    }
-    return `I am here to assist you with ${patientName}'s care. You can ask me to analyze recent vitals, verify symptoms, or provide step-by-step emergency care guidelines.`;
-  };
+  const handleSend = async (text: string) => {
+    const trimmedText = text.trim();
 
-  const handleSend = (text: string) => {
+    if (!trimmedText || isAIResponding) return;
+
     const userMsg: Message = {
       id: Date.now().toString(),
       sender: "user",
-      text,
+      text: trimmedText,
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    setActivePrompt(text);
+    const updatedMessages = [...messages, userMsg];
+
+    setMessages(updatedMessages);
+    setActivePrompt(trimmedText);
+    setIsAIResponding(true);
     scrollToBottom();
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiReply: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: "ai",
-        text: getAIResponse(text),
-      };
-      setMessages((prev) => [...prev, aiReply]);
-      scrollToBottom();
-    }, 450);
-  };
+    try {
+      const response = await axiosInstance.post("/api/ai/v1/chat", {
+        messages: updatedMessages.map((message) => ({
+          role: message.sender === "user" ? "user" : "model",
+          text: message.text,
+        })),
+      });
 
+      const aiText = response.data?.data?.response;
+
+      if (!aiText) {
+        throw new Error("Empty AI response");
+      }
+
+      const aiReply: Message = {
+        id: `${Date.now()}-ai`,
+        sender: "ai",
+        text: aiText,
+      };
+
+      setMessages((prev) => [...prev, aiReply]);
+    } catch (error) {
+      console.error("Carelink AI request failed:", error);
+
+      const errorMessage: Message = {
+        id: `${Date.now()}-error`,
+        sender: "ai",
+        text: "I'm sorry, but I couldn't connect to Carelink right now. Please try again.",
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsAIResponding(false);
+    }
+
+    scrollToBottom();
+  };
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <AIHeader patientName={patientName} />
@@ -149,8 +197,22 @@ export default function AiHelpScreen() {
           onContentSizeChange={scrollToBottom}
         >
           {messages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} />
+            <ChatMessage key={msg.id} message={msg} isCopyable={true} />
           ))}
+
+          {isAIResponding && (
+            <View
+                  style={[
+                    styles.row,
+                    styles.aiRow,
+                  ]}
+                >
+            <View style={styles.avatarWrap}>
+                      <AIIcon size={44} />
+                    </View>
+            <ChatBubble text="CareLink is thinking..." isUser={false} isCopyable={false} />
+            </View>
+          )}
         </ScrollView>
 
         <QuickPrompts
@@ -177,5 +239,18 @@ const styles = StyleSheet.create({
   chatScroll: {
     paddingVertical: 18,
     flexGrow: 1,
+  },
+  avatarWrap: {
+    marginRight: 10,
+    marginBottom: 2,
+  },
+  row: {
+    flexDirection: "row",
+    marginBottom: 20,
+    alignItems: "flex-end",
+    paddingHorizontal: 16,
+  },
+  aiRow: {
+    justifyContent: "flex-start",
   },
 });
