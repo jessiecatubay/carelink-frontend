@@ -16,7 +16,7 @@ import {
 import PasswordRequirements from "./PasswordRequirements";
 
 type ChangePasswordFormProps = {
-  onSubmit: (values: ChangePasswordFormValues) => Promise<void> | void;
+  onSubmit?: (values: ChangePasswordFormValues) => Promise<void> | void;
   loading?: boolean;
   serverError?: string | null;
 };
@@ -41,6 +41,7 @@ export default function ChangePasswordForm({
 
   const handleSubmit = async () => {
     setFormError(null);
+
     const parsed = changePasswordSchema.safeParse({
       currentPassword,
       newPassword,
@@ -51,22 +52,37 @@ export default function ChangePasswordForm({
       const fieldErrors: Partial<
         Record<keyof ChangePasswordFormValues, string>
       > = {};
+
       parsed.error.issues.forEach((issue) => {
         const field = issue.path[0] as keyof ChangePasswordFormValues;
+
         if (field && !fieldErrors[field]) {
           fieldErrors[field] = issue.message;
         }
       });
+
       setErrors(fieldErrors);
       return;
     }
 
     setErrors({});
-    await onSubmit({
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
+
+    try {
+      if (onSubmit) {
+        await onSubmit({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        });
+      }
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to change password. Please try again.";
+
+      setFormError(message);
+    }
   };
 
   const activeError = serverError || formError;
@@ -86,9 +102,9 @@ export default function ChangePasswordForm({
       ) : null}
 
       <View style={styles.card}>
-        {/* Current Password Field */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Current Password</Text>
+
           <View
             style={[
               styles.inputRow,
@@ -100,6 +116,7 @@ export default function ChangePasswordForm({
               style={styles.padlockIcon}
               resizeMode="contain"
             />
+
             <TextInput
               style={styles.textInput}
               placeholder="Enter current password"
@@ -108,12 +125,20 @@ export default function ChangePasswordForm({
               value={currentPassword}
               onChangeText={(text) => {
                 setCurrentPassword(text);
+
                 if (errors.currentPassword) {
-                  setErrors((prev) => ({ ...prev, currentPassword: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    currentPassword: undefined,
+                  }));
                 }
-                if (formError) setFormError(null);
+
+                if (formError) {
+                  setFormError(null);
+                }
               }}
             />
+
             <Pressable
               onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               hitSlop={10}
@@ -129,14 +154,17 @@ export default function ChangePasswordForm({
               />
             </Pressable>
           </View>
+
           {errors.currentPassword ? (
-            <Text style={styles.fieldErrorText}>{errors.currentPassword}</Text>
+            <Text style={styles.fieldErrorText}>
+              {errors.currentPassword}
+            </Text>
           ) : null}
         </View>
 
-        {/* New Password Field */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>New Password</Text>
+
           <View
             style={[
               styles.inputRow,
@@ -148,6 +176,7 @@ export default function ChangePasswordForm({
               style={styles.padlockIcon}
               resizeMode="contain"
             />
+
             <TextInput
               style={styles.textInput}
               placeholder="Enter new password"
@@ -156,12 +185,20 @@ export default function ChangePasswordForm({
               value={newPassword}
               onChangeText={(text) => {
                 setNewPassword(text);
+
                 if (errors.newPassword) {
-                  setErrors((prev) => ({ ...prev, newPassword: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    newPassword: undefined,
+                  }));
                 }
-                if (formError) setFormError(null);
+
+                if (formError) {
+                  setFormError(null);
+                }
               }}
             />
+
             <Pressable
               onPress={() => setShowNewPassword(!showNewPassword)}
               hitSlop={10}
@@ -177,14 +214,17 @@ export default function ChangePasswordForm({
               />
             </Pressable>
           </View>
+
           {errors.newPassword ? (
-            <Text style={styles.fieldErrorText}>{errors.newPassword}</Text>
+            <Text style={styles.fieldErrorText}>
+              {errors.newPassword}
+            </Text>
           ) : null}
         </View>
 
-        {/* Confirm New Password Field */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Confirm New Password</Text>
+
           <View
             style={[
               styles.inputRow,
@@ -196,6 +236,7 @@ export default function ChangePasswordForm({
               style={styles.padlockIcon}
               resizeMode="contain"
             />
+
             <TextInput
               style={styles.textInput}
               placeholder="Re-enter new password"
@@ -204,12 +245,20 @@ export default function ChangePasswordForm({
               value={confirmPassword}
               onChangeText={(text) => {
                 setConfirmPassword(text);
+
                 if (errors.confirmPassword) {
-                  setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: undefined,
+                  }));
                 }
-                if (formError) setFormError(null);
+
+                if (formError) {
+                  setFormError(null);
+                }
               }}
             />
+
             <Pressable
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               hitSlop={10}
@@ -225,30 +274,18 @@ export default function ChangePasswordForm({
               />
             </Pressable>
           </View>
+
           {errors.confirmPassword ? (
-            <Text style={styles.fieldErrorText}>{errors.confirmPassword}</Text>
+            <Text style={styles.fieldErrorText}>
+              {errors.confirmPassword}
+            </Text>
           ) : null}
         </View>
 
-        {/* Password Requirements Checklist */}
         <PasswordRequirements
           password={newPassword}
           confirmPassword={confirmPassword}
         />
-
-        {/* 6-Month Cooldown Note */}
-        <View style={styles.securityNote}>
-          <Ionicons
-            name="information-circle"
-            size={18}
-            color="#0AA7A8"
-            style={styles.noteIcon}
-          />
-          <Text style={styles.noteText}>
-            <Text style={styles.noteBold}>Important Note: </Text>
-            Once you change your password, you will need to wait 6 months before you can change it again.
-          </Text>
-        </View>
       </View>
 
       <Button
@@ -265,6 +302,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
   },
+
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -279,15 +317,18 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
+
   fieldGroup: {
     gap: 6,
   },
+
   label: {
     fontSize: 13,
     fontWeight: "600",
     color: "#374151",
     marginLeft: 2,
   },
+
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -298,32 +339,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     backgroundColor: "#FFFFFF",
   },
+
   inputRowError: {
     borderColor: "#F16A66",
   },
+
   padlockIcon: {
     width: 18,
     height: 18,
     tintColor: "#9CA3AF",
     marginRight: 10,
   },
+
   eyeIcon: {
     width: 20,
     height: 20,
     tintColor: "#9CA3AF",
     marginLeft: 10,
   },
+
   textInput: {
     flex: 1,
     fontSize: 15,
     color: "#1F2937",
     height: "100%",
   },
+
   fieldErrorText: {
     color: "#F16A66",
     fontSize: 12,
     marginLeft: 4,
   },
+
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -334,16 +381,19 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
+
   errorBannerText: {
     flex: 1,
     color: "#DC2626",
     fontSize: 13,
     fontWeight: "500",
   },
+
   submitButton: {
     width: "100%",
     backgroundColor: "#0AA7A8",
   },
+
   securityNote: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -353,16 +403,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
+
   noteIcon: {
     marginRight: 8,
     marginTop: 1,
   },
+
   noteText: {
     flex: 1,
     fontSize: 12,
     color: "#0F766E",
     lineHeight: 18,
   },
+
   noteBold: {
     fontWeight: "700",
     color: "#115E59",

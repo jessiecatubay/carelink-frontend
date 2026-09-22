@@ -20,8 +20,7 @@ export default function ChangePasswordSuccess({
         <Text style={styles.title}>Password Changed!</Text>
 
         <Text style={styles.description}>
-          Your password has been successfully updated. You will be eligible to
-          change your password again in 6 months.
+          Your password has been successfully updated
         </Text>
 
         <Button
