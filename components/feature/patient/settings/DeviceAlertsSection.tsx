@@ -1,10 +1,13 @@
 import SettingsItem from "@/components/feature/shared/settings/SettingsItem";
 import SettingsSection from "@/components/feature/shared/settings/SettingsSection";
 import SettingsToggle from "@/components/feature/shared/settings/SettingsToggle";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function DeviceAlertsSection() {
+  const router = useRouter();
+
   const [alertSoundEnabled, setAlertSoundEnabled] = useState(true);
   const [hapticFeedback, setHapticFeedback] = useState(true);
 
@@ -17,6 +20,7 @@ export default function DeviceAlertsSection() {
         value={alertSoundEnabled}
         onValueChange={setAlertSoundEnabled}
       />
+
       <SettingsToggle
         icon="radio-outline"
         title="Haptic Feedback"
@@ -24,6 +28,14 @@ export default function DeviceAlertsSection() {
         value={hapticFeedback}
         onValueChange={setHapticFeedback}
       />
+
+      <SettingsItem
+        icon="watch-outline"
+        title="Register Device Owned"
+        subtitle="Register your CareLink wrist device"
+        onPress={() => router.push("/patient/dashboard/register-device")}
+      />
+
       <SettingsItem
         icon="shield-checkmark-outline"
         title="Emergency Alert Service"
@@ -45,6 +57,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
+
   alwaysOnText: {
     color: "#FFFFFF",
     fontSize: 10,
