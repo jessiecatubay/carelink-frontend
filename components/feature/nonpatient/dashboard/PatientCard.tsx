@@ -3,17 +3,17 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface PatientCardProps {
   name?: string;
-  status?: string;
-  avatar?: any;
+  internetStatus?: "CONNECTED" | "DISCONNECTED";
   onPress?: () => void;
 }
 
 export default function PatientCard({
   name,
-  status,
-  avatar,
   onPress,
+  internetStatus,
 }: PatientCardProps) {
+  const isConnected = internetStatus === "CONNECTED";
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -24,13 +24,29 @@ export default function PatientCard({
       <View style={styles.patientCardLeft}>
         <View style={styles.patientInfo}>
           <Text style={styles.patientName}>Patient: {name}</Text>
+
           <View style={styles.statusRow}>
             <Text style={styles.statusLabel}>Status:</Text>
-            <Text style={styles.statusValue}>{status}</Text>
-            <View style={styles.statusDot} />
+
+            <Text
+              style={[
+                styles.statusValue,
+                !isConnected && styles.disconnectedText,
+              ]}
+            >
+              {isConnected ? "Connected" : "Disconnected"}
+            </Text>
+
+            <View
+              style={[
+                styles.statusDot,
+                !isConnected && styles.disconnectedDot,
+              ]}
+            />
           </View>
         </View>
       </View>
+
       <Ionicons name="chevron-forward" size={20} color="#718096" />
     </Pressable>
   );
@@ -56,44 +72,60 @@ const styles = StyleSheet.create({
       },
     }),
   },
+
   patientCardLeft: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     backgroundColor: "#E2E8F0",
   },
+
   patientInfo: {
     marginLeft: 12,
   },
+
   patientName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1A202C",
   },
+
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
   },
+
   statusLabel: {
     fontSize: 14,
     color: "#718096",
   },
+
   statusValue: {
     fontSize: 14,
     fontWeight: "500",
     color: "#48BB78",
     marginLeft: 4,
   },
+
+  disconnectedText: {
+    color: "#E53E3E",
+  },
+
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: "#48BB78",
     marginLeft: 6,
+  },
+
+  disconnectedDot: {
+    backgroundColor: "#E53E3E",
   },
 });
