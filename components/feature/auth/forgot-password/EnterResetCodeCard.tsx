@@ -17,7 +17,7 @@ type CheckEmailCardProps = {
   onProceedToReset?: () => void;
 };
 
-export default function CheckEmailCard({
+export default function EnterResetCodeCard({
   email,
   onResend,
   onProceedToReset,

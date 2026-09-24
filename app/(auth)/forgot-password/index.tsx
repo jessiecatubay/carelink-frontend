@@ -20,17 +20,15 @@ export default function ForgotPasswordIndexScreen() {
     setLoading(true);
     try {
       await forgotPassword(email);
+
       router.push({
-        pathname: "/(auth)/forgot-password/check-email",
+        pathname: "/(auth)/forgot-password/enter-reset-code-screen",
         params: { email },
       });
     } catch (err) {
       console.error("Forgot password API error:", err);
       // Fallback transition so flow is testable
-      router.push({
-        pathname: "/(auth)/forgot-password/check-email",
-        params: { email },
-      });
+      return;
     } finally {
       setLoading(false);
     }

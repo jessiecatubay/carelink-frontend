@@ -1,3 +1,4 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -6,7 +7,6 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 
 import ForgotPasswordHeader from "@/components/feature/auth/forgot-password/ForgotPasswordHeader";
 import NewPasswordForm from "@/components/feature/auth/forgot-password/NewPasswordForm";
@@ -14,17 +14,37 @@ import { resetPassword } from "@/services/auth";
 
 export default function NewPasswordScreen() {
   const router = useRouter();
+
+  const params = useLocalSearchParams<{
+    resetToken?: string;
+  }>();
+
+  const resetToken = params.resetToken || "";
+
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleResetPassword = async (password: string) => {
+    if (!resetToken) {
+      setErrorMessage("Reset token is missing or expired.");
+      return;
+    }
+
     setLoading(true);
+    setErrorMessage("");
+
     try {
-      await resetPassword(password);
+      await resetPassword(resetToken, password);
+
       router.push("/(auth)/forgot-password/success");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Reset password error:", err);
-      // Fallback transition so flow is testable
-      router.push("/(auth)/forgot-password/success");
+
+      const serverMessage =
+        err?.response?.data?.message ||
+        "Unable to reset your password. Please try again.";
+
+      setErrorMessage(serverMessage);
     } finally {
       setLoading(false);
     }
@@ -45,6 +65,7 @@ export default function NewPasswordScreen() {
             title="Create New Password"
             icon={require("@/assets/icons/password-lock.png")}
           />
+
           <NewPasswordForm
             onSubmit={handleResetPassword}
             loading={loading}

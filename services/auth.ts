@@ -1,5 +1,5 @@
 import axiosInstance from "@/hooks/lib/axios";
-import { AuthUser, UserOnBoardingData } from "@/types/user";
+import { UserOnBoardingData } from "@/types/user";
 
 export const login = async (email: string, password: string) => {
   return axiosInstance.post("/api/user/v1/login", { email, password });
@@ -39,9 +39,19 @@ export const forgotPassword = async (email: string) => {
   return axiosInstance.post("/api/user/v1/forgot-password", { email });
 };
 
-export const resetPassword = async (password: string, token?: string) => {
-  return axiosInstance.post("/api/user/v1/reset-password", { password, token });
-};
+export async function resetPassword(resetToken: string, newPassword: string) {
+  return axiosInstance.post("/api/user/v1/reset-password", {
+    resetToken,
+    newPassword,
+  });
+}
+
+export async function verifyResetCode(email: string, resetCode: string) {
+  return axiosInstance.post("/api/user/v1/verify-reset-code", {
+    email,
+    resetCode,
+  });
+}
 
 export const changePassword = async (
   id: string,
