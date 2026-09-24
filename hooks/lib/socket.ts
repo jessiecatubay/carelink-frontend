@@ -61,6 +61,30 @@ export function initSocket() {
   return socket;
 }
 
+export function startPatientPresence() {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return () => {};
+  }
+
+  const sendHeartbeat = () => {
+    if (!currentSocket.connected) {
+      return;
+    }
+
+    currentSocket.emit("patient:heartbeat");
+  };
+
+  sendHeartbeat();
+
+  const interval = setInterval(sendHeartbeat, 10000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}
+
 /**
  * Listen for patient vitals
  */
@@ -102,6 +126,48 @@ export function onPatientAlert(callback: (payload: PatientAlert) => void) {
 
   return () => {
     currentSocket.off("patientAlert", handleAlert);
+  };
+}
+
+export function onPatientConnectionStatus(
+  callback: (payload: {
+    patientId: string;
+    status: "CONNECTED" | "DISCONNECTED";
+    timestamp: string;
+  }) => void,
+) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return () => {};
+  }
+
+  const handleStatus = (payload: unknown) => {
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+
+    const data = payload as Record<string, unknown>;
+
+    if (
+      typeof data.patientId !== "string" ||
+      (data.status !== "CONNECTED" && data.status !== "DISCONNECTED") ||
+      typeof data.timestamp !== "string"
+    ) {
+      return;
+    }
+
+    callback({
+      patientId: data.patientId,
+      status: data.status,
+      timestamp: data.timestamp,
+    });
+  };
+
+  currentSocket.on("patientConnectionStatus", handleStatus);
+
+  return () => {
+    currentSocket.off("patientConnectionStatus", handleStatus);
   };
 }
 

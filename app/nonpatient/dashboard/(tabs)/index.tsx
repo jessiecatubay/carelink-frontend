@@ -1,10 +1,10 @@
-import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
-import { initSocket, onPatientVitals } from "@/hooks/lib/socket";
+import {
+  initSocket,
+  onPatientConnectionStatus,
+  onPatientVitals,
+} from "@/hooks/lib/socket";
 import { vitalResponseSchema } from "@/schema/api";
 import { User, Vital } from "@/types/user";
 import {
@@ -12,7 +12,10 @@ import {
   formatPhilippineTime,
   isSamePhilippineDay,
 } from "@/utils/date";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
 import DashboardHeader from "@/components/feature/nonpatient/dashboard/DashboardHeader";
@@ -35,7 +38,28 @@ export default function Home() {
   const [tempHistory, setTempHistory] = useState<number[]>([]);
   const [patient, setPatient] = useState<User>();
   const [connected, setConnected] = useState<string>("DISCONNECTED");
+  const [patientInternetStatus, setPatientInternetStatus] = useState<
+    "CONNECTED" | "DISCONNECTED"
+  >("DISCONNECTED");
   const [patientLoading, setPatientLoading] = useState(true);
+
+  useEffect(() => {
+    const off = onPatientConnectionStatus((payload) => {
+      console.log("🌐 Patient connection status:", payload);
+
+      if (patient?.id !== payload.patientId) {
+        return;
+      }
+
+      setPatientInternetStatus(payload.status);
+    });
+
+    console.log("📡 CURRENT PATIENT INTERNET STATUS:", patientInternetStatus);
+
+    return () => {
+      off();
+    };
+  }, [patient?.id]);
 
   useEffect(() => {
     if (!patient) return;
@@ -183,6 +207,10 @@ export default function Home() {
       console.log("🔥 NON-PATIENT RECEIVED:", payload);
     });
 
+    socket!.on("patientConnectionStatus", (payload) => {
+      console.log("🌐 PATIENT CONNECTION STATUS:", payload);
+    });
+
     return () => {
       socket!.off("patientAlert");
     };
@@ -204,7 +232,7 @@ export default function Home() {
                 ? "Loading patient..."
                 : "No patient connected"
           }
-          status={patient ? connected : "Connect a patient to begin"}
+          internetStatus={patient ? patientInternetStatus : "DISCONNECTED"}
           onPress={() => router.push("/nonpatient/dashboard/manage-patients")}
         />
 

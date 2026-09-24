@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
-import { initSocket } from "@/hooks/lib/socket";
+import { initSocket, startPatientPresence } from "@/hooks/lib/socket";
 import { patientCommand } from "@/services/monitor";
 import { useEffect, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
@@ -66,6 +66,8 @@ export default function PatientRemote() {
 
   useEffect(() => {
     const socket = initSocket();
+
+    startPatientPresence();
 
     const handleAlert = (payload: any) => {
       console.log("🔥 PATIENT ALERT RECEIVED:", payload);
