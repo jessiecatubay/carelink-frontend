@@ -15,14 +15,48 @@ import { OnboardingProvider } from "@/context/OnboardingContext";
 import { initSocket } from "@/hooks/lib/socket";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import * as Notifications from "expo-notifications";
+import { getNotificationSettings } from "@/hooks/lib/notification-settings";
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    const settings = await getNotificationSettings();
+
+    const data = notification.request.content.data as {
+      type?: string;
+      command?: string;
+      alertType?: string;
+    };
+
+    const isEmergency =
+      data?.type === "EMERGENCY" ||
+      data?.command === "EMERGENCY" ||
+      data?.alertType === "Emergency";
+
+    if (isEmergency) {
+      return {
+        shouldPlaySound: settings.alertSoundEnabled,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      };
+    }
+
+    if (!settings.notificationsEnabled) {
+      return {
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
+      };
+    }
+
+    return {
+      shouldPlaySound: settings.alertSoundEnabled,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 SplashScreen.preventAutoHideAsync();

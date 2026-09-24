@@ -35,14 +35,20 @@ export default function EmergencyContactsScreen() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form State
   const [name, setName] = useState("");
   const [relationship, setRelationship] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [patientProfileId, setPatientProfileId] = useState<PatientProfile>();
+  const [isPriority, setIsPriority] = useState(false);
+
+  const [patientProfileId, setPatientProfileId] =
+    useState<PatientProfile>();
+
+  const [editingContact, setEditingContact] =
+    useState<EmergencyContact | null>(null);
 
   const fetchContacts = async () => {
     try {
@@ -50,29 +56,53 @@ export default function EmergencyContactsScreen() {
         "/api/patient-nonpatient/v1/connected-patients",
         {
           nonPatientId: user?.id,
-        },
+        }
       );
-      console.log("fasdfawef 23qrfasdcv23", result.data.data[0].patient.id);
 
-      setPatientProfileId(result.data.data[0].patient.id);
+      const connectedPatients = result.data?.data;
 
-      if (!patientProfileId) {
+      if (!connectedPatients || connectedPatients.length === 0) {
+        setContacts([]);
         setLoading(false);
         setRefreshing(false);
         return;
       }
 
+      const currentPatientProfileId =
+        connectedPatients[0]?.patient?.id;
+
+      if (!currentPatientProfileId) {
+        setContacts([]);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      setPatientProfileId(currentPatientProfileId);
+
       const response = await axiosInstance.post(
         "/api/emergency-contact/v1/emergency-contacts/patient",
-        { patientProfileId: patientProfileId },
+        {
+          patientProfileId: currentPatientProfileId,
+        }
       );
 
-      if (response.data?.status === "success" || response.data?.data) {
+      if (
+        response.data?.status === "success" ||
+        response.data?.data
+      ) {
         setContacts(response.data.data || []);
       }
     } catch (error) {
-      console.error("Failed to fetch emergency contacts:", error);
-      Alert.alert("Error", "Unable to load emergency contacts.");
+      console.error(
+        "Failed to fetch emergency contacts:",
+        error
+      );
+
+      Alert.alert(
+        "Error",
+        "Unable to load emergency contacts."
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -81,7 +111,7 @@ export default function EmergencyContactsScreen() {
 
   useEffect(() => {
     fetchContacts();
-  }, [patientProfileId]);
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -93,58 +123,140 @@ export default function EmergencyContactsScreen() {
       router.back();
     } else {
       if (user?.role === "PATIENT") {
-        router.replace("/(protected)/(patient)/settings");
+        router.replace(
+          "/(protected)/(patient)/settings"
+        );
       } else {
-        router.replace("/(protected)/(non-patient)/settings");
+        router.replace(
+          "/(protected)/(non-patient)/settings"
+        );
       }
     }
   };
 
   const handleCall = (phone: string) => {
     const cleaned = phone.replace(/[^0-9+]/g, "");
+
     Linking.openURL(`tel:${cleaned}`).catch(() => {
-      Alert.alert("Error", `Cannot place call to ${phone}`);
+      Alert.alert(
+        "Error",
+        `Cannot place call to ${phone}`
+      );
     });
   };
 
-  const handleAddContact = async () => {
+  const resetForm = () => {
+    setName("");
+    setRelationship("");
+    setPhoneNumber("");
+    setIsPriority(false);
+    setEditingContact(null);
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setModalVisible(true);
+  };
+
+  const handleEditContact = (
+    contact: EmergencyContact
+  ) => {
+    setEditingContact(contact);
+    setName(contact.name || "");
+    setRelationship(contact.relationship || "");
+    setPhoneNumber(contact.phoneNumber || "");
+    setIsPriority(contact.isPriority ?? false);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    if (submitting) {
+      return;
+    }
+
+    setModalVisible(false);
+    resetForm();
+  };
+
+  const handleSaveContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
       Alert.alert(
         "Required Fields",
-        "Please enter contact name and phone number.",
+        "Please enter contact name and phone number."
       );
       return;
     }
 
     if (!patientProfileId) {
-      Alert.alert("Error", "Patient profile ID not found.");
+      Alert.alert(
+        "Error",
+        "Patient profile ID not found."
+      );
       return;
     }
 
     try {
       setSubmitting(true);
-      const payload = {
-        name: name.trim(),
-        relationship: relationship.trim() || "Emergency Contact",
-        phoneNumber: phoneNumber.trim(),
-        patientProfileId: patientProfileId,
-      };
 
-      const response = await axiosInstance.post(
-        "/api/emergency-contact/v1/create-emergency-contact",
-        payload,
-      );
+      if (editingContact) {
+        const payload = {
+          id: editingContact.id,
+          name: name.trim(),
+          relationship:
+            relationship.trim() || "Emergency Contact",
+          phoneNumber: phoneNumber.trim(),
+          isPriority,
+        };
 
-      if (response.data?.status === "success" || response.data?.data) {
-        await fetchContacts();
-        setName("");
-        setRelationship("");
-        setPhoneNumber("");
-        setModalVisible(false);
+        const response = await axiosInstance.put(
+          "/api/emergency-contact/v1/update-emergency-contact",
+          payload
+        );
+
+        if (
+          response.data?.status === "success" ||
+          response.data?.data
+        ) {
+          await fetchContacts();
+          setModalVisible(false);
+          resetForm();
+        }
+      } else {
+        const payload = {
+          name: name.trim(),
+          relationship:
+            relationship.trim() || "Emergency Contact",
+          phoneNumber: phoneNumber.trim(),
+          patientProfileId: patientProfileId,
+          isPriority,
+        };
+
+        const response = await axiosInstance.post(
+          "/api/emergency-contact/v1/create-emergency-contact",
+          payload
+        );
+
+        if (
+          response.data?.status === "success" ||
+          response.data?.data
+        ) {
+          await fetchContacts();
+          setModalVisible(false);
+          resetForm();
+        }
       }
     } catch (error) {
-      console.error("Failed to create emergency contact:", error);
-      Alert.alert("Error", "Unable to save emergency contact.");
+      console.error(
+        "Failed to save emergency contact:",
+        error
+      );
+
+      Alert.alert(
+        "Error",
+        editingContact
+          ? "Unable to update emergency contact."
+          : "Unable to save emergency contact."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -155,39 +267,60 @@ export default function EmergencyContactsScreen() {
       "Delete Contact",
       "Are you sure you want to remove this emergency contact?",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
             try {
-              const response = await axiosInstance.delete(
-                "/api/emergency-contact/v1/delete-emergency-contact",
-                { data: { id } },
-              );
+              const response =
+                await axiosInstance.delete(
+                  "/api/emergency-contact/v1/delete-emergency-contact",
+                  {
+                    data: { id },
+                  }
+                );
 
               if (
                 response.data?.status === "success" ||
                 response.status === 200
               ) {
-                setContacts((prev) => prev.filter((c) => c.id !== id));
+                setContacts((prev) =>
+                  prev.filter(
+                    (contact) => contact.id !== id
+                  )
+                );
               }
             } catch (error) {
-              console.error("Failed to delete emergency contact:", error);
-              Alert.alert("Error", "Unable to delete contact.");
+              console.error(
+                "Failed to delete emergency contact:",
+                error
+              );
+
+              Alert.alert(
+                "Error",
+                "Unable to delete contact."
+              );
             }
           },
         },
-      ],
+      ]
     );
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.screen}>
-      {/* Curved Background Accent */}
-      <View style={styles.backgroundAccent} pointerEvents="none" />
+    <SafeAreaView
+      edges={["top"]}
+      style={styles.screen}
+    >
+      <View
+        style={styles.backgroundAccent}
+        pointerEvents="none"
+      />
 
-      {/* Header */}
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
@@ -196,25 +329,42 @@ export default function EmergencyContactsScreen() {
           onPress={handleGoBack}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={26} color="#0AA7A8" />
+          <Ionicons
+            name="arrow-back"
+            size={26}
+            color="#0AA7A8"
+          />
         </Pressable>
 
-        <Text style={styles.headerTitle}>Emergency Contacts</Text>
+        <Text style={styles.headerTitle}>
+          Emergency Contacts
+        </Text>
 
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Add emergency contact"
           hitSlop={12}
-          onPress={() => setModalVisible(true)}
+          onPress={openAddModal}
           style={styles.addButton}
         >
-          <Ionicons name="add" size={26} color="#0AA7A8" />
+          <Ionicons
+            name="add"
+            size={26}
+            color="#0AA7A8"
+          />
         </Pressable>
       </View>
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#0AA7A8" />
-          <Text style={styles.loadingText}>Loading emergency contacts...</Text>
+          <ActivityIndicator
+            size="large"
+            color="#0AA7A8"
+          />
+
+          <Text style={styles.loadingText}>
+            Loading emergency contacts...
+          </Text>
         </View>
       ) : (
         <ScrollView
@@ -229,8 +379,8 @@ export default function EmergencyContactsScreen() {
           }
         >
           <Text style={styles.sectionSubtitle}>
-            These contacts will be notified immediately when an emergency SOS
-            alert is triggered.
+            These contacts will be notified immediately
+            when an emergency SOS alert is triggered.
           </Text>
 
           {contacts.length === 0 ? (
@@ -239,40 +389,93 @@ export default function EmergencyContactsScreen() {
             </Text>
           ) : (
             contacts.map((contact) => (
-              <View key={contact.id} style={styles.contactCard}>
+              <View
+                key={contact.id}
+                style={styles.contactCard}
+              >
                 <View style={styles.contactIcon}>
                   <Ionicons
-                    name={contact.isPriority ? "shield-checkmark" : "person"}
+                    name={
+                      contact.isPriority
+                        ? "shield-checkmark"
+                        : "person"
+                    }
                     size={22}
-                    color={contact.isPriority ? "#0AA7A8" : "#64748B"}
+                    color={
+                      contact.isPriority
+                        ? "#0AA7A8"
+                        : "#64748B"
+                    }
                   />
                 </View>
 
                 <View style={styles.contactDetails}>
                   <View style={styles.nameRow}>
-                    <Text style={styles.contactName}>{contact.name}</Text>
+                    <Text
+                      style={styles.contactName}
+                      numberOfLines={1}
+                    >
+                      {contact.name}
+                    </Text>
+
                     {contact.isPriority && (
                       <View style={styles.primaryTag}>
-                        <Text style={styles.primaryTagText}>Priority</Text>
+                        <Text
+                          style={styles.primaryTagText}
+                        >
+                          Priority
+                        </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={styles.contactRel}>{contact.relationship}</Text>
-                  <Text style={styles.contactPhone}>{contact.phoneNumber}</Text>
+
+                  <Text style={styles.contactRel}>
+                    {contact.relationship}
+                  </Text>
+
+                  <Text style={styles.contactPhone}>
+                    {contact.phoneNumber}
+                  </Text>
                 </View>
 
                 <View style={styles.actionsRow}>
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => handleCall(contact.phoneNumber)}
+                    accessibilityLabel={`Call ${contact.name}`}
+                    onPress={() =>
+                      handleCall(contact.phoneNumber)
+                    }
                     style={styles.callBtn}
                   >
-                    <Ionicons name="call" size={18} color="#FFFFFF" />
+                    <Ionicons
+                      name="call"
+                      size={18}
+                      color="#FFFFFF"
+                    />
                   </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Edit ${contact.name}`}
+                    onPress={() =>
+                      handleEditContact(contact)
+                    }
+                    style={styles.editBtn}
+                  >
+                    <Ionicons
+                      name="pencil"
+                      size={18}
+                      color="#0AA7A8"
+                    />
+                  </Pressable>
+
                   {!contact.isPriority && (
                     <Pressable
                       accessibilityRole="button"
-                      onPress={() => handleDeleteContact(contact.id)}
+                      accessibilityLabel={`Delete ${contact.name}`}
+                      onPress={() =>
+                        handleDeleteContact(contact.id)
+                      }
                       style={styles.deleteBtn}
                     >
                       <Ionicons
@@ -289,40 +492,66 @@ export default function EmergencyContactsScreen() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => setModalVisible(true)}
+            onPress={openAddModal}
             style={styles.addContactRow}
           >
-            <Ionicons name="add-circle-outline" size={22} color="#0AA7A8" />
-            <Text style={styles.addContactText}>Add New Emergency Contact</Text>
+            <Ionicons
+              name="add-circle-outline"
+              size={22}
+              color="#0AA7A8"
+            />
+
+            <Text style={styles.addContactText}>
+              Add New Emergency Contact
+            </Text>
           </Pressable>
         </ScrollView>
       )}
 
-      {/* Add Contact Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={closeModal}
+      >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Emergency Contact</Text>
+            <Text style={styles.modalTitle}>
+              {editingContact
+                ? "Edit Emergency Contact"
+                : "Add Emergency Contact"}
+            </Text>
 
-            <Text style={styles.inputLabel}>Full Name</Text>
+            <Text style={styles.inputLabel}>
+              Full Name
+            </Text>
+
             <TextInput
               style={styles.input}
               placeholder="e.g. Dr. Emily Davis"
               placeholderTextColor="#94A3B8"
               value={name}
               onChangeText={setName}
+              editable={!submitting}
             />
 
-            <Text style={styles.inputLabel}>Relationship</Text>
+            <Text style={styles.inputLabel}>
+              Relationship
+            </Text>
+
             <TextInput
               style={styles.input}
               placeholder="e.g. Cardiologist, Daughter"
               placeholderTextColor="#94A3B8"
               value={relationship}
               onChangeText={setRelationship}
+              editable={!submitting}
             />
 
-            <Text style={styles.inputLabel}>Phone Number</Text>
+            <Text style={styles.inputLabel}>
+              Phone Number
+            </Text>
+
             <TextInput
               style={styles.input}
               placeholder="e.g. +63 912 345 6789"
@@ -330,26 +559,81 @@ export default function EmergencyContactsScreen() {
               keyboardType="phone-pad"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
+              editable={!submitting}
             />
+
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{
+                checked: isPriority,
+              }}
+              onPress={() =>
+                setIsPriority(
+                  (previous) => !previous
+                )
+              }
+              disabled={submitting}
+              style={styles.priorityRow}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  isPriority &&
+                    styles.checkboxSelected,
+                ]}
+              >
+                {isPriority && (
+                  <Ionicons
+                    name="checkmark"
+                    size={16}
+                    color="#FFFFFF"
+                  />
+                )}
+              </View>
+
+              <View
+                style={styles.priorityTextContainer}
+              >
+                <Text style={styles.priorityTitle}>
+                  Priority Contact
+                </Text>
+
+                <Text
+                  style={styles.priorityDescription}
+                >
+                  Mark this contact as the primary
+                  emergency contact.
+                </Text>
+              </View>
+            </Pressable>
 
             <View style={styles.modalActions}>
               <Pressable
-                onPress={() => setModalVisible(false)}
+                onPress={closeModal}
                 style={styles.cancelBtn}
                 disabled={submitting}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>
+                  Cancel
+                </Text>
               </Pressable>
 
               <Pressable
-                onPress={handleAddContact}
+                onPress={handleSaveContact}
                 style={styles.saveBtn}
                 disabled={submitting}
               >
                 {submitting ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator
+                    color="#FFFFFF"
+                    size="small"
+                  />
                 ) : (
-                  <Text style={styles.saveBtnText}>Save Contact</Text>
+                  <Text style={styles.saveBtnText}>
+                    {editingContact
+                      ? "Update Contact"
+                      : "Save Contact"}
+                  </Text>
                 )}
               </Pressable>
             </View>
@@ -365,6 +649,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
+
   backgroundAccent: {
     position: "absolute",
     top: -80,
@@ -375,6 +660,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EDFBFB",
     opacity: 0.9,
   },
+
   header: {
     height: 56,
     flexDirection: "row",
@@ -384,52 +670,61 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     zIndex: 10,
   },
+
   backButton: {
     width: 40,
     height: 40,
     alignItems: "flex-start",
     justifyContent: "center",
   },
+
   addButton: {
     width: 40,
     height: 40,
     alignItems: "flex-end",
     justifyContent: "center",
   },
+
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#1E242B",
     textAlign: "center",
   },
+
   loaderContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
   },
+
   loadingText: {
     marginTop: 12,
     fontSize: 14,
     color: "#64748B",
   },
+
   content: {
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 40,
   },
+
   sectionSubtitle: {
     fontSize: 13,
     color: "#64748B",
     lineHeight: 18,
     marginBottom: 20,
   },
+
   emptyText: {
     textAlign: "center",
     color: "#64748B",
     marginVertical: 20,
     fontSize: 14,
   },
+
   contactCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -440,11 +735,15 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
   },
+
   contactIcon: {
     width: 42,
     height: 42,
@@ -454,18 +753,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14,
   },
+
   contactDetails: {
     flex: 1,
+    minWidth: 0,
+    marginRight: 8,
   },
+
   nameRow: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   contactName: {
     fontSize: 15,
     fontWeight: "600",
     color: "#0F172A",
+    flexShrink: 1,
   },
+
   primaryTag: {
     backgroundColor: "#EDFBFB",
     borderColor: "#0AA7A8",
@@ -475,27 +781,33 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     marginLeft: 8,
   },
+
   primaryTagText: {
     color: "#0AA7A8",
     fontSize: 9,
     fontWeight: "700",
   },
+
   contactRel: {
     fontSize: 12,
     color: "#64748B",
     marginTop: 2,
   },
+
   contactPhone: {
     fontSize: 13,
     color: "#0AA7A8",
     fontWeight: "500",
     marginTop: 2,
   },
+
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 8,
+    justifyContent: "flex-end",
+    flexShrink: 0,
   },
+
   callBtn: {
     width: 36,
     height: 36,
@@ -503,8 +815,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#0AA7A8",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: 6,
   },
+
+  editBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EDFBFB",
+    borderWidth: 1,
+    borderColor: "#0AA7A8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+  },
+
   deleteBtn: {
     width: 36,
     height: 36,
@@ -513,6 +838,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   addContactRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -525,17 +851,20 @@ const styles = StyleSheet.create({
     borderColor: "#0AA7A8",
     backgroundColor: "#F8FAFC",
   },
+
   addContactText: {
     marginLeft: 8,
     fontSize: 15,
     fontWeight: "600",
     color: "#0AA7A8",
   },
+
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
   },
+
   modalContent: {
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
@@ -543,18 +872,21 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+
   modalTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#0F172A",
     marginBottom: 20,
   },
+
   inputLabel: {
     fontSize: 13,
     fontWeight: "600",
     color: "#475569",
     marginBottom: 6,
   },
+
   input: {
     height: 46,
     borderWidth: 1,
@@ -566,27 +898,73 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     marginBottom: 14,
   },
+
+  priorityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    marginTop: 2,
+    marginBottom: 8,
+  },
+
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  checkboxSelected: {
+    backgroundColor: "#0AA7A8",
+    borderColor: "#0AA7A8",
+  },
+
+  priorityTextContainer: {
+    flex: 1,
+  },
+
+  priorityTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0F172A",
+  },
+
+  priorityDescription: {
+    fontSize: 12,
+    color: "#64748B",
+    marginTop: 2,
+    lineHeight: 17,
+  },
+
   modalActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
     marginTop: 12,
   },
+
   cancelBtn: {
     paddingVertical: 12,
     paddingHorizontal: 18,
     marginRight: 10,
   },
+
   cancelBtnText: {
     fontSize: 15,
     fontWeight: "600",
     color: "#64748B",
   },
+
   saveBtn: {
     backgroundColor: "#0AA7A8",
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
+
   saveBtnText: {
     fontSize: 15,
     fontWeight: "600",
