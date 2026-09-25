@@ -6,7 +6,7 @@ import { registerSchema, type RegisterFormValues } from "@/schema/auth";
 import { register } from "@/services/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -27,6 +27,7 @@ export default function RegisterForm() {
 
   const handleRegister = async () => {
     setGeneralError(null);
+
     const parsed = registerSchema.safeParse({
       firstName,
       lastName,
@@ -43,14 +44,13 @@ export default function RegisterForm() {
 
         if (
           typeof field === "string" &&
-          field in
-            {
-              firstName: true,
-              lastName: true,
-              email: true,
-              password: true,
-              confirmPassword: true,
-            } &&
+          field in {
+            firstName: true,
+            lastName: true,
+            email: true,
+            password: true,
+            confirmPassword: true,
+          } &&
           !errors[field as keyof RegisterFormValues]
         ) {
           errors[field as keyof RegisterFormValues] = issue.message;
@@ -75,19 +75,24 @@ export default function RegisterForm() {
         email,
       }));
 
-      Alert.alert(
-        "Registration successful",
-        "Your account has been created. Please log in to continue.",
-        [{ text: "Continue", onPress: () => router.replace("/login") }],
-      );
+      router.push({
+        pathname: "/(auth)/verify-email",
+        params: {
+          email,
+        },
+      });
     } catch (error: any) {
       console.log(error);
+
       const serverMessage =
         error.response?.data?.message ||
         (Array.isArray(error.response?.data?.errors)
-          ? error.response.data.errors.map((e: any) => e.message).join(", ")
+          ? error.response.data.errors
+              .map((e: any) => e.message)
+              .join(", ")
           : null) ||
         "Registration failed. Please check the provided information.";
+
       setGeneralError(serverMessage);
     } finally {
       setLoading(false);
@@ -114,6 +119,7 @@ export default function RegisterForm() {
               firstName: undefined,
             }));
           }
+
           if (generalError) {
             setGeneralError(null);
           }
@@ -197,7 +203,11 @@ export default function RegisterForm() {
 
       <View style={styles.space} />
 
-      <Button title="Register" loading={loading} onPress={handleRegister} />
+      <Button
+        title="Register"
+        loading={loading}
+        onPress={handleRegister}
+      />
 
       <Pressable onPress={() => router.push("/login")}>
         <Text style={styles.footer}>
@@ -234,6 +244,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
+
   errorBannerText: {
     color: "#DC2626",
     fontSize: 14,

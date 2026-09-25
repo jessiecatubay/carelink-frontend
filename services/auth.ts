@@ -64,3 +64,16 @@ export const changePassword = async (
     newPassword,
   });
 };
+
+export async function verifyEmail(email: string, verificationCode: string) {
+  return axiosInstance.post("/api/user/v1/verify-email", {
+    email,
+    verificationCode,
+  });
+}
+
+export async function resendEmailVerification(email: string) {
+  return axiosInstance.post("/api/user/v1/resend-email-verification", {
+    email,
+  });
+}
