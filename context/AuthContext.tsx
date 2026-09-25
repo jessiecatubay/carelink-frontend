@@ -22,6 +22,7 @@ type AuthContextType = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   loading: boolean;
+  // googleSignIn: (idToken: string) => Promise<void>;
   signIn: (params: SignInParams) => Promise<void>;
   updateUser: (user: AuthUser) => Promise<void>;
   signOut: () => Promise<void>;

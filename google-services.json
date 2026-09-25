@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:633909210249:android:783740f2abc1e4aedfaa58",
+        "mobilesdk_app_id": "1:633909210249:android:314da2a1754a1a29dfaa58",
         "android_client_info": {
-          "package_name": "com.cracklings.frontend"
+          "package_name": "com.creepers.carelink"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "633909210249-v32hioernujlbr8bedjl5h162lokk0je.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBMWGtEQPEu3HtE0vzWwC8wp8eN8csjj68"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "633909210249-v32hioernujlbr8bedjl5h162lokk0je.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
