@@ -13,6 +13,7 @@ import ForgotPasswordLink from "./ForgotPasswordLink";
 import GoogleSignInButton from "./GoogleSignInButton";
 import LoginFooter from "./LoginFooter";
 import RememberMe from "./RememberMe";
+import { resendEmailVerification } from "@/services/auth";
 
 export default function LoginForm() {
   const { signIn } = useAuth();
@@ -91,7 +92,7 @@ export default function LoginForm() {
 
   const handleVerifyEmail = async () => {
     try {
-      await axiosInstance.post("/api/user/v1/resend-email-verification", {email: email});
+      await resendEmailVerification(email);
     } catch (error: any) {
       const serverMessage =
         error.response?.data?.message ||
