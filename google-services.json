@@ -1,33 +1,41 @@
 {
   "project_info": {
-    "project_number": "633909210249",
-    "project_id": "carelink-a0dd0",
-    "storage_bucket": "carelink-a0dd0.firebasestorage.app"
+    "project_number": "567616666250",
+    "project_id": "carelink-a25f5",
+    "storage_bucket": "carelink-a25f5.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:633909210249:android:314da2a1754a1a29dfaa58",
+        "mobilesdk_app_id": "1:567616666250:android:658b40a9eae3c0ab17cb73",
         "android_client_info": {
           "package_name": "com.creepers.carelink"
         }
       },
       "oauth_client": [
         {
-          "client_id": "633909210249-v32hioernujlbr8bedjl5h162lokk0je.apps.googleusercontent.com",
+          "client_id": "567616666250-lj7ng84an9a5bhkbmiq6trmm8eiln4c9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.creepers.carelink",
+            "certificate_hash": "00325d229056c8aef407e1341d1fe275889fc1fb"
+          }
+        },
+        {
+          "client_id": "567616666250-0sr7cgva9st10lvktd03iv29kkbdk3e2.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBMWGtEQPEu3HtE0vzWwC8wp8eN8csjj68"
+          "current_key": "AIzaSyCNdHarotlH_9jyNqE5G7hpfkU4Rr0xa_A"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "633909210249-v32hioernujlbr8bedjl5h162lokk0je.apps.googleusercontent.com",
+              "client_id": "567616666250-0sr7cgva9st10lvktd03iv29kkbdk3e2.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

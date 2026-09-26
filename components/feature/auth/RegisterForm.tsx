@@ -1,6 +1,9 @@
 import Button from "@/components/ui/Button";
+import Divider from "@/components/ui/Divider";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import GoogleSignInButton from "./login/GoogleSignInButton";
+import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { registerSchema, type RegisterFormValues } from "@/schema/auth";
 import { register } from "@/services/auth";
@@ -10,6 +13,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const { loginWithGoogle } = useAuth();
   const { setData } = useOnboarding();
 
   const [firstName, setFirstName] = useState("");
@@ -19,6 +23,7 @@ export default function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<
@@ -96,6 +101,30 @@ export default function RegisterForm() {
       setGeneralError(serverMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGeneralError(null);
+      setGoogleLoading(true);
+      await loginWithGoogle();
+    } catch (error: any) {
+      console.log("Google Sign-In Error:", error);
+      const serverMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to sign in with Google. Please try again.";
+
+      if (
+        serverMessage.includes("cancelled") ||
+        serverMessage.includes("SIGN_IN_CANCELLED")
+      ) {
+        return;
+      }
+      setGeneralError(serverMessage);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -207,6 +236,13 @@ export default function RegisterForm() {
         title="Register"
         loading={loading}
         onPress={handleRegister}
+      />
+
+      <Divider text="Or" />
+
+      <GoogleSignInButton
+        loading={googleLoading}
+        onPress={handleGoogleSignIn}
       />
 
       <Pressable onPress={() => router.push("/login")}>

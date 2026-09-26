@@ -71,7 +71,7 @@ export default function ManagePatientsScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/nonpatient/dashboard/(tabs)/settings");
+      router.replace("/nonpatient/dashboard/settings");
     }
   };
 
@@ -103,8 +103,8 @@ export default function ManagePatientsScreen() {
 
       Alert.alert(
         "Patient selected",
-        "The dashboard will now show this patient&apos;s information.",
-        [{ text: "Continue", onPress: () => router.replace("/nonpatient/dashboard/(tabs)") }],
+        "The dashboard will now show this patient's information.",
+        [{ text: "Continue", onPress: () => router.replace("/nonpatient/dashboard") }],
       );
     } catch (error) {
       console.error("Failed to select current patient:", error);

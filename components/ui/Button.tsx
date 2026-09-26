@@ -1,3 +1,4 @@
+import React from "react";
 import {
   ActivityIndicator,
   StyleProp,
@@ -37,7 +38,7 @@ export default function Button({
       {loading ? (
         <ActivityIndicator color="#FFF" />
       ) : (
-        <View style={styles.contentRow}>
+        <View style={styles.content}>
           {icon}
           <Text style={[styles.text, textStyle]}>{title}</Text>
         </View>
@@ -54,14 +55,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  contentRow: {
+
+  content: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
+
   disabledButton: {
     opacity: 0.6,
   },
+
   text: {
     color: "#FFF",
     fontSize: 16,

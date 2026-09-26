@@ -19,6 +19,12 @@ export const register = async (
   });
 };
 
+export const googleAuth = async (idToken: string) => {
+  return axiosInstance.post("/api/user/v1/google-auth", {
+    idToken,
+  });
+};
+
 export const resendVerification = async () => {
   return axiosInstance.post("/api/user/v1/resend-verification");
 };

@@ -21,11 +21,11 @@ export default function Login() {
     if (!loading && isAuthenticated) {
       // already authenticated — redirect based on role
       if (user?.role === "NON_PATIENT") {
-        router.replace("/nonpatient/dashboard/(tabs)");
+        router.replace("/nonpatient/dashboard");
         return;
       }
 
-      router.replace("/patient/dashboard/(tabs)");
+      router.replace("/patient/dashboard");
     }
   }, [isAuthenticated, loading, router, user?.role]);
 

@@ -20,7 +20,7 @@ export default function PatientLayout() {
       }
 
       if (user?.role !== "PATIENT") {
-        router.replace("/nonpatient/dashboard/(tabs)");
+        router.replace("/nonpatient/dashboard");
       }
     }
   }, [isAuthenticated, loading, router, user?.role]);

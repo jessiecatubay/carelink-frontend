@@ -4,11 +4,10 @@ import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
-import axiosInstance from "@/hooks/lib/axios";
 import { loginSchema, type LoginFormValues } from "@/schema/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import ForgotPasswordLink from "./ForgotPasswordLink";
 import GoogleSignInButton from "./GoogleSignInButton";
 import LoginFooter from "./LoginFooter";
@@ -16,7 +15,7 @@ import RememberMe from "./RememberMe";
 import { resendEmailVerification } from "@/services/auth";
 
 export default function LoginForm() {
-  const { signIn } = useAuth();
+  const { signIn, loginWithGoogle } = useAuth();
   const { setData } = useOnboarding();
   const router = useRouter();
 
@@ -24,6 +23,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showVerifyEmail, setShowVerifyEmail] = useState(false);
 
   const [errors, setErrors] = useState<
@@ -87,6 +87,31 @@ export default function LoginForm() {
       setGeneralError(serverMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGeneralError(null);
+      setGoogleLoading(true);
+      await loginWithGoogle();
+    } catch (error: any) {
+      console.log("Google Sign-In Error:", error);
+      const serverMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to sign in with Google. Please try again.";
+      
+      // Do not display loud error if user simply cancelled
+      if (
+        serverMessage.includes("cancelled") ||
+        serverMessage.includes("SIGN_IN_CANCELLED")
+      ) {
+        return;
+      }
+      setGeneralError(serverMessage);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -185,7 +210,10 @@ export default function LoginForm() {
 
       <Divider text="Or" />
 
-      <GoogleSignInButton />
+      <GoogleSignInButton
+        loading={googleLoading}
+        onPress={handleGoogleSignIn}
+      />
 
       <LoginFooter />
     </>

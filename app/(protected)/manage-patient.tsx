@@ -94,7 +94,7 @@ export default function ManagePatientScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/nonpatient/dashboard/(tabs)/settings");
+      router.replace("/nonpatient/dashboard/settings");
     }
   };
 
