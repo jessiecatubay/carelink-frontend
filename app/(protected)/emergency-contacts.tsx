@@ -1,3 +1,4 @@
+import SlideToCall911 from "@/components/ui/SlideToCall911";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { PatientProfile } from "@/types/user";
@@ -378,6 +379,9 @@ export default function EmergencyContactsScreen() {
             />
           }
         >
+          {/* Emergency 911 Slide-to-Call */}
+          <SlideToCall911 />
+
           <Text style={styles.sectionSubtitle}>
             These contacts will be notified immediately
             when an emergency SOS alert is triggered.

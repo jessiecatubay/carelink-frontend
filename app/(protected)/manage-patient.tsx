@@ -121,18 +121,16 @@ export default function ManagePatientScreen() {
 
   const patientName =
     [patient?.firstName, patient?.lastName].filter(Boolean).join(" ") ||
-    "Elderly Resident";
+    "Patient";
   const patientEmail = patient?.email || "No email available";
-  const age = profile?.age ?? 74;
-  const gender = profile?.gender ?? "Female";
-  const medicalConditions =
-    profile?.medicalConditions ?? "Hypertension, Mild Arthritis, Type 2 Diabetes";
-  const notes =
-    profile?.notes ??
-    "Prefers morning walks. Takes prescribed hypertension medication at 8:00 AM daily after breakfast.";
-  const emergencyContact = profile?.emergencyContact ?? "+63 912 345 6789";
-  const connectionCode = profile?.connectionCode ?? "CARE-8821";
-  const status = currentConnection?.status ?? "CONNECTED";
+  const age = profile?.age ?? null;
+  const gender = profile?.gender ?? null;
+  const medicalConditions = profile?.medicalConditions ?? "";
+  const notes = profile?.notes ?? "";
+  const emergencyContact =
+    profile?.emergencyContact || patient?.phoneNumber || null;
+  const connectionCode = profile?.connectionCode || null;
+  const status = currentConnection?.status ?? "DISCONNECTED";
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
@@ -170,55 +168,74 @@ export default function ManagePatientScreen() {
             />
           }
         >
-          {/* Patient Profile Card */}
-          <PatientProfileCard
-            name={patientName}
-            age={age}
-            gender={gender}
-            connectionStatus={status}
-            connectionCode={connectionCode}
-          />
+          {!patient ? (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="person-outline" size={48} color="#0AA7A8" />
+              </View>
+              <Text style={styles.emptyTitle}>No Patient Connected</Text>
+              <Text style={styles.emptySubtitle}>
+                You haven't connected with any patient yet. Scan a patient's QR code to start monitoring.
+              </Text>
+              <EditPatientButton
+                title="Pair New Patient"
+                onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
+                style={styles.pairButton}
+              />
+            </View>
+          ) : (
+            <>
+              {/* Patient Profile Card */}
+              <PatientProfileCard
+                name={patientName}
+                age={age}
+                gender={gender}
+                connectionStatus={status}
+                connectionCode={connectionCode}
+              />
 
-          {/* Personal Information */}
-          <PatientInformation
-            fullName={patientName}
-            age={age}
-            gender={gender}
-            email={patientEmail}
-            relationship="Primary Monitored Patient"
-          />
+              {/* Personal Information */}
+              <PatientInformation
+                fullName={patientName}
+                age={age}
+                gender={gender}
+                email={patientEmail}
+                relationship="Primary Monitored Patient"
+              />
 
-          {/* Medical & Illness Details */}
-          <MedicalInformation
-            medicalConditions={medicalConditions}
-            notes={notes}
-            onEditConditions={() =>
-              Alert.alert(
-                "Medical Conditions",
-                "To modify diagnosed medical conditions, please consult the healthcare supervisor.",
-              )
-            }
-            onEditNotes={() =>
-              Alert.alert(
-                "Care Notes",
-                "Care notes are synchronized in real-time with family members.",
-              )
-            }
-          />
+              {/* Medical & Illness Details */}
+              <MedicalInformation
+                medicalConditions={medicalConditions}
+                notes={notes}
+                onEditConditions={() =>
+                  Alert.alert(
+                    "Medical Conditions",
+                    "To modify diagnosed medical conditions, please consult the healthcare supervisor.",
+                  )
+                }
+                onEditNotes={() =>
+                  Alert.alert(
+                    "Care Notes",
+                    "Care notes are synchronized in real-time with family members.",
+                  )
+                }
+              />
 
-          {/* Emergency Contact */}
-          <EmergencyContactCard
-            contactName={`${patientName}'s Emergency Contact`}
-            phoneNumber={emergencyContact}
-            relationship="Caregiver / Emergency"
-          />
+              {/* Emergency Contact */}
+              <EmergencyContactCard
+                contactName={`${patientName}'s Emergency Contact`}
+                phoneNumber={emergencyContact}
+                relationship="Caregiver / Emergency"
+              />
 
-          {/* Action Button */}
-          <EditPatientButton
-            title="Manage Connected Patients"
-            onPress={handleEditPatient}
-            style={styles.editButton}
-          />
+              {/* Action Button */}
+              <EditPatientButton
+                title="Manage Connected Patients"
+                onPress={handleEditPatient}
+                style={styles.editButton}
+              />
+            </>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -255,6 +272,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 40,
+  },
+  emptyContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 28,
+    alignItems: "center",
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  emptyIconCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: "#EDFBFB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: "#0AA7A8",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1E242B",
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  pairButton: {
+    width: "100%",
   },
   editButton: {
     marginTop: 8,

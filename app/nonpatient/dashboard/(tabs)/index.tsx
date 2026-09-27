@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import {
@@ -13,8 +14,8 @@ import {
   isSamePhilippineDay,
 } from "@/utils/date";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
@@ -25,12 +26,17 @@ import PatientCurrentStatus from "@/components/feature/nonpatient/dashboard/Pati
 import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions";
 import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
 import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
+import ConnectPatientPromptModal from "@/components/ui/ConnectPatientPromptModal";
+import DashboardFeatureTour from "@/components/ui/DashboardFeatureTour";
 
 const MAX_HISTORY = 8;
+const TOUR_STORAGE_KEY = "@carelink_dashboard_tour_completed_v1";
 
 export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -42,6 +48,11 @@ export default function Home() {
     "CONNECTED" | "DISCONNECTED"
   >("DISCONNECTED");
   const [patientLoading, setPatientLoading] = useState(true);
+
+  // Connection Prompt & Feature Spotlight Tour States
+  const [showConnectPrompt, setShowConnectPrompt] = useState(false);
+  const [isTourActive, setIsTourActive] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
 
   useEffect(() => {
     const off = onPatientConnectionStatus((payload) => {
@@ -167,21 +178,36 @@ export default function Home() {
         });
         const connections = result.data.data.nonPatientConnections;
 
-        console.log(
-          "lafdsjhfoaweflsfkeasd",
-          JSON.stringify(connections, null, 2),
-        );
 
-        if (!Array.isArray(connections)) return;
 
-        for (const connection of connections) {
-          if (!connection.currentPatient) {
-            continue;
+        let activePatient: User | undefined;
+
+        if (Array.isArray(connections)) {
+          for (const connection of connections) {
+            if (!connection.currentPatient) {
+              continue;
+            }
+
+            activePatient = connection.patient;
+            setPatient(connection.patient);
+            setConnected(connection.status);
+            break;
           }
+        }
 
-          setPatient(connection.patient);
-          setConnected(connection.status);
-          break;
+        // 1. If user has no connected patient -> force connect prompt
+        if (!activePatient) {
+          setShowConnectPrompt(true);
+        } else {
+          setShowConnectPrompt(false);
+          // 2. Once patient is connected, start feature tour if not completed
+          const tourDone = await AsyncStorage.getItem(TOUR_STORAGE_KEY);
+          if (!tourDone) {
+            setTimeout(() => {
+              setIsTourActive(true);
+              setTourStepIndex(0);
+            }, 600);
+          }
         }
       } catch (error) {
         console.error("Failed to get patient:", error);
@@ -216,65 +242,192 @@ export default function Home() {
     };
   }, []);
 
+  // Handle tour step changes & auto-scroll to feature
+  const handleTourStep = (newIndex: number) => {
+    setTourStepIndex(newIndex);
+
+    const scrollTargets = [0, 90, 290, 470, 680];
+    const targetY = scrollTargets[newIndex] ?? 0;
+
+    scrollViewRef.current?.scrollTo({
+      y: targetY,
+      animated: true,
+    });
+  };
+
+  const handleFinishTour = async () => {
+    try {
+      await AsyncStorage.setItem(TOUR_STORAGE_KEY, "true");
+    } catch (e) {
+      console.log("Tour save error:", e);
+    }
+    setIsTourActive(false);
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       <DashboardHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        ref={scrollViewRef}
+        contentContainerStyle={[
+          styles.scrollContainer,
+          isTourActive && styles.scrollContainerDuringTour,
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <PatientCard
-          name={
-            patient
-              ? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim()
-              : patientLoading
-                ? "Loading patient..."
-                : "No patient connected"
-          }
-          internetStatus={patient ? patientInternetStatus : "DISCONNECTED"}
-          onPress={() => router.push("/nonpatient/dashboard/manage-patients")}
-        />
-
-        <CurrentVitals />
-
-        <View style={styles.vitalsGrid}>
-          <VitalCard
-            label="Heart Rate"
-            value={heartRate}
-            unit=" BPM"
-            icon={require("@/assets/icons/cardiogram.png")}
-            color="#12A5B5"
-            backgroundColor="#F0FCFD"
-            rangeDetail="60 - 100 BPM"
-            history={heartHistory}
-            chartGradientId="hrGradient"
-            tickType="heart"
-          />
-          <VitalCard
-            label="Temperature"
-            value={temperature}
-            unit=" °C"
-            icon={require("@/assets/icons/temperature.png")}
-            color="#F16A66"
-            backgroundColor="#FFF5F5"
-            rangeDetail="36.0 - 37.5 °C"
-            history={tempHistory}
-            chartGradientId="tempGradient"
-            tickType="temp"
+        {/* Step 1 Highlight: Patient Card */}
+        <View
+          style={[
+            styles.featureWrapper,
+            isTourActive && tourStepIndex === 0 && styles.spotlightActive,
+          ]}
+        >
+          {isTourActive && tourStepIndex === 0 ? (
+            <View style={[styles.spotlightTag, { backgroundColor: "#0284C7" }]}>
+              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: PATIENT STATUS ✦</Text>
+            </View>
+          ) : null}
+          <PatientCard
+            name={
+              patient
+                ? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim()
+                : patientLoading
+                  ? "Loading patient..."
+                  : "No patient connected"
+            }
+            internetStatus={patient ? patientInternetStatus : "DISCONNECTED"}
+            onPress={() => router.push("/nonpatient/dashboard/manage-patients")}
           />
         </View>
 
-        <PatientCurrentStatus patientId={patient?.id} />
-        <LastUpdatedCard lastUpdated={lastUpdated} />
-        <QuickActions
-          onNotificationPress={() =>
-            router.push("/nonpatient/dashboard/alerts")
-          }
-          onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
-        />
-        <RecentActivity patientId={patient?.id} />
+        {/* Step 2 Highlight: Current Vitals & Graphs */}
+        <View
+          style={[
+            styles.featureWrapper,
+            isTourActive && tourStepIndex === 1 && styles.spotlightActive,
+          ]}
+        >
+          {isTourActive && tourStepIndex === 1 ? (
+            <View style={[styles.spotlightTag, { backgroundColor: "#F16A66" }]}>
+              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: REAL-TIME VITALS ✦</Text>
+            </View>
+          ) : null}
+          <CurrentVitals />
+
+          <View style={styles.vitalsGrid}>
+            <VitalCard
+              label="Heart Rate"
+              value={heartRate}
+              unit=" BPM"
+              icon={require("@/assets/icons/cardiogram.png")}
+              color="#12A5B5"
+              backgroundColor="#F0FCFD"
+              rangeDetail="60 - 100 BPM"
+              history={heartHistory}
+              chartGradientId="hrGradient"
+              tickType="heart"
+            />
+            <VitalCard
+              label="Temperature"
+              value={temperature}
+              unit=" °C"
+              icon={require("@/assets/icons/temperature.png")}
+              color="#F16A66"
+              backgroundColor="#FFF5F5"
+              rangeDetail="36.0 - 37.5 °C"
+              history={tempHistory}
+              chartGradientId="tempGradient"
+              tickType="temp"
+            />
+          </View>
+        </View>
+
+        {/* Step 3 Highlight: Patient Posture & Safety Status */}
+        <View
+          style={[
+            styles.featureWrapper,
+            isTourActive && tourStepIndex === 2 && styles.spotlightActive,
+          ]}
+        >
+          {isTourActive && tourStepIndex === 2 ? (
+            <View style={[styles.spotlightTag, { backgroundColor: "#10B981" }]}>
+              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: POSTURE & SAFETY ✦</Text>
+            </View>
+          ) : null}
+          <PatientCurrentStatus patientId={patient?.id} />
+          <LastUpdatedCard lastUpdated={lastUpdated} />
+        </View>
+
+        {/* Step 4 Highlight: Quick Actions & AI Help */}
+        <View
+          style={[
+            styles.featureWrapper,
+            isTourActive && tourStepIndex === 3 && styles.spotlightActive,
+          ]}
+        >
+          {isTourActive && tourStepIndex === 3 ? (
+            <View style={[styles.spotlightTag, { backgroundColor: "#D97706" }]}>
+              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: AI & ALERTS ✦</Text>
+            </View>
+          ) : null}
+          <QuickActions
+            onNotificationPress={() =>
+              router.push("/nonpatient/dashboard/alerts")
+            }
+            onAiHelpPress={() => router.push("/nonpatient/dashboard/ai-help")}
+          />
+        </View>
+
+        {/* Step 5 Highlight: Recent Activity Feed */}
+        <View
+          style={[
+            styles.featureWrapper,
+            isTourActive && tourStepIndex === 4 && styles.spotlightActive,
+          ]}
+        >
+          {isTourActive && tourStepIndex === 4 ? (
+            <View style={[styles.spotlightTag, { backgroundColor: "#8B5CF6" }]}>
+              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: ACTIVITY LOG ✦</Text>
+            </View>
+          ) : null}
+          <RecentActivity patientId={patient?.id} />
+        </View>
       </ScrollView>
+
+      {/* Mandatory Modal: Connect Patient First */}
+      <ConnectPatientPromptModal
+        visible={showConnectPrompt && !patientLoading && !patient}
+        onScanQR={() => {
+          setShowConnectPrompt(false);
+          router.push("/nonpatient/dashboard/scan-patient");
+        }}
+        onManualPair={() => {
+          setShowConnectPrompt(false);
+          router.push("/nonpatient/dashboard/manage-patients");
+        }}
+      />
+
+      {/* Interactive In-Place Feature Tour with Explanations */}
+      {isTourActive ? (
+        <DashboardFeatureTour
+          currentStepIndex={tourStepIndex}
+          onNext={() => {
+            if (tourStepIndex < 4) {
+              handleTourStep(tourStepIndex + 1);
+            } else {
+              handleFinishTour();
+            }
+          }}
+          onPrev={() => {
+            if (tourStepIndex > 0) {
+              handleTourStep(tourStepIndex - 1);
+            }
+          }}
+          onFinish={handleFinishTour}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -288,44 +441,42 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
+  scrollContainerDuringTour: {
+    paddingBottom: 320,
+  },
+  featureWrapper: {
+    marginBottom: 16,
+    borderRadius: 20,
+  },
+  spotlightActive: {
+    borderWidth: 2.5,
+    borderColor: "#0AA7A8",
+    borderRadius: 20,
+    padding: 4,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#0AA7A8",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  spotlightTag: {
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignSelf: "center",
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  spotlightTagText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+  },
   vitalsGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  connectionFallback: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#DCEFF1",
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 24,
-    padding: 28,
-  },
-  fallbackTitle: {
-    color: "#1A202C",
-    fontSize: 17,
-    fontWeight: "700",
-    marginTop: 12,
-    textAlign: "center",
-  },
-  fallbackText: {
-    color: "#718096",
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 8,
-    textAlign: "center",
-  },
-  emptyButton: {
-    backgroundColor: "#12A5B5",
-    borderRadius: 10,
-    marginTop: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-  },
-  emptyButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700",
+    gap: 12,
+    marginTop: 10,
   },
 });

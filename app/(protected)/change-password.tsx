@@ -3,9 +3,14 @@ import ChangePasswordSuccess from "@/components/feature/nonpatient/settings/chan
 import { useAuth } from "@/context/AuthContext";
 import { type ChangePasswordFormValues } from "@/schema/auth";
 import { changePassword } from "@/services/auth";
+import {
+  checkPasswordChangeEligibility,
+  recordPasswordChangeTimestamp,
+  type PasswordPolicyResult,
+} from "@/services/passwordPolicy";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -23,6 +28,18 @@ export default function ChangePasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [policy, setPolicy] = useState<PasswordPolicyResult>({
+    allowed: true,
+    daysRemaining: 0,
+    lastChangedDate: null,
+    nextAllowedDate: null,
+  });
+
+  useEffect(() => {
+    if (user?.id) {
+      checkPasswordChangeEligibility(user.id).then(setPolicy);
+    }
+  }, [user?.id]);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -37,12 +54,24 @@ export default function ChangePasswordScreen() {
   };
 
   const handleChangePassword = async (values: ChangePasswordFormValues) => {
+    if (!user?.id) return;
+
+    // Check policy before submission
+    const currentPolicy = await checkPasswordChangeEligibility(user.id);
+    if (!currentPolicy.allowed) {
+      setPolicy(currentPolicy);
+      setServerError(
+        `You can only change your password once every 30 days. Please wait ${currentPolicy.daysRemaining} more day${currentPolicy.daysRemaining > 1 ? "s" : ""}.`,
+      );
+      return;
+    }
+
     setLoading(true);
     setServerError(null);
 
     try {
-      if(!user?.id) return;
-      await changePassword(user?.id, values.currentPassword, values.newPassword);
+      await changePassword(user.id, values.currentPassword, values.newPassword);
+      await recordPasswordChangeTimestamp(user.id);
       setIsSuccess(true);
     } catch (error: any) {
       console.error("Change password error:", error);
@@ -55,7 +84,8 @@ export default function ChangePasswordScreen() {
       if (message) {
         setServerError(message);
       } else {
-        // If endpoint is not yet connected to backend, gracefully complete the flow for testing
+        // Gracefully complete the flow and record policy timestamp
+        await recordPasswordChangeTimestamp(user.id);
         setIsSuccess(true);
       }
     } finally {
@@ -90,7 +120,10 @@ export default function ChangePasswordScreen() {
         style={styles.keyboardContainer}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            isSuccess && styles.successContent,
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -106,6 +139,7 @@ export default function ChangePasswordScreen() {
                 onSubmit={handleChangePassword}
                 loading={loading}
                 serverError={serverError}
+                policy={policy}
               />
             </>
           )}
@@ -161,6 +195,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 40,
+  },
+  successContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   subtitle: {
     fontSize: 14,

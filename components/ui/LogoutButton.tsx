@@ -1,8 +1,7 @@
+import LogoutConfirmModal from "@/components/ui/LogoutConfirmModal";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -11,41 +10,37 @@ import {
 
 export default function LogoutButton() {
   const { signOut } = useAuth();
+  const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogout = () => {
-    Alert.alert("Log out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          setLoading(true);
-          try {
-            await signOut();
-          } catch (e) {
-            console.error("Logout failed", e);
-          } finally {
-            setLoading(false);
-          }
-        },
-      },
-    ]);
+  const handleConfirmLogout = async () => {
+    setLoading(true);
+    try {
+      await signOut();
+    } catch (e) {
+      console.error("Logout failed", e);
+    } finally {
+      setLoading(false);
+      setModalVisible(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Pressable
         style={styles.button}
-        onPress={handleLogout}
+        onPress={() => setModalVisible(true)}
         disabled={loading}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.text}>Log out</Text>
-        )}
+        <Text style={styles.text}>Log out</Text>
       </Pressable>
+
+      <LogoutConfirmModal
+        visible={modalVisible}
+        loading={loading}
+        onCancel={() => setModalVisible(false)}
+        onConfirm={handleConfirmLogout}
+      />
     </View>
   );
 }
@@ -57,7 +52,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   button: {
-    backgroundColor: "#F16A66",
+    backgroundColor: "#DC2626",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

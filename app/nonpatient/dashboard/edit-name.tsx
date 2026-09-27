@@ -20,8 +20,8 @@ export default function EditNameScreen() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
 
-  const [firstName, setFirstName] = useState(user?.firstName || "Zayn");
-  const [lastName, setLastName] = useState(user?.lastName || "Malik");
+  const [firstName, setFirstName] = useState(user?.firstName || "");
+  const [lastName, setLastName] = useState(user?.lastName || "");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ firstName?: string; lastName?: string }>({});
 

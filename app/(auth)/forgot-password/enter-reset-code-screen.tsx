@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -187,6 +188,21 @@ export default function EnterResetCodeScreen() {
               The code expires after 15 minutes.
             </Text>
 
+            {/* Spam Folder Note Callout */}
+            <View style={styles.spamNoteBox}>
+              <Ionicons
+                name="information-circle-outline"
+                size={18}
+                color="#0AA7A8"
+                style={styles.spamNoteIcon}
+              />
+              <Text style={styles.spamNoteText}>
+                <Text style={styles.spamNoteBold}>Note:</Text> Can{"'"}t find the code? Please make sure to check your{" "}
+                <Text style={styles.spamNoteHighlight}>Spam</Text> or{" "}
+                <Text style={styles.spamNoteHighlight}>Junk</Text> folder.
+              </Text>
+            </View>
+
             <TouchableOpacity
               onPress={handleResendCode}
               disabled={resending || loading}
@@ -252,21 +268,21 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: 40,
     paddingBottom: 32,
-    justifyContent: "center",
   },
 
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 24,
-    marginTop: 24,
+    marginTop: 12,
   },
 
   title: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#1A202C",
+    color: "#111827",
     textAlign: "center",
     marginBottom: 10,
   },
@@ -321,6 +337,40 @@ const styles = StyleSheet.create({
     color: "#718096",
     textAlign: "center",
     marginTop: 12,
+  },
+
+  spamNoteBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 16,
+    gap: 8,
+  },
+
+  spamNoteIcon: {
+    flexShrink: 0,
+  },
+
+  spamNoteText: {
+    flex: 1,
+    fontSize: 12,
+    color: "#334155",
+    lineHeight: 17,
+  },
+
+  spamNoteBold: {
+    fontWeight: "700",
+    color: "#0F766E",
+  },
+
+  spamNoteHighlight: {
+    fontWeight: "700",
+    color: "#0D9488",
   },
 
   resend: {

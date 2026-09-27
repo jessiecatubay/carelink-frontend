@@ -2,13 +2,13 @@ import AccountInformation from "@/components/feature/nonpatient/settings/profile
 import EditProfileButton from "@/components/feature/nonpatient/settings/profile/EditProfileButton";
 import ProfileHeader from "@/components/feature/nonpatient/settings/profile/ProfileHeader";
 import RoleInformation from "@/components/feature/nonpatient/settings/profile/RoleInformation";
+import PatientMedicalInformation from "@/components/feature/patient/settings/PatientMedicalInformation";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -20,26 +20,41 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
+  const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [phoneNumber, setPhoneNumber] = useState(
     user?.emergencyContact || "",
   );
+  const [age, setAge] = useState(
+    user?.patientProfile?.age ? String(user.patientProfile.age) : "",
+  );
+  const [gender, setGender] = useState(user?.patientProfile?.gender || "");
+  const [medicalConditions, setMedicalConditions] = useState(
+    user?.patientProfile?.medicalConditions || "",
+  );
+  const [notes, setNotes] = useState(user?.patientProfile?.notes || "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setFirstName(user?.firstName || "");
-    setLastName(user?.lastName || "");
-    setPhoneNumber(user?.emergencyContact || "");
-  }, [user]);
+    if (!isEditing) {
+      setFirstName(user?.firstName || "");
+      setLastName(user?.lastName || "");
+      setPhoneNumber(user?.emergencyContact || "");
+      setAge(user?.patientProfile?.age ? String(user.patientProfile.age) : "");
+      setGender(user?.patientProfile?.gender || "");
+      setMedicalConditions(user?.patientProfile?.medicalConditions || "");
+      setNotes(user?.patientProfile?.notes || "");
+    }
+  }, [user, isEditing]);
 
   const fullName =
     [firstName, lastName].filter(Boolean).join(" ") ||
-    (user?.role === "PATIENT" ? "Patient Resident" : "Caregiver / Family");
+    (user?.role === "PATIENT" ? "Patient" : "Caregiver / Family");
 
-  const email = user?.email || "user@carelink.com";
+  const email = user?.email || "";
 
   const roleTitle =
     user?.role === "NON_PATIENT"
@@ -58,6 +73,17 @@ export default function ProfileScreen() {
         router.replace("/(protected)/(non-patient)/settings");
       }
     }
+  };
+
+  const handleCancelEdit = () => {
+    setFirstName(user?.firstName || "");
+    setLastName(user?.lastName || "");
+    setPhoneNumber(user?.emergencyContact || "");
+    setAge(user?.patientProfile?.age ? String(user.patientProfile.age) : "");
+    setGender(user?.patientProfile?.gender || "");
+    setMedicalConditions(user?.patientProfile?.medicalConditions || "");
+    setNotes(user?.patientProfile?.notes || "");
+    setIsEditing(false);
   };
 
   const handleSaveProfile = async () => {
@@ -91,12 +117,53 @@ export default function ProfileScreen() {
       formData.append("lastName", lastName.trim());
       formData.append("emergencyContact", phoneNumber.trim());
 
+      if (user.role === "PATIENT") {
+        if (age.trim()) formData.append("age", age.trim());
+        if (gender.trim()) formData.append("gender", gender.trim());
+        if (medicalConditions.trim())
+          formData.append("medicalConditions", medicalConditions.trim());
+        if (notes.trim()) formData.append("notes", notes.trim());
+      }
+
       const response = await axiosInstance.put(
         "/api/user/v1/update-user",
         formData,
       );
 
       console.log("Updated profile:", response.data);
+
+      const updatedUser =
+        response?.data?.data?.user ??
+        response?.data?.data ??
+        response?.data?.user;
+
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      } else {
+        await updateUser({
+          ...user,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          emergencyContact: phoneNumber.trim(),
+          patientProfile:
+            user.role === "PATIENT"
+              ? {
+                  ...(user.patientProfile || {
+                    id: "",
+                    userId: user.id,
+                    connectionCode: "",
+                    emergencyContact: phoneNumber.trim(),
+                  }),
+                  age: age.trim() ? Number(age.trim()) : null,
+                  gender: gender.trim() || null,
+                  medicalConditions: medicalConditions.trim() || null,
+                  notes: notes.trim() || null,
+                }
+              : user.patientProfile,
+        });
+      }
+
+      setIsEditing(false);
 
       Alert.alert(
         "Profile Updated",
@@ -146,34 +213,36 @@ export default function ProfileScreen() {
           lastName={lastName}
           email={email}
           phoneNumber={phoneNumber}
+          editable={isEditing}
           onFirstNameChange={setFirstName}
           onLastNameChange={setLastName}
           onPhoneNumberChange={setPhoneNumber}
         />
 
-        <RoleInformation
-          accountType={roleTitle}
-          onPress={() =>
-            Alert.alert(
-              "Account Type",
-              `Your account role is currently configured as ${roleTitle}.`,
-            )
-          }
-        />
+        {user?.role === "PATIENT" && (
+          <PatientMedicalInformation
+            age={age}
+            gender={gender}
+            medicalConditions={medicalConditions}
+            notes={notes}
+            editable={isEditing}
+            onAgeChange={setAge}
+            onGenderChange={setGender}
+            onMedicalConditionsChange={setMedicalConditions}
+            onNotesChange={setNotes}
+          />
+        )}
+
+        <RoleInformation accountType={roleTitle} />
 
         <EditProfileButton
-          onPress={handleSaveProfile}
+          isEditing={isEditing}
+          loading={saving}
+          onPress={isEditing ? handleSaveProfile : () => setIsEditing(true)}
+          onCancel={handleCancelEdit}
           style={styles.editButton}
           disabled={saving}
         />
-
-        {saving && (
-          <ActivityIndicator
-            size="small"
-            color="#0AA7A8"
-            style={styles.loading}
-          />
-        )}
       </ScrollView>
     </SafeAreaView>
   );

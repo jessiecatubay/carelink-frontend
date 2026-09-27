@@ -21,7 +21,7 @@ export default function EditPhoneScreen() {
   const { user, updateUser } = useAuth();
 
   const [phoneNumber, setPhoneNumber] = useState(
-    user?.emergencyContact || "+63 936 936 938 171",
+    user?.emergencyContact || "",
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -118,7 +118,7 @@ export default function EditPhoneScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Phone Number</Text>
               <Input
-                placeholder="+63 936 936 938 171"
+                placeholder="+63 9XX XXX XXXX"
                 keyboardType="phone-pad"
                 value={phoneNumber}
                 onChangeText={(text) => {

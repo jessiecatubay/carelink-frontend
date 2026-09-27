@@ -41,14 +41,27 @@ export default function SelectRole() {
       <Text style={styles.subtitle}>Select your role to continue</Text>
 
       {/* Patient Card */}
-      <Pressable style={styles.card} onPress={() => setSelectedRole("patient")}>
+      <Pressable
+        style={[
+          styles.card,
+          selectedRole === "patient" && styles.cardSelectedPatient,
+        ]}
+        onPress={() => setSelectedRole("patient")}
+      >
         <Image
           source={require("@/assets/icons/disabled.png")}
           style={styles.icon}
         />
 
         <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>Patient</Text>
+          <Text
+            style={[
+              styles.cardTitle,
+              selectedRole === "patient" && styles.cardTitlePatientSelected,
+            ]}
+          >
+            Patient
+          </Text>
           <Text style={styles.cardSubtitle}>Send requests using remote</Text>
         </View>
 
@@ -60,7 +73,10 @@ export default function SelectRole() {
 
       {/* Non-patient Card */}
       <Pressable
-        style={styles.card}
+        style={[
+          styles.card,
+          selectedRole === "nonpatient" && styles.cardSelectedNonPatient,
+        ]}
         onPress={() => setSelectedRole("nonpatient")}
       >
         <Image
@@ -69,7 +85,14 @@ export default function SelectRole() {
         />
 
         <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>Non-patient</Text>
+          <Text
+            style={[
+              styles.cardTitle,
+              selectedRole === "nonpatient" && styles.cardTitleNonPatientSelected,
+            ]}
+          >
+            Non-patient
+          </Text>
           <Text style={styles.cardSubtitle}>
             Monitor and assist the patient
           </Text>
@@ -135,6 +158,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F7F7F7",
     borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "transparent",
     paddingHorizontal: 16,
     marginBottom: 16,
     // Subtle shadow
@@ -143,6 +168,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  cardSelectedPatient: {
+    backgroundColor: "#F0FCFD",
+    borderColor: "#12A5B5",
+    borderWidth: 2,
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  cardSelectedNonPatient: {
+    backgroundColor: "#FFF5F5",
+    borderColor: "#F16A66",
+    borderWidth: 2,
+    shadowColor: "#F16A66",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
   icon: {
     width: 44,
@@ -157,6 +202,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#000",
+  },
+  cardTitlePatientSelected: {
+    color: "#12A5B5",
+    fontWeight: "700",
+  },
+  cardTitleNonPatientSelected: {
+    color: "#F16A66",
+    fontWeight: "700",
   },
   cardSubtitle: {
     fontSize: 12,

@@ -1,3 +1,4 @@
+import { triggerAppHaptic } from "@/context/HapticsContext";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -32,11 +33,17 @@ export default function SettingsItem({
 }: SettingsItemProps) {
   const isPressable = Boolean(onPress) && !disabled;
 
+  const handlePress = () => {
+    if (!isPressable) return;
+    triggerAppHaptic(destructive ? "medium" : "light");
+    onPress?.();
+  };
+
   return (
     <Pressable
       accessibilityRole={isPressable ? "button" : undefined}
       disabled={!isPressable}
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => [
         styles.row,
         pressed && isPressable && styles.rowPressed,

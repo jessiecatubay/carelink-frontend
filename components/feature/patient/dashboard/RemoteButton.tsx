@@ -1,5 +1,5 @@
+import { triggerAppHaptic, triggerAppVibration } from "@/context/HapticsContext";
 import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
-import * as Haptics from "expo-haptics";
 
 type RemoteButtonProps = {
   label: string;
@@ -20,8 +20,12 @@ export default function RemoteButton({
 }: RemoteButtonProps) {
   const handlePress = () => {
     if (disabled) return;
-    // Premium haptic feedback to mimic a physical remote button click
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (isEmergency) {
+      triggerAppHaptic("heavy");
+      triggerAppVibration([0, 80, 50, 80]);
+    } else {
+      triggerAppHaptic("medium");
+    }
     onPress();
   };
 

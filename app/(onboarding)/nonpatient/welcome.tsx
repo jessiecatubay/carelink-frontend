@@ -13,7 +13,7 @@ export default function NonPatientOnboardingScreen() {
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={0} total={7} />
+          <PaginationDots currentIndex={0} total={6} />
         </View>
 
         <View style={styles.content}>

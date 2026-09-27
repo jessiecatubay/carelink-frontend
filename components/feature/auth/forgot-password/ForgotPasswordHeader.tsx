@@ -1,5 +1,4 @@
 import { Image, ImageSourcePropType, StyleSheet, Text, View } from "react-native";
-import Logo from "@/components/common/Logo";
 
 type ForgotPasswordHeaderProps = {
   title: string;
@@ -10,16 +9,9 @@ type ForgotPasswordHeaderProps = {
 export default function ForgotPasswordHeader({
   title,
   icon,
-  showLogo = true,
 }: ForgotPasswordHeaderProps) {
   return (
     <View style={styles.container}>
-      {showLogo && (
-        <View style={styles.logoWrap}>
-          <Logo />
-        </View>
-      )}
-
       {title ? <Text style={styles.title}>{title}</Text> : null}
 
       {icon && (
@@ -36,15 +28,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
-  logoWrap: {
-    alignItems: "center",
-    marginTop: 16,
-    marginBottom: 8,
-  },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#12A5B5",
+    color: "#111827",
     textAlign: "center",
     marginBottom: 16,
   },

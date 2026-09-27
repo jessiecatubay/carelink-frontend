@@ -7,6 +7,7 @@ export type AccountInformationProps = {
   lastName?: string;
   email?: string;
   phoneNumber?: string;
+  editable?: boolean;
   onFirstNameChange?: (value: string) => void;
   onLastNameChange?: (value: string) => void;
   onPhoneNumberChange?: (value: string) => void;
@@ -15,8 +16,9 @@ export type AccountInformationProps = {
 export default function AccountInformation({
   firstName = "",
   lastName = "",
-  email = "zaynmalik@gmail.com",
-  phoneNumber = "+63 936 936 938 171",
+  email = "",
+  phoneNumber = "",
+  editable = false,
   onFirstNameChange,
   onLastNameChange,
   onPhoneNumberChange,
@@ -30,7 +32,7 @@ export default function AccountInformation({
           icon="person"
           label="First Name"
           value={firstName}
-          editable
+          editable={editable}
           onChangeText={onFirstNameChange}
           showChevron={false}
           showDivider
@@ -40,7 +42,7 @@ export default function AccountInformation({
           icon="person"
           label="Last Name"
           value={lastName}
-          editable
+          editable={editable}
           onChangeText={onLastNameChange}
           showChevron={false}
           showDivider
@@ -59,7 +61,7 @@ export default function AccountInformation({
           icon="call"
           label="Phone Number"
           value={phoneNumber}
-          editable
+          editable={editable}
           onChangeText={onPhoneNumberChange}
           showChevron={false}
         />

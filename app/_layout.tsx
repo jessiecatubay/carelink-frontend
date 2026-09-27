@@ -11,6 +11,8 @@ import {
 } from "@react-navigation/native";
 
 import { AuthProvider } from "@/context/AuthContext";
+import { EmergencyAlertProvider } from "@/context/EmergencyAlertContext";
+import { HapticsProvider } from "@/context/HapticsContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
 import { initSocket } from "@/hooks/lib/socket";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -87,10 +89,14 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <AuthProvider>
-          <OnboardingProvider>
-            <Stack screenOptions={{ headerShown: false }} />
-            <StatusBar style="auto" />
-          </OnboardingProvider>
+          <HapticsProvider>
+            <EmergencyAlertProvider>
+              <OnboardingProvider>
+                <Stack screenOptions={{ headerShown: false }} />
+                <StatusBar style="auto" />
+              </OnboardingProvider>
+            </EmergencyAlertProvider>
+          </HapticsProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -1,6 +1,6 @@
+import LogoutConfirmModal from "@/components/ui/LogoutConfirmModal";
 import { useAuth } from "@/context/AuthContext";
-import React from "react";
-import { Alert } from "react-native";
+import React, { useState } from "react";
 import SettingsItem from "./SettingsItem";
 
 export type LogoutButtonProps = {
@@ -9,30 +9,41 @@ export type LogoutButtonProps = {
 
 export default function LogoutButton({ onLogout }: LogoutButtonProps) {
   const { signOut } = useAuth();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogoutPress = () => {
-    Alert.alert("Log out", "Are you sure you want to log out of CareLink?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          if (onLogout) {
-            onLogout();
-          } else {
-            await signOut();
-          }
-        },
-      },
-    ]);
+  const handleConfirmLogout = async () => {
+    setLoading(true);
+    try {
+      if (onLogout) {
+        onLogout();
+      } else {
+        await signOut();
+      }
+    } catch (e) {
+      console.error("Logout failed:", e);
+    } finally {
+      setLoading(false);
+      setModalVisible(false);
+    }
   };
 
   return (
-    <SettingsItem
-      destructive
-      icon="log-out-outline"
-      title="Logout"
-      onPress={handleLogoutPress}
-    />
+    <>
+      <SettingsItem
+        destructive
+        icon="log-out-outline"
+        title="Logout"
+        onPress={() => setModalVisible(true)}
+      />
+
+      <LogoutConfirmModal
+        visible={modalVisible}
+        loading={loading}
+        onCancel={() => setModalVisible(false)}
+        onConfirm={handleConfirmLogout}
+      />
+    </>
   );
 }
+

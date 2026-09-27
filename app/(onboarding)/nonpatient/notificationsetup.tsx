@@ -1,15 +1,21 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { Image, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
+import AnimatedBell from "@/components/ui/AnimatedBell";
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
+import { registerForPushNotificationsAsync } from "@/hooks/lib/notifications";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NotificationSetupScreen() {
   const router = useRouter();
 
-  const handleEnable = () => {
+  const handleEnable = async () => {
+    try {
+      await registerForPushNotificationsAsync();
+    } catch (e) {
+      console.log("Push notification registration during onboarding:", e);
+    }
     // Navigate to setup complete
     router.push("/(onboarding)/nonpatient/setupcomplete");
   };
@@ -20,7 +26,7 @@ export default function NotificationSetupScreen() {
         <View>
           {/* Progress */}
           <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={5} total={7} />
+            <PaginationDots currentIndex={5} total={6} />
           </View>
 
           {/* Title */}
@@ -33,11 +39,7 @@ export default function NotificationSetupScreen() {
 
           {/* Card */}
           <View style={styles.card}>
-            <Image
-              source={require("@/assets/icons/bell.png")}
-              style={styles.bellIcon}
-              resizeMode="contain"
-            />
+            <AnimatedBell size={64} tintColor="#12A5B5" />
 
             <Text style={styles.cardTitle}>Stay Alerted</Text>
 

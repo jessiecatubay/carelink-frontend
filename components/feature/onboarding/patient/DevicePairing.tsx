@@ -27,7 +27,7 @@ export default function DevicePairing({
       >
         <View>
           <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={3} total={7} />
+            <PaginationDots currentIndex={3} total={6} />
           </View>
 
           <Text style={styles.title}>Connect to a Patient</Text>

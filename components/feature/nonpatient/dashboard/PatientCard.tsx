@@ -1,3 +1,4 @@
+import { triggerAppHaptic } from "@/context/HapticsContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -14,11 +15,16 @@ export default function PatientCard({
 }: PatientCardProps) {
   const isConnected = internetStatus === "CONNECTED";
 
+  const handlePress = () => {
+    triggerAppHaptic("light");
+    onPress?.();
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="View connected patients"
-      onPress={onPress}
+      onPress={handlePress}
       style={styles.patientCard}
     >
       <View style={styles.patientCardLeft}>

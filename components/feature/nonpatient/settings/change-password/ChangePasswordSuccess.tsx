@@ -1,6 +1,5 @@
-import Button from "@/components/ui/Button";
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import AnimatedCheckmark from "@/components/ui/AnimatedCheckmark";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 type ChangePasswordSuccessProps = {
@@ -10,76 +9,62 @@ type ChangePasswordSuccessProps = {
 export default function ChangePasswordSuccess({
   onContinue,
 }: ChangePasswordSuccessProps) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onContinue();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onContinue]);
+
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.iconCircle}>
-          <Ionicons name="checkmark-circle" size={64} color="#0AA7A8" />
-        </View>
+      <AnimatedCheckmark
+        size={140}
+        circleColor="#F16A66"
+        checkColor="#FFFFFF"
+        showRipple
+        style={{ marginBottom: 28 }}
+      />
 
-        <Text style={styles.title}>Password Changed!</Text>
+      <Text style={styles.congratsTitle}>Congratulations!</Text>
+      <Text style={styles.congratsText}>
+        Your password has been{"\n"}successfully updated.
+      </Text>
 
-        <Text style={styles.description}>
-          Your password has been successfully updated
-        </Text>
-
-        <Button
-          title="Back to Settings"
-          onPress={onContinue}
-          style={styles.button}
-        />
-      </View>
+      <Text style={styles.redirectText}>Redirecting to settings...</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     width: "100%",
-    alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 20,
-  },
-  card: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 24,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 4,
+    paddingVertical: 40,
+    paddingHorizontal: 24,
   },
-  iconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: "#E6F7F7",
-    alignItems: "center",
-    justifyContent: "center",
+  congratsTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#F16A66",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  congratsText: {
+    fontSize: 16,
+    color: "#4B5563",
+    textAlign: "center",
+    lineHeight: 24,
     marginBottom: 20,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1E242B",
-    marginBottom: 10,
+  redirectText: {
+    fontSize: 13,
+    color: "#9CA3AF",
     textAlign: "center",
-  },
-  description: {
-    fontSize: 14,
-    color: "#64748B",
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 24,
-    paddingHorizontal: 10,
-  },
-  button: {
-    width: "100%",
-    backgroundColor: "#0AA7A8",
+    fontWeight: "500",
   },
 });
+

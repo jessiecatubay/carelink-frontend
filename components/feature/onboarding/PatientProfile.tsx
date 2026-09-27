@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -36,6 +37,11 @@ const initialForm: PatientOnboardingInput = {
   notes: "",
 };
 
+const GENDER_OPTIONS = [
+  { label: "Male", value: "Male", icon: "male" as const },
+  { label: "Female", value: "Female", icon: "female" as const },
+];
+
 function getFormErrors(form: PatientOnboardingInput): FormErrors {
   const result = patientOnboardingSchema.safeParse(form);
 
@@ -54,6 +60,8 @@ function getFormErrors(form: PatientOnboardingInput): FormErrors {
 
 export default function PatientProfile({ onContinue }: PatientProfileProps) {
   const [form, setForm] = useState(initialForm);
+  const [isGenderOpen, setIsGenderOpen] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>(
     {},
   );
@@ -103,7 +111,7 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
       >
         <View>
           <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={3} total={6} />
+            <PaginationDots currentIndex={3} total={5} />
           </View>
 
           {/* Title */}
@@ -114,31 +122,126 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
             <TextInput
               style={[
                 styles.input,
+                focusedField === "age" && styles.inputFocused,
                 touched.age && errors.age ? styles.inputError : null,
               ]}
               placeholder="Age"
               placeholderTextColor="#9CA3AF"
               keyboardType="numeric"
               value={form.age}
+              onFocus={() => {
+                setFocusedField("age");
+                setIsGenderOpen(false);
+              }}
+              onBlur={() => setFocusedField(null)}
               onChangeText={(value) => updateField("age", value)}
             />
             {renderError("age")}
 
-            <TextInput
-              style={[
-                styles.input,
-                touched.gender && errors.gender ? styles.inputError : null,
-              ]}
-              placeholder="Gender"
-              placeholderTextColor="#9CA3AF"
-              value={form.gender}
-              onChangeText={(value) => updateField("gender", value)}
-            />
+            {/* Gender Dropdown Selector */}
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.dropdownButton,
+                  touched.gender && errors.gender ? styles.inputError : null,
+                  isGenderOpen && styles.dropdownButtonOpen,
+                ]}
+                onPress={() => setIsGenderOpen((prev) => !prev)}
+              >
+                <View style={styles.dropdownValueRow}>
+                  <Ionicons
+                    name={
+                      form.gender === "Male"
+                        ? "male"
+                        : form.gender === "Female"
+                          ? "female"
+                          : "male-female-outline"
+                    }
+                    size={19}
+                    color={form.gender ? "#0AA7A8" : "#9CA3AF"}
+                    style={styles.genderIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.dropdownValueText,
+                      !form.gender && styles.placeholderText,
+                    ]}
+                  >
+                    {form.gender || "Select Gender"}
+                  </Text>
+                </View>
+
+                <Ionicons
+                  name={isGenderOpen ? "chevron-up" : "chevron-down"}
+                  size={19}
+                  color={isGenderOpen ? "#0AA7A8" : "#9CA3AF"}
+                />
+              </TouchableOpacity>
+
+              {/* Dropdown Menu Options */}
+              {isGenderOpen && (
+                <View style={styles.dropdownMenu}>
+                  {GENDER_OPTIONS.map((option, idx) => {
+                    const isSelected = form.gender === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.7}
+                        style={[
+                          styles.dropdownOption,
+                          idx === 0 && styles.dropdownOptionTop,
+                          idx === GENDER_OPTIONS.length - 1 &&
+                            styles.dropdownOptionBottom,
+                          isSelected && styles.dropdownOptionSelected,
+                        ]}
+                        onPress={() => {
+                          updateField("gender", option.value);
+                          setIsGenderOpen(false);
+                        }}
+                      >
+                        <View style={styles.optionLeft}>
+                          <View
+                            style={[
+                              styles.optionIconWrap,
+                              isSelected && styles.optionIconWrapSelected,
+                            ]}
+                          >
+                            <Ionicons
+                              name={option.icon}
+                              size={17}
+                              color={isSelected ? "#0AA7A8" : "#6B7280"}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.optionText,
+                              isSelected && styles.optionTextSelected,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </View>
+
+                        {isSelected && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={19}
+                            color="#0AA7A8"
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
             {renderError("gender")}
 
             <TextInput
               style={[
                 styles.input,
+                focusedField === "medicalConditions" && styles.inputFocused,
                 touched.medicalConditions && errors.medicalConditions
                   ? styles.inputError
                   : null,
@@ -146,6 +249,11 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
               placeholder="Illness / Medical Conditions"
               placeholderTextColor="#9CA3AF"
               value={form.medicalConditions}
+              onFocus={() => {
+                setFocusedField("medicalConditions");
+                setIsGenderOpen(false);
+              }}
+              onBlur={() => setFocusedField(null)}
               onChangeText={(value) => updateField("medicalConditions", value)}
             />
             {renderError("medicalConditions")}
@@ -154,6 +262,7 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
               style={[
                 styles.input,
                 styles.textArea,
+                focusedField === "notes" && styles.inputFocused,
                 touched.notes && errors.notes ? styles.inputError : null,
               ]}
               placeholder="Notes / Optional"
@@ -161,6 +270,11 @@ export default function PatientProfile({ onContinue }: PatientProfileProps) {
               multiline
               numberOfLines={4}
               value={form.notes}
+              onFocus={() => {
+                setFocusedField("notes");
+                setIsGenderOpen(false);
+              }}
+              onBlur={() => setFocusedField(null)}
               onChangeText={(value) => updateField("notes", value)}
             />
             {renderError("notes")}
@@ -238,6 +352,107 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1F2937",
     marginBottom: 16,
+  },
+  inputFocused: {
+    borderColor: "#0AA7A8",
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  dropdownContainer: {
+    marginBottom: 16,
+    zIndex: 10,
+  },
+  dropdownButton: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#4B5563",
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+  },
+  dropdownButtonOpen: {
+    borderColor: "#0AA7A8",
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  dropdownValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  genderIcon: {
+    marginRight: 2,
+  },
+  dropdownValueText: {
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "500",
+  },
+  placeholderText: {
+    color: "#9CA3AF",
+    fontWeight: "400",
+  },
+  dropdownMenu: {
+    marginTop: 6,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  dropdownOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  dropdownOptionTop: {
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+  },
+  dropdownOptionBottom: {
+    borderBottomWidth: 0,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+  },
+  dropdownOptionSelected: {
+    backgroundColor: "#F0FDFA",
+  },
+  optionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  optionIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  optionIconWrapSelected: {
+    backgroundColor: "#CCFBF1",
+  },
+  optionText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  optionTextSelected: {
+    color: "#0AA7A8",
+    fontWeight: "700",
   },
   inputError: {
     borderColor: "#F16A66",

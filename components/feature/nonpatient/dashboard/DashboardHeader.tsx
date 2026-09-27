@@ -1,8 +1,14 @@
-import { Image, Pressable, StyleSheet, View } from "react-native";
-import { router } from "expo-router";
 import ScanIcon from "@/components/common/ScanIcon";
+import { triggerAppHaptic } from "@/context/HapticsContext";
+import { router } from "expo-router";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 
 export default function DashboardHeader() {
+  const handleScanPress = () => {
+    triggerAppHaptic("light");
+    router.push("/nonpatient/dashboard/scan-patient");
+  };
+
   return (
     <View style={styles.header}>
       <Image
@@ -11,7 +17,7 @@ export default function DashboardHeader() {
         resizeMode="contain"
       />
       <Pressable
-        onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
+        onPress={handleScanPress}
         style={styles.scanButton}
         hitSlop={8}
       >

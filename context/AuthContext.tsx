@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
 
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import { closeSocket, initSocket } from "@/hooks/lib/socket";
 import { getMe, googleAuth, login } from "@/services/auth";
 import {
@@ -22,6 +22,17 @@ type SignInParams = {
   rememberMe: boolean;
 };
 
+type ModalConfig = {
+  visible: boolean;
+  title: string;
+  message: string;
+  buttonText?: string;
+  hideButton?: boolean;
+  autoDismissMs?: number;
+  type?: AlertModalType;
+  onConfirm: () => void;
+};
+
 type AuthContextType = {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -37,6 +48,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -96,35 +108,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("currently logged in", apiUser);
 
     if (apiUser.onBoarded === false && apiUser.role === "USER") {
-      Alert.alert("Login successful", "Let&apos;s finish setting up your account.", [
-        { text: "Continue", onPress: () => router.replace("/user-onboarding") },
-      ]);
+      setModalConfig({
+        visible: true,
+        title: "Login Successful",
+        message: "Let's finish setting up your account.",
+        hideButton: true,
+        autoDismissMs: 3000,
+        type: "success",
+        onConfirm: () => {
+          setModalConfig(null);
+          router.replace("/user-onboarding");
+        },
+      });
       return;
     }
 
     if (apiUser.role === "NON_PATIENT") {
-      Alert.alert("Login successful", "Welcome back to CareLink.", [
-        {
-          text: "Continue",
-          onPress: () => router.replace("/nonpatient/dashboard"),
+      setModalConfig({
+        visible: true,
+        title: "Login Successful",
+        message: "Welcome back to CareLink.",
+        hideButton: true,
+        autoDismissMs: 3000,
+        type: "success",
+        onConfirm: () => {
+          setModalConfig(null);
+          router.replace("/nonpatient/dashboard");
         },
-      ]);
+      });
       return;
     }
 
     if (apiUser.role === "PATIENT") {
-      Alert.alert("Login successful", "Welcome back to CareLink.", [
-        {
-          text: "Continue",
-          onPress: () => router.replace("/patient/dashboard"),
+      setModalConfig({
+        visible: true,
+        title: "Login Successful",
+        message: "Welcome back to CareLink.",
+        hideButton: true,
+        autoDismissMs: 3000,
+        type: "success",
+        onConfirm: () => {
+          setModalConfig(null);
+          router.replace("/patient/dashboard");
         },
-      ]);
+      });
       return;
     }
 
-    Alert.alert("Login successful", "Please continue setting up your account.", [
-      { text: "Continue", onPress: () => router.replace("/(auth)/register") },
-    ]);
+    setModalConfig({
+      visible: true,
+      title: "Login Successful",
+      message: "Please continue setting up your account.",
+      hideButton: true,
+      autoDismissMs: 3000,
+      type: "success",
+      onConfirm: () => {
+        setModalConfig(null);
+        router.replace("/(auth)/register");
+      },
+    });
   };
 
   const loginWithGoogle = async () => {
@@ -141,35 +183,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initSocket();
 
     if (apiUser.onBoarded === false && apiUser.role === "USER") {
-      Alert.alert("Login successful", "Let's finish setting up your account.", [
-        { text: "Continue", onPress: () => router.replace("/user-onboarding") },
-      ]);
+      setModalConfig({
+        visible: true,
+        title: "Login Successful",
+        message: "Let's finish setting up your account.",
+        hideButton: true,
+        autoDismissMs: 3000,
+        type: "success",
+        onConfirm: () => {
+          setModalConfig(null);
+          router.replace("/user-onboarding");
+        },
+      });
       return;
     }
 
     if (apiUser.role === "NON_PATIENT") {
-      Alert.alert("Login successful", "Welcome back to CareLink.", [
-        {
-          text: "Continue",
-          onPress: () => router.replace("/nonpatient/dashboard"),
+      setModalConfig({
+        visible: true,
+        title: "Login Successful",
+        message: "Welcome back to CareLink.",
+        hideButton: true,
+        autoDismissMs: 3000,
+        type: "success",
+        onConfirm: () => {
+          setModalConfig(null);
+          router.replace("/nonpatient/dashboard");
         },
-      ]);
+      });
       return;
     }
 
     if (apiUser.role === "PATIENT") {
-      Alert.alert("Login successful", "Welcome back to CareLink.", [
-        {
-          text: "Continue",
-          onPress: () => router.replace("/patient/dashboard"),
+      setModalConfig({
+        visible: true,
+        title: "Login Successful",
+        message: "Welcome back to CareLink.",
+        hideButton: true,
+        autoDismissMs: 3000,
+        type: "success",
+        onConfirm: () => {
+          setModalConfig(null);
+          router.replace("/patient/dashboard");
         },
-      ]);
+      });
       return;
     }
 
-    Alert.alert("Login successful", "Please continue setting up your account.", [
-      { text: "Continue", onPress: () => router.replace("/(auth)/register") },
-    ]);
+    setModalConfig({
+      visible: true,
+      title: "Login Successful",
+      message: "Please continue setting up your account.",
+      hideButton: true,
+      autoDismissMs: 3000,
+      type: "success",
+      onConfirm: () => {
+        setModalConfig(null);
+        router.replace("/(auth)/register");
+      },
+    });
   };
 
   const updateUser = async (updatedUser: AuthUser) => {
@@ -202,7 +274,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user, loading],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {modalConfig ? (
+        <CustomAlertModal
+          visible={modalConfig.visible}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          buttonText={modalConfig.buttonText}
+          hideButton={modalConfig.hideButton}
+          autoDismissMs={modalConfig.autoDismissMs}
+          type={modalConfig.type}
+          onConfirm={modalConfig.onConfirm}
+        />
+      ) : null}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
