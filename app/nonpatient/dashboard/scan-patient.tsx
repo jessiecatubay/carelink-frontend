@@ -128,7 +128,7 @@ export default function ScanPatientScreen() {
             {
               text: "OK",
               onPress: () => {
-                router.replace("/nonpatient/dashboard/(tabs)");
+                router.replace("/nonpatient/dashboard");
               },
             },
           ],

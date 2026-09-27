@@ -3,7 +3,11 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
 import { closeSocket, initSocket } from "@/hooks/lib/socket";
-import { getMe, login } from "@/services/auth";
+import { getMe, googleAuth, login } from "@/services/auth";
+import {
+  signInWithGoogle as googleSignIn,
+  signOutFromGoogle,
+} from "@/services/googleAuthService";
 import {
   clearAuthTokens,
   loadAuthTokens,
@@ -22,8 +26,8 @@ type AuthContextType = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  // googleSignIn: (idToken: string) => Promise<void>;
   signIn: (params: SignInParams) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   updateUser: (user: AuthUser) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -102,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       Alert.alert("Login successful", "Welcome back to CareLink.", [
         {
           text: "Continue",
-          onPress: () => router.replace("/nonpatient/dashboard/(tabs)"),
+          onPress: () => router.replace("/nonpatient/dashboard"),
         },
       ]);
       return;
@@ -112,7 +116,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       Alert.alert("Login successful", "Welcome back to CareLink.", [
         {
           text: "Continue",
-          onPress: () => router.replace("/patient/dashboard/(tabs)"),
+          onPress: () => router.replace("/patient/dashboard"),
+        },
+      ]);
+      return;
+    }
+
+    Alert.alert("Login successful", "Please continue setting up your account.", [
+      { text: "Continue", onPress: () => router.replace("/(auth)/register") },
+    ]);
+  };
+
+  const loginWithGoogle = async () => {
+    console.log("AuthContext: Starting Google Sign-In flow...");
+    const { firebaseIdToken } = await googleSignIn();
+    console.log("AuthContext: Received Firebase ID Token, verifying with backend...");
+
+    const result = await googleAuth(firebaseIdToken);
+    const { accessToken, refreshToken, user: apiUser } = result.data.data;
+
+    await setAuthTokens({ accessToken, refreshToken }, apiUser, true);
+    setUser(apiUser);
+    closeSocket();
+    initSocket();
+
+    if (apiUser.onBoarded === false && apiUser.role === "USER") {
+      Alert.alert("Login successful", "Let's finish setting up your account.", [
+        { text: "Continue", onPress: () => router.replace("/user-onboarding") },
+      ]);
+      return;
+    }
+
+    if (apiUser.role === "NON_PATIENT") {
+      Alert.alert("Login successful", "Welcome back to CareLink.", [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/nonpatient/dashboard"),
+        },
+      ]);
+      return;
+    }
+
+    if (apiUser.role === "PATIENT") {
+      Alert.alert("Login successful", "Welcome back to CareLink.", [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/patient/dashboard"),
         },
       ]);
       return;
@@ -129,6 +178,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    try {
+      await signOutFromGoogle();
+    } catch (e) {
+      console.log("Error signing out of Google:", e);
+    }
     await clearAuthTokens();
     closeSocket();
     setUser(null);
@@ -141,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(user),
       loading,
       signIn,
+      loginWithGoogle,
       updateUser,
       signOut,
     }),

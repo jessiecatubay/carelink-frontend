@@ -33,7 +33,7 @@ export default function SetupCompleteScreen() {
       }
 
       router.dismissAll();
-      router.replace("/nonpatient/dashboard/(tabs)" as Href);
+      router.replace("/nonpatient/dashboard" as Href);
     } catch (error) {
       console.error("SetupCompleteScreen onboarding failed", error);
       // Fallback local updates so the user is not trapped in an onboarding redirect loop during dev
@@ -45,7 +45,7 @@ export default function SetupCompleteScreen() {
         });
       }
       router.dismissAll();
-      router.replace("/nonpatient/dashboard/(tabs)" as Href);
+      router.replace("/nonpatient/dashboard" as Href);
     }
   };
 

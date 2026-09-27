@@ -68,7 +68,7 @@ export default function DevicePairingScreen() {
         [
           {
             text: "OK",
-            onPress: () => router.replace("/nonpatient/dashboard/(tabs)"),
+            onPress: () => router.replace("/nonpatient/dashboard"),
           },
         ],
       );

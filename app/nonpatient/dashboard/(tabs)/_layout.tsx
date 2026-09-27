@@ -5,17 +5,17 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 
 export default function TabLayout() {
-  useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => {
-        if (token) {
-          console.log("Non-patient push token:", token);
-        }
-      })
-      .catch((error) => {
-        console.error("Push notification registration error:", error);
-      });
-  }, []);
+  // useEffect(() => {
+  //   registerForPushNotificationsAsync()
+  //     .then((token) => {
+  //       if (token) {
+  //         console.log("Non-patient push token:", token);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error("Push notification registration error:", error);
+  //     });
+  // }, []);
   return (
     <Tabs
       screenOptions={{
@@ -40,7 +40,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
               size={24}
@@ -53,7 +53,7 @@ export default function TabLayout() {
         name="alerts"
         options={{
           title: "Alerts",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <Ionicons
               name={focused ? "notifications" : "notifications-outline"}
               size={24}
@@ -66,7 +66,7 @@ export default function TabLayout() {
         name="ai-help"
         options={{
           title: "AI Help",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <MaterialCommunityIcons
               name={focused ? "robot" : "robot-outline"}
               size={24}
@@ -79,7 +79,7 @@ export default function TabLayout() {
         name="history"
         options={{
           title: "History",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <Ionicons
               name={focused ? "time" : "time-outline"}
               size={24}
@@ -92,7 +92,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <Ionicons
               name={focused ? "settings" : "settings-outline"}
               size={24}

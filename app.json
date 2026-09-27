@@ -4,7 +4,7 @@
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/satisfiedlogo.png",
+    "icon": "./assets/images/CareLink_logo.png",
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -12,9 +12,10 @@
     },
     "android": {
       "googleServicesFile": "./google-services.json",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/satisfiedlogo.png"
+        "foregroundImage": "./assets/images/CareLink_logo.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.creepers.carelink"
@@ -50,8 +51,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "813ac6e1-b221-41ae-9ae1-e5d91b5f0c8a"
+        "projectId": "e127e085-b558-4ce2-85ba-f0e13b8b38fa"
       }
-    }
+    },
+    "owner": "lostcreeper"
   }
 }

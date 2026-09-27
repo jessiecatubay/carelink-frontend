@@ -51,7 +51,7 @@ export default function ProfileScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/nonpatient/dashboard/(tabs)/settings");
+      router.replace("/nonpatient/dashboard/settings");
     }
   };
 
