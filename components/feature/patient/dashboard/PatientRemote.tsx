@@ -9,7 +9,6 @@ import RemoteButton from "./RemoteButton";
 
 export default function PatientRemote() {
   const { user } = useAuth();
-  const { triggerEmergencyAlert } = useEmergencyAlert();
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -30,12 +29,6 @@ export default function PatientRemote() {
 
     if (label === "Emergency") {
       setPendingRequest("Emergency");
-      // Trigger centered NDRRMC emergency modal & loud siren sound locally
-      triggerEmergencyAlert({
-        patientName: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "You (Patient)",
-        alertType: "🚨 CRITICAL EMERGENCY SOS",
-        timestamp: new Date().toLocaleTimeString(),
-      });
     } else if (label === "Food" || label === "Water" || label === "Assistance") {
       setPendingRequest(label);
     } else if (label === "Satisfied") {

@@ -1,10 +1,12 @@
 import NDRRMCEmergencyModal, {
   EmergencyModalData,
 } from "@/components/ui/NDRRMCEmergencyModal";
+import { useAuth } from "@/context/AuthContext";
 import { onPatientAlert } from "@/hooks/lib/socket";
 import { playEmergencySiren, stopEmergencySiren } from "@/services/emergencyAudio";
 import * as Notifications from "expo-notifications";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { Platform } from "react-native";
 
 interface EmergencyAlertContextType {
   isEmergencyActive: boolean;
@@ -25,11 +27,17 @@ export function EmergencyAlertProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { user } = useAuth();
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
   const [emergencyData, setEmergencyData] =
     useState<EmergencyModalData | null>(null);
 
   const triggerEmergencyAlert = (data?: EmergencyModalData) => {
+    // Only non-patients / caregivers should have emergency alerts triggered
+    if (user?.role === "PATIENT") {
+      return;
+    }
+
     const alertInfo: EmergencyModalData = {
       patientName: data?.patientName || "Connected Patient",
       alertType: data?.alertType || "CRITICAL EMERGENCY SOS",
@@ -50,14 +58,82 @@ export function EmergencyAlertProvider({
     stopEmergencySiren();
   };
 
+  // Helper to trigger system notification banner & sound for non-emergency alerts
+  const showLocalAlertNotification = async (payload: any) => {
+    try {
+      // Patients should never receive notification banners for commands they sent
+      if (user?.role === "PATIENT") {
+        return;
+      }
+
+      const command = (payload?.command || payload?.alertType || "").toUpperCase();
+      if (!command) return;
+
+      let title = "CareLink Alert";
+      let body = "The patient sent a new alert.";
+
+      switch (command) {
+        case "FOOD":
+          title = "🍱 Food Assistance";
+          body = "The patient is requesting food.";
+          break;
+        case "WATER":
+          title = "💧 Water Assistance";
+          body = "The patient is requesting water.";
+          break;
+        case "ASSISTANCE":
+          title = "🙋 Assistance Requested";
+          body = "The patient is requesting assistance.";
+          break;
+        case "SATISFIED":
+          title = "✅ Request Satisfied";
+          body = "The patient's request has been marked as satisfied.";
+          break;
+        default:
+          title = `CareLink Alert: ${command}`;
+          body = "The patient sent a new request.";
+          break;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          sound: "default",
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          vibrate: [0, 250, 250, 250],
+          data: payload,
+        },
+        trigger: null,
+      });
+    } catch (error) {
+      console.warn("Local notification error:", error);
+    }
+  };
+
   // 1. Listen for real-time WebSocket socket alerts from connected patients
   useEffect(() => {
     const unsubscribe = onPatientAlert((payload) => {
       console.log("🚨 EmergencyAlertContext received socket alert:", payload);
 
+      // Only non-patients (caregivers) should receive notifications
+      if (user?.role === "PATIENT") {
+        return;
+      }
+
+      if (user?.id && payload?.patientId && user.id === payload.patientId && user.role !== "NON_PATIENT") {
+        return;
+      }
+
       const command = (payload as any)?.command?.toUpperCase?.() || "";
       const alertType = (payload as any)?.alertType?.toUpperCase?.() || "";
       const type = (payload as any)?.type?.toUpperCase?.() || "";
+
+      if (command === "SATISFIED" || alertType === "SATISFIED") {
+        dismissEmergencyAlert();
+        showLocalAlertNotification(payload);
+        return;
+      }
 
       const isEmergency =
         command === "EMERGENCY" ||
@@ -75,17 +151,23 @@ export function EmergencyAlertProvider({
           alertType: "🚨 EMERGENCY SOS BROADCAST",
           timestamp: new Date().toLocaleTimeString(),
         });
+      } else {
+        showLocalAlertNotification(payload);
       }
     });
 
     return () => {
       unsubscribe?.();
     };
-  }, []);
+  }, [user?.role, user?.id]);
 
   // 2. Listen for Push Notifications (foreground received + opened from closed/background state)
   useEffect(() => {
     const handlePushNotification = (notification: Notifications.Notification) => {
+      if (user?.role === "PATIENT") {
+        return;
+      }
+
       const data = notification.request.content.data as {
         type?: string;
         command?: string;

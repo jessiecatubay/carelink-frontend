@@ -5,17 +5,17 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 
 export default function TabLayout() {
-  // useEffect(() => {
-  //   registerForPushNotificationsAsync()
-  //     .then((token) => {
-  //       if (token) {
-  //         console.log("Non-patient push token:", token);
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.error("Push notification registration error:", error);
-  //     });
-  // }, []);
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        if (token) {
+          console.log("Non-patient push token:", token);
+        }
+      })
+      .catch((error) => {
+        console.error("Push notification registration error:", error);
+      });
+  }, []);
   return (
     <Tabs
       screenOptions={{

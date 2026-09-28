@@ -65,7 +65,7 @@ export function startPatientPresence() {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const sendHeartbeat = () => {
@@ -92,7 +92,7 @@ export function onPatientVitals(callback: (payload: PatientVitals) => void) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const handleVitals = (payload: unknown) => {
@@ -114,7 +114,7 @@ export function onPatientAlert(callback: (payload: PatientAlert) => void) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const handleAlert = (payload: unknown) => {
@@ -139,7 +139,7 @@ export function onPatientConnectionStatus(
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const handleStatus = (payload: unknown) => {
