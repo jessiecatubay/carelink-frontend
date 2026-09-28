@@ -1,3 +1,4 @@
+import PairingSuccess from "@/components/feature/nonpatient/settings/PairingSuccess";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,7 @@ export default function DevicePairingScreen() {
   const { user } = useAuth();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -62,16 +64,7 @@ export default function DevicePairingScreen() {
         return;
       }
 
-      Alert.alert(
-        "Pairing Successful",
-        "Patient device has been linked to your account.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/nonpatient/dashboard"),
-          },
-        ],
-      );
+      setIsSuccess(true);
     } catch (error: any) {
       const msg =
         error?.response?.data?.message ||
@@ -108,68 +101,79 @@ export default function DevicePairingScreen() {
         style={styles.container}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            isSuccess && styles.successContent,
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Card 1: Scan QR */}
-          <View style={styles.card}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="qr-code-outline" size={32} color="#0AA7A8" />
-            </View>
-            <Text style={styles.cardTitle}>Scan Patient QR Code</Text>
-            <Text style={styles.cardSubtitle}>
-              Use your device camera to scan the pairing QR code displayed on the patient&apos;s device.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleOpenScanner}
-              style={({ pressed }) => [
-                styles.scanButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Ionicons name="camera-outline" size={20} color="#FFFFFF" style={styles.btnIcon} />
-              <Text style={styles.scanButtonText}>Open QR Scanner</Text>
-            </Pressable>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR ENTER CODE</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Card 2: Manual Code Input */}
-          <View style={styles.card}>
-            <Text style={styles.inputLabel}>Connection Code</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. AB12CD"
-              placeholderTextColor="#94A3B8"
-              autoCapitalize="characters"
-              autoCorrect={false}
-              value={code}
-              onChangeText={setCode}
+          {isSuccess ? (
+            <PairingSuccess
+              onContinue={() => router.replace("/nonpatient/dashboard")}
             />
-            <Pressable
-              accessibilityRole="button"
-              disabled={loading}
-              onPress={handleConnectByCode}
-              style={({ pressed }) => [
-                styles.connectButton,
-                pressed && styles.buttonPressed,
-                loading && styles.buttonDisabled,
-              ]}
-            >
-              {loading ? (
-                <ActivityIndicator color="#0AA7A8" />
-              ) : (
-                <Text style={styles.connectButtonText}>Pair with Code</Text>
-              )}
-            </Pressable>
-          </View>
+          ) : (
+            <>
+              {/* Card 1: Scan QR */}
+              <View style={styles.card}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="qr-code-outline" size={32} color="#0AA7A8" />
+                </View>
+                <Text style={styles.cardTitle}>Scan Patient QR Code</Text>
+                <Text style={styles.cardSubtitle}>
+                  Use your device camera to scan the pairing QR code displayed on the patient&apos;s device.
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={handleOpenScanner}
+                  style={({ pressed }) => [
+                    styles.scanButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Ionicons name="camera-outline" size={20} color="#FFFFFF" style={styles.btnIcon} />
+                  <Text style={styles.scanButtonText}>Open QR Scanner</Text>
+                </Pressable>
+              </View>
+
+              {/* Divider */}
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR ENTER CODE</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Card 2: Manual Code Input */}
+              <View style={styles.card}>
+                <Text style={styles.inputLabel}>Connection Code</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. AB12CD"
+                  placeholderTextColor="#94A3B8"
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  value={code}
+                  onChangeText={setCode}
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={loading}
+                  onPress={handleConnectByCode}
+                  style={({ pressed }) => [
+                    styles.connectButton,
+                    pressed && styles.buttonPressed,
+                    loading && styles.buttonDisabled,
+                  ]}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#0AA7A8" />
+                  ) : (
+                    <Text style={styles.connectButtonText}>Pair with Code</Text>
+                  )}
+                </Pressable>
+              </View>
+            </>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -222,6 +226,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 40,
+  },
+  successContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   card: {
     backgroundColor: "#FFFFFF",

@@ -1,12 +1,45 @@
 import PatientRemote from "@/components/feature/patient/dashboard/PatientRemote";
+import ConnectPatientPromptModal from "@/components/ui/ConnectPatientPromptModal";
+import DashboardTourModal from "@/components/ui/DashboardTourModal";
+import { useAuth } from "@/context/AuthContext";
+import { triggerAppHaptic } from "@/context/HapticsContext";
+import axiosInstance from "@/hooks/lib/axios";
 import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PatientDashboardHome() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [showConnectPrompt, setShowConnectPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const checkFamilyConnections = async () => {
+      try {
+        const response = await axiosInstance.post(
+          "/api/patient-nonpatient/v1/connected-nonpatients",
+          { userId: user.id },
+        );
+
+        const connected = response.data?.data;
+        if (!connected || (Array.isArray(connected) && connected.length === 0)) {
+          setShowConnectPrompt(true);
+        }
+      } catch (error) {
+        console.log("Check patient family connections failed:", error);
+        // Show prompt if not yet connected
+        setShowConnectPrompt(true);
+      }
+    };
+
+    checkFamilyConnections();
+  }, [user?.id]);
 
   const handleOpenSettings = () => {
+    triggerAppHaptic("light");
     router.push("/patient/dashboard/settings");
   };
 
@@ -41,6 +74,22 @@ export default function PatientDashboardHome() {
           <PatientRemote />
         </View>
       </View>
+
+      {/* Connect a Family First Prompt Modal for New/Unconnected Patients */}
+      <ConnectPatientPromptModal
+        role="PATIENT"
+        visible={showConnectPrompt}
+        onPrimaryAction={() => {
+          setShowConnectPrompt(false);
+          router.push("/patient/dashboard/qrcode");
+        }}
+        onSecondaryAction={() => {
+          setShowConnectPrompt(false);
+        }}
+      />
+
+      {/* Interactive Feature Walkthrough Guide for New Patient Users */}
+      <DashboardTourModal role="PATIENT" />
     </SafeAreaView>
   );
 }

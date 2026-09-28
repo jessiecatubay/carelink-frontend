@@ -3,6 +3,7 @@ import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from "@/schema/auth";
+import { type PasswordPolicyResult } from "@/services/passwordPolicy";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -19,12 +20,14 @@ type ChangePasswordFormProps = {
   onSubmit?: (values: ChangePasswordFormValues) => Promise<void> | void;
   loading?: boolean;
   serverError?: string | null;
+  policy?: PasswordPolicyResult;
 };
 
 export default function ChangePasswordForm({
   onSubmit,
   loading = false,
   serverError = null,
+  policy,
 }: ChangePasswordFormProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -85,10 +88,45 @@ export default function ChangePasswordForm({
     }
   };
 
+  const isLocked = policy && !policy.allowed;
   const activeError = serverError || formError;
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
     <View style={styles.container}>
+      {/* 30-Day Cooldown / Policy Locked Banner */}
+      {isLocked ? (
+        <View style={styles.policyLockedBanner}>
+          <View style={styles.policyIconCircle}>
+            <Ionicons name="lock-closed" size={20} color="#D97706" />
+          </View>
+          <View style={styles.policyContent}>
+            <Text style={styles.policyTitle}>
+              Password Change Locked (30-Day Policy)
+            </Text>
+            <Text style={styles.policyText}>
+              You recently changed your password on{" "}
+              <Text style={styles.policyBold}>
+                {formatDate(policy.lastChangedDate)}
+              </Text>
+              . For your account security, you can change your password again on{" "}
+              <Text style={styles.policyBold}>
+                {formatDate(policy.nextAllowedDate)}
+              </Text>{" "}
+              (in <Text style={styles.policyBold}>{policy.daysRemaining} day{policy.daysRemaining > 1 ? "s" : ""}</Text>).
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       {activeError ? (
         <View style={styles.errorBanner}>
           <Ionicons
@@ -101,13 +139,16 @@ export default function ChangePasswordForm({
         </View>
       ) : null}
 
-      <View style={styles.card}>
+      <View style={[styles.card, isLocked && styles.cardDisabled]}>
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Current Password</Text>
+          <Text style={[styles.label, isLocked && styles.labelDisabled]}>
+            Current Password
+          </Text>
 
           <View
             style={[
               styles.inputRow,
+              isLocked && styles.inputRowDisabled,
               errors.currentPassword ? styles.inputRowError : null,
             ]}
           >
@@ -123,6 +164,7 @@ export default function ChangePasswordForm({
               placeholderTextColor="#9CA3AF"
               secureTextEntry={!showCurrentPassword}
               value={currentPassword}
+              editable={!isLocked}
               onChangeText={(text) => {
                 setCurrentPassword(text);
 
@@ -140,6 +182,7 @@ export default function ChangePasswordForm({
             />
 
             <Pressable
+              disabled={isLocked}
               onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               hitSlop={10}
             >
@@ -163,11 +206,14 @@ export default function ChangePasswordForm({
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>New Password</Text>
+          <Text style={[styles.label, isLocked && styles.labelDisabled]}>
+            New Password
+          </Text>
 
           <View
             style={[
               styles.inputRow,
+              isLocked && styles.inputRowDisabled,
               errors.newPassword ? styles.inputRowError : null,
             ]}
           >
@@ -183,6 +229,7 @@ export default function ChangePasswordForm({
               placeholderTextColor="#9CA3AF"
               secureTextEntry={!showNewPassword}
               value={newPassword}
+              editable={!isLocked}
               onChangeText={(text) => {
                 setNewPassword(text);
 
@@ -200,6 +247,7 @@ export default function ChangePasswordForm({
             />
 
             <Pressable
+              disabled={isLocked}
               onPress={() => setShowNewPassword(!showNewPassword)}
               hitSlop={10}
             >
@@ -223,11 +271,14 @@ export default function ChangePasswordForm({
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Confirm New Password</Text>
+          <Text style={[styles.label, isLocked && styles.labelDisabled]}>
+            Confirm New Password
+          </Text>
 
           <View
             style={[
               styles.inputRow,
+              isLocked && styles.inputRowDisabled,
               errors.confirmPassword ? styles.inputRowError : null,
             ]}
           >
@@ -243,6 +294,7 @@ export default function ChangePasswordForm({
               placeholderTextColor="#9CA3AF"
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
+              editable={!isLocked}
               onChangeText={(text) => {
                 setConfirmPassword(text);
 
@@ -260,6 +312,7 @@ export default function ChangePasswordForm({
             />
 
             <Pressable
+              disabled={isLocked}
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               hitSlop={10}
             >
@@ -289,10 +342,11 @@ export default function ChangePasswordForm({
       </View>
 
       <Button
-        title="Update Password"
+        title={isLocked ? `Locked (${policy?.daysRemaining}d remaining)` : "Update Password"}
         onPress={handleSubmit}
         loading={loading}
-        style={styles.submitButton}
+        disabled={Boolean(isLocked) || loading}
+        style={[styles.submitButton, isLocked && styles.submitButtonDisabled]}
       />
     </View>
   );
@@ -301,6 +355,50 @@ export default function ChangePasswordForm({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+  },
+
+  policyLockedBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#FFFBEB",
+    borderColor: "#FDE68A",
+    borderWidth: 1.5,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    gap: 12,
+  },
+
+  policyIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+
+  policyContent: {
+    flex: 1,
+  },
+
+  policyTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#92400E",
+    marginBottom: 4,
+  },
+
+  policyText: {
+    fontSize: 13,
+    color: "#B45309",
+    lineHeight: 18,
+  },
+
+  policyBold: {
+    fontWeight: "700",
+    color: "#78350F",
   },
 
   card: {
@@ -318,6 +416,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
+  cardDisabled: {
+    backgroundColor: "#F9FAFB",
+    opacity: 0.85,
+  },
+
   fieldGroup: {
     gap: 6,
   },
@@ -329,6 +432,10 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
 
+  labelDisabled: {
+    color: "#9CA3AF",
+  },
+
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -338,6 +445,11 @@ const styles = StyleSheet.create({
     height: 52,
     paddingHorizontal: 14,
     backgroundColor: "#FFFFFF",
+  },
+
+  inputRowDisabled: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
   },
 
   inputRowError: {
@@ -392,6 +504,11 @@ const styles = StyleSheet.create({
   submitButton: {
     width: "100%",
     backgroundColor: "#0AA7A8",
+  },
+
+  submitButtonDisabled: {
+    backgroundColor: "#94A3B8",
+    opacity: 0.7,
   },
 
   securityNote: {

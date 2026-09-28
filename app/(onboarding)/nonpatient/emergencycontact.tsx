@@ -79,7 +79,7 @@ export default function EmergencyContactScreen() {
         <View>
           {/* Progress */}
           <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={4} total={7} />
+            <PaginationDots currentIndex={4} total={6} />
           </View>
 
           {/* Title */}

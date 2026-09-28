@@ -2,28 +2,27 @@ import AnimatedCheckmark from "@/components/ui/AnimatedCheckmark";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-type SetupCompleteProps = {
-  onGoToDashboard: () => void;
+type PairingSuccessProps = {
+  onContinue: () => void;
+  title?: string;
+  message?: string;
 };
 
-export default function SetupComplete({ onGoToDashboard }: SetupCompleteProps) {
+export default function PairingSuccess({
+  onContinue,
+  title = "Pairing Successful!",
+  message = "Patient device has been linked to your account.",
+}: PairingSuccessProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      onGoToDashboard();
+      onContinue();
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [onGoToDashboard]);
+  }, [onContinue]);
 
   return (
     <View style={styles.container}>
-      {/* Header Title */}
-      <Text style={styles.title}>Setup Complete</Text>
-
-      {/* Subtitle */}
-      <Text style={styles.subtitle}>You{"'"}re all set!</Text>
-
-      {/* Animated Checkmark */}
       <AnimatedCheckmark
         size={140}
         circleColor="#F16A66"
@@ -32,11 +31,8 @@ export default function SetupComplete({ onGoToDashboard }: SetupCompleteProps) {
         style={{ marginBottom: 28 }}
       />
 
-      {/* Congratulations Block */}
-      <Text style={styles.congratsTitle}>Congratulations!</Text>
-      <Text style={styles.congratsText}>
-        CareLink is now connected{"\n"}and ready.
-      </Text>
+      <Text style={styles.congratsTitle}>{title}</Text>
+      <Text style={styles.congratsText}>{message}</Text>
 
       <Text style={styles.redirectText}>Redirecting to dashboard...</Text>
     </View>
@@ -46,24 +42,12 @@ export default function SetupComplete({ onGoToDashboard }: SetupCompleteProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
+    width: "100%",
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 24,
     backgroundColor: "#FFFFFF",
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#12A5B5",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  subtitle: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 22,
-    marginBottom: 28,
   },
   congratsTitle: {
     fontSize: 26,

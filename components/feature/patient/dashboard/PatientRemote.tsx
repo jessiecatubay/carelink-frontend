@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useEmergencyAlert } from "@/context/EmergencyAlertContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, startPatientPresence } from "@/hooks/lib/socket";
 import { patientCommand } from "@/services/monitor";
@@ -8,6 +9,7 @@ import RemoteButton from "./RemoteButton";
 
 export default function PatientRemote() {
   const { user } = useAuth();
+  const { triggerEmergencyAlert } = useEmergencyAlert();
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -26,7 +28,15 @@ export default function PatientRemote() {
 
     setActiveAlert(label);
 
-    if (label === "Food" || label === "Water" || label === "Assistance" || label === "Emergency") {
+    if (label === "Emergency") {
+      setPendingRequest("Emergency");
+      // Trigger centered NDRRMC emergency modal & loud siren sound locally
+      triggerEmergencyAlert({
+        patientName: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "You (Patient)",
+        alertType: "🚨 CRITICAL EMERGENCY SOS",
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    } else if (label === "Food" || label === "Water" || label === "Assistance") {
       setPendingRequest(label);
     } else if (label === "Satisfied") {
       setPendingRequest(null);

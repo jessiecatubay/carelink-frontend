@@ -35,11 +35,23 @@ export async function registerForPushNotificationsAsync() {
   }
 
   if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("carelink-emergency", {
+      name: "CareLink Critical Emergency",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 500, 200, 500, 200, 1000],
+      sound: "default",
+      enableLights: true,
+      lightColor: "#EF4444",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+    });
+
     await Notifications.setNotificationChannelAsync("carelink-alerts", {
       name: "CareLink Alerts",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       sound: "default",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     });
   }
 

@@ -26,7 +26,7 @@ export default function DevicePairingScreen() {
         >
           <View>
             <View style={styles.paginationWrap}>
-              <PaginationDots currentIndex={4} total={6} />
+              <PaginationDots currentIndex={4} total={5} />
             </View>
 
             <Text style={styles.title}>Connect to Family</Text>

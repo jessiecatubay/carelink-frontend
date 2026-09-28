@@ -20,7 +20,7 @@ export default function EditEmailScreen() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
 
-  const [email, setEmail] = useState(user?.email || "zaynmalik@gmail.com");
+  const [email, setEmail] = useState(user?.email || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
 

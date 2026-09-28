@@ -1,3 +1,4 @@
+import { triggerAppHaptic } from "@/context/HapticsContext";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -10,6 +11,16 @@ export default function QuickActions({
   onNotificationPress,
   onAiHelpPress,
 }: QuickActionsProps) {
+  const handleNotification = () => {
+    triggerAppHaptic("light");
+    onNotificationPress?.();
+  };
+
+  const handleAiHelp = () => {
+    triggerAppHaptic("light");
+    onAiHelpPress?.();
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.actionsTitle}>Quick Actions</Text>
@@ -17,7 +28,7 @@ export default function QuickActions({
         <TouchableOpacity
           style={styles.actionButton}
           activeOpacity={0.8}
-          onPress={onNotificationPress}
+          onPress={handleNotification}
         >
           <Image
             source={require("@/assets/icons/bell.png")}
@@ -30,7 +41,7 @@ export default function QuickActions({
         <TouchableOpacity
           style={styles.actionButton}
           activeOpacity={0.8}
-          onPress={onAiHelpPress}
+          onPress={handleAiHelp}
         >
           <Image
             source={require("@/assets/icons/ai.png")}

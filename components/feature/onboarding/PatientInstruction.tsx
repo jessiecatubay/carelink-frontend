@@ -11,7 +11,7 @@ export default function PatientInstruction({ onContinue }: PatientInstructionPro
     <View style={styles.container}>
       <View>
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={2} total={6} />
+          <PaginationDots currentIndex={2} total={5} />
         </View>
 
         {/* How CareLink Works Header */}

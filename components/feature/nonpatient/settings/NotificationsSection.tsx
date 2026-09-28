@@ -1,5 +1,6 @@
-import SettingsToggle from "@/components/feature/shared/settings/SettingsToggle";
 import SettingsSection from "@/components/feature/shared/settings/SettingsSection";
+import SettingsToggle from "@/components/feature/shared/settings/SettingsToggle";
+import { useHaptics } from "@/context/HapticsContext";
 import { useNotificationSettings } from "@/hooks/useNotificationSettings";
 
 export default function NotificationsSection() {
@@ -9,9 +10,10 @@ export default function NotificationsSection() {
     updateNotificationsEnabled,
     updateAlertSoundEnabled,
   } = useNotificationSettings();
+  const { hapticFeedbackEnabled, setHapticFeedbackEnabled } = useHaptics();
 
   return (
-    <SettingsSection title="NOTIFICATIONS">
+    <SettingsSection title="NOTIFICATIONS & FEEDBACK">
       <SettingsToggle
         icon="notifications-outline"
         title="Alert Notifications"
@@ -26,6 +28,14 @@ export default function NotificationsSection() {
         subtitle="Play sound when an alert is received"
         value={alertSoundEnabled}
         onValueChange={updateAlertSoundEnabled}
+      />
+
+      <SettingsToggle
+        icon="radio-outline"
+        title="Haptic Feedback"
+        subtitle="Vibration response on button press"
+        value={hapticFeedbackEnabled}
+        onValueChange={setHapticFeedbackEnabled}
       />
     </SettingsSection>
   );

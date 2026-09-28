@@ -9,7 +9,6 @@ export type RoleInformationProps = {
 
 export default function RoleInformation({
   accountType = "Family / Caregiver",
-  onPress,
 }: RoleInformationProps) {
   return (
     <View style={styles.container}>
@@ -19,7 +18,7 @@ export default function RoleInformation({
           icon="people"
           label="Account Type"
           value={accountType}
-          onPress={onPress}
+          showChevron={false}
         />
       </View>
     </View>

@@ -1,3 +1,4 @@
+import PairingSuccess from "@/components/feature/nonpatient/settings/PairingSuccess";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { qrCodeSchema } from "@/schema/api";
@@ -10,6 +11,7 @@ import {
 import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ScanPatientScreen() {
   const { user } = useAuth();
@@ -18,6 +20,7 @@ export default function ScanPatientScreen() {
 
   const [scanned, setScanned] = useState(false);
   const [scannerPaused, setScannerPaused] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   if (!permission) {
     return <View />;
@@ -116,31 +119,13 @@ export default function ScanPatientScreen() {
 
         console.log("Successfully connected");
 
-        // Stop scanner permanently because
-        // connection was successful.
+        // Stop scanner permanently because connection was successful.
         setScanned(true);
-
-        // Show success message first.
-        Alert.alert(
-          "Successfully Connected",
-          "The patient has been successfully connected to your account.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                router.replace("/nonpatient/dashboard");
-              },
-            },
-          ],
-          {
-            cancelable: false,
-          },
-        );
+        setIsSuccess(true);
       } catch (error: any) {
         console.error("Failed to connect patient:", error);
 
-        // Connection failed, so allow the user
-        // to scan another QR after closing alert.
+        // Connection failed, so allow the user to scan another QR after closing alert.
         Alert.alert(
           "Connection Failed",
           error?.response?.data?.message ??
@@ -178,6 +163,18 @@ export default function ScanPatientScreen() {
       );
     }
   };
+
+  if (isSuccess) {
+    return (
+      <SafeAreaView style={styles.successScreen}>
+        <PairingSuccess
+          onContinue={() => {
+            router.replace("/nonpatient/dashboard");
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -271,5 +268,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#000",
     fontWeight: "600",
+  },
+  successScreen: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
   },
 });

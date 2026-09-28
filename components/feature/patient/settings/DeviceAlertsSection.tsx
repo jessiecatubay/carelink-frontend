@@ -1,15 +1,16 @@
 import SettingsItem from "@/components/feature/shared/settings/SettingsItem";
 import SettingsSection from "@/components/feature/shared/settings/SettingsSection";
 import SettingsToggle from "@/components/feature/shared/settings/SettingsToggle";
+import { useHaptics } from "@/context/HapticsContext";
+import { useNotificationSettings } from "@/hooks/useNotificationSettings";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function DeviceAlertsSection() {
   const router = useRouter();
-
-  const [alertSoundEnabled, setAlertSoundEnabled] = useState(true);
-  const [hapticFeedback, setHapticFeedback] = useState(true);
+  const { alertSoundEnabled, updateAlertSoundEnabled } = useNotificationSettings();
+  const { hapticFeedbackEnabled, setHapticFeedbackEnabled } = useHaptics();
 
   return (
     <SettingsSection title="DEVICE & ALERTS">
@@ -18,15 +19,15 @@ export default function DeviceAlertsSection() {
         title="Alert Sound"
         subtitle="Play audible chime on alert selection"
         value={alertSoundEnabled}
-        onValueChange={setAlertSoundEnabled}
+        onValueChange={updateAlertSoundEnabled}
       />
 
       <SettingsToggle
         icon="radio-outline"
         title="Haptic Feedback"
         subtitle="Vibration response on button press"
-        value={hapticFeedback}
-        onValueChange={setHapticFeedback}
+        value={hapticFeedbackEnabled}
+        onValueChange={setHapticFeedbackEnabled}
       />
 
       <SettingsItem

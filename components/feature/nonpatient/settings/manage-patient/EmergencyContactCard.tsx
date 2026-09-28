@@ -1,3 +1,5 @@
+import SlideToCall911 from "@/components/ui/SlideToCall911";
+import { triggerAppHaptic } from "@/context/HapticsContext";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
@@ -16,6 +18,7 @@ export default function EmergencyContactCard({
   onCallPress,
 }: EmergencyContactCardProps) {
   const handleCall = () => {
+    triggerAppHaptic("light");
     if (onCallPress) {
       onCallPress();
       return;
@@ -34,7 +37,14 @@ export default function EmergencyContactCard({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>EMERGENCY CONTACT</Text>
+      <Text style={styles.sectionTitle}>EMERGENCY SERVICES</Text>
+
+      {/* Slide to Call 911 */}
+      <SlideToCall911 />
+
+      <Text style={[styles.sectionTitle, { marginTop: 12 }]}>
+        PRIMARY EMERGENCY CONTACT
+      </Text>
 
       <View style={styles.card}>
         <View style={styles.left}>

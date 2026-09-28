@@ -21,7 +21,7 @@ export default function TermsPage() {
       <View style={styles.container}>
         {/* Progress */}
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={1} total={6} />
+          <PaginationDots currentIndex={1} total={5} />
         </View>
 
         {/* Title */}

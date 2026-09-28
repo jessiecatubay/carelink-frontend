@@ -14,7 +14,9 @@ export default function LastUpdatedCard({ lastUpdated }: LastUpdatedCardProps) {
           style={styles.beltIcon}
           resizeMode="contain"
         />
-        <Text style={styles.syncText}>Last updated: {lastUpdated}</Text>
+        <Text style={styles.syncText}>
+          {lastUpdated ? `Last updated: ${lastUpdated}` : "No vitals recorded yet"}
+        </Text>
       </View>
       <View style={styles.syncDivider} />
       <View style={styles.syncCol}>

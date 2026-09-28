@@ -20,8 +20,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
+  const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [phoneNumber, setPhoneNumber] = useState(
@@ -30,15 +31,17 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setFirstName(user?.firstName || "");
-    setLastName(user?.lastName || "");
-    setPhoneNumber(user?.emergencyContact || "");
-  }, [user]);
+    if (!isEditing) {
+      setFirstName(user?.firstName || "");
+      setLastName(user?.lastName || "");
+      setPhoneNumber(user?.emergencyContact || "");
+    }
+  }, [user, isEditing]);
 
   const fullName =
-    [firstName, lastName].filter(Boolean).join(" ") || "Zayn Malik";
+    [firstName, lastName].filter(Boolean).join(" ") || "User";
 
-  const email = user?.email || "zaynmalik@gmail.com";
+  const email = user?.email || "";
 
   const roleTitle =
     user?.role === "NON_PATIENT"
@@ -53,6 +56,13 @@ export default function ProfileScreen() {
     } else {
       router.replace("/nonpatient/dashboard/settings");
     }
+  };
+
+  const handleCancelEdit = () => {
+    setFirstName(user?.firstName || "");
+    setLastName(user?.lastName || "");
+    setPhoneNumber(user?.emergencyContact || "");
+    setIsEditing(false);
   };
 
   const handleSaveProfile = async () => {
@@ -92,6 +102,24 @@ export default function ProfileScreen() {
       );
 
       console.log("Updated profile:", response.data);
+
+      const updatedUser =
+        response?.data?.data?.user ??
+        response?.data?.data ??
+        response?.data?.user;
+
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      } else {
+        await updateUser({
+          ...user,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          emergencyContact: phoneNumber.trim(),
+        });
+      }
+
+      setIsEditing(false);
 
       Alert.alert(
         "Profile Updated",
@@ -141,34 +169,22 @@ export default function ProfileScreen() {
           lastName={lastName}
           email={email}
           phoneNumber={phoneNumber}
+          editable={isEditing}
           onFirstNameChange={setFirstName}
           onLastNameChange={setLastName}
           onPhoneNumberChange={setPhoneNumber}
         />
 
-        <RoleInformation
-          accountType={roleTitle}
-          onPress={() =>
-            Alert.alert(
-              "Account Type",
-              `Your account role is ${roleTitle}.`,
-            )
-          }
-        />
+        <RoleInformation accountType={roleTitle} />
 
         <EditProfileButton
-          onPress={handleSaveProfile}
+          isEditing={isEditing}
+          loading={saving}
+          onPress={isEditing ? handleSaveProfile : () => setIsEditing(true)}
+          onCancel={handleCancelEdit}
           style={styles.editButton}
           disabled={saving}
         />
-
-        {saving && (
-          <ActivityIndicator
-            size="small"
-            color="#0AA7A8"
-            style={styles.loading}
-          />
-        )}
       </ScrollView>
     </SafeAreaView>
   );

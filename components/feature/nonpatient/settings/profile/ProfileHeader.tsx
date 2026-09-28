@@ -7,7 +7,7 @@ export type ProfileHeaderProps = {
 };
 
 export default function ProfileHeader({
-  name = "Zayn Malik",
+  name = "",
   roleTitle = "Family / Caregiver",
 }: ProfileHeaderProps) {
   return (
