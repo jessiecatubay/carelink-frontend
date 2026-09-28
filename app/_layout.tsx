@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -36,6 +37,7 @@ Notifications.setNotificationHandler({
 
     if (isEmergency) {
       return {
+        shouldShowAlert: true,
         shouldPlaySound: settings.alertSoundEnabled,
         shouldSetBadge: true,
         shouldShowBanner: true,
@@ -45,6 +47,7 @@ Notifications.setNotificationHandler({
 
     if (!settings.notificationsEnabled) {
       return {
+        shouldShowAlert: false,
         shouldPlaySound: false,
         shouldSetBadge: false,
         shouldShowBanner: false,
@@ -53,6 +56,7 @@ Notifications.setNotificationHandler({
     }
 
     return {
+      shouldShowAlert: true,
       shouldPlaySound: settings.alertSoundEnabled,
       shouldSetBadge: true,
       shouldShowBanner: true,
@@ -73,6 +77,36 @@ export default function RootLayout() {
 
   useEffect(() => {
     initSocket();
+
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("carelink-emergency", {
+        name: "CareLink Critical Emergency",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 500, 200, 500, 200, 1000],
+        sound: "default",
+        enableLights: true,
+        lightColor: "#EF4444",
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+      });
+
+      Notifications.setNotificationChannelAsync("carelink-alerts", {
+        name: "CareLink Alerts",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: "default",
+        enableLights: true,
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      });
+
+      Notifications.setNotificationChannelAsync("default", {
+        name: "Default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: "default",
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      });
+    }
   }, []);
 
   useEffect(() => {
