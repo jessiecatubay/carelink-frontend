@@ -1,14 +1,16 @@
 import SlideToCall911 from "@/components/ui/SlideToCall911";
 import { triggerAppHaptic } from "@/context/HapticsContext";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export type EmergencyContactCardProps = {
   contactName?: string | null;
   phoneNumber?: string | null;
   relationship?: string | null;
   onCallPress?: () => void;
+  onManagePress?: () => void;
 };
 
 export default function EmergencyContactCard({
@@ -16,7 +18,10 @@ export default function EmergencyContactCard({
   phoneNumber,
   relationship = "Primary Contact",
   onCallPress,
+  onManagePress,
 }: EmergencyContactCardProps) {
+  const router = useRouter();
+
   const handleCall = () => {
     triggerAppHaptic("light");
     if (onCallPress) {
@@ -32,6 +37,14 @@ export default function EmergencyContactCard({
     }
   };
 
+  const handleManage = () => {
+    if (onManagePress) {
+      onManagePress();
+    } else {
+      router.push("/(protected)/emergency-contacts");
+    }
+  };
+
   const displayName = contactName || "Emergency Contact";
   const displayPhone = phoneNumber || "Not provided";
 
@@ -42,9 +55,14 @@ export default function EmergencyContactCard({
       {/* Slide to Call 911 */}
       <SlideToCall911 />
 
-      <Text style={[styles.sectionTitle, { marginTop: 12 }]}>
-        PRIMARY EMERGENCY CONTACT
-      </Text>
+      <View style={styles.sectionHeaderRow}>
+        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+          PRIMARY EMERGENCY CONTACT
+        </Text>
+        <TouchableOpacity onPress={handleManage} activeOpacity={0.7}>
+          <Text style={styles.manageLinkText}>Manage All</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.card}>
         <View style={styles.left}>
@@ -79,6 +97,18 @@ export default function EmergencyContactCard({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  manageLinkText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#0AA7A8",
   },
   sectionTitle: {
     fontSize: 12,

@@ -1,5 +1,5 @@
 import { triggerAppHaptic, triggerAppVibration } from "@/context/HapticsContext";
-import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
+import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
 
 type RemoteButtonProps = {
   label: string;
@@ -8,6 +8,7 @@ type RemoteButtonProps = {
   cardStyle?: ViewStyle;
   isEmergency?: boolean;
   disabled?: boolean;
+  cooldown?: number;
 };
 
 export default function RemoteButton({
@@ -17,9 +18,12 @@ export default function RemoteButton({
   cardStyle,
   isEmergency = false,
   disabled = false,
+  cooldown,
 }: RemoteButtonProps) {
+  const isButtonDisabled = disabled || (typeof cooldown === "number" && cooldown > 0);
+
   const handlePress = () => {
-    if (disabled) return;
+    if (isButtonDisabled) return;
     if (isEmergency) {
       triggerAppHaptic("heavy");
       triggerAppVibration([0, 80, 50, 80]);
@@ -35,11 +39,11 @@ export default function RemoteButton({
         styles.card,
         cardStyle,
         isEmergency ? styles.emergencyCard : styles.defaultCard,
-        disabled && styles.disabledCard,
+        isButtonDisabled && styles.disabledCard,
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
-      disabled={disabled}
+      disabled={isButtonDisabled}
     >
       <Image
         source={icon}
@@ -47,8 +51,13 @@ export default function RemoteButton({
         resizeMode="contain"
       />
       <Text style={[styles.cardText, isEmergency && styles.whiteText]}>
-        {label}
+        {cooldown && cooldown > 0 ? `${label} (${cooldown}s)` : label}
       </Text>
+      {cooldown && cooldown > 0 ? (
+        <View style={styles.cooldownPill}>
+          <Text style={styles.cooldownPillText}>{cooldown}s cooldown</Text>
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 }
@@ -92,5 +101,17 @@ const styles = StyleSheet.create({
   },
   whiteText: {
     color: "#FFFFFF",
+  },
+  cooldownPill: {
+    marginTop: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  cooldownPillText: {
+    fontSize: 10.5,
+    fontWeight: "700",
+    color: "#64748B",
   },
 });

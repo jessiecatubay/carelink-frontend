@@ -1,3 +1,4 @@
+import Button from "@/components/ui/Button";
 import ChangePasswordForm from "@/components/feature/nonpatient/settings/change-password/ChangePasswordForm";
 import ChangePasswordSuccess from "@/components/feature/nonpatient/settings/change-password/ChangePasswordSuccess";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -35,11 +37,13 @@ export default function ChangePasswordScreen() {
     nextAllowedDate: null,
   });
 
+  const isGoogleUser = Boolean(user?.googleId && !user?.hasPassword);
+
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !isGoogleUser) {
       checkPasswordChangeEligibility(user.id).then(setPolicy);
     }
-  }, [user?.id]);
+  }, [user?.id, isGoogleUser]);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -54,7 +58,7 @@ export default function ChangePasswordScreen() {
   };
 
   const handleChangePassword = async (values: ChangePasswordFormValues) => {
-    if (!user?.id) return;
+    if (!user?.id || isGoogleUser) return;
 
     // Check policy before submission
     const currentPolicy = await checkPasswordChangeEligibility(user.id);
@@ -95,9 +99,6 @@ export default function ChangePasswordScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
-      {/* Curved Background Accent */}
-      <View style={styles.backgroundAccent} pointerEvents="none" />
-
       {/* Header */}
       <View style={styles.header}>
         <Pressable
@@ -122,13 +123,50 @@ export default function ChangePasswordScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.content,
-            isSuccess && styles.successContent,
+            (isSuccess || isGoogleUser) && styles.successContent,
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {isSuccess ? (
             <ChangePasswordSuccess onContinue={handleGoBack} />
+          ) : isGoogleUser ? (
+            <View style={styles.googleCard}>
+              <View style={styles.googleIconCircle}>
+                <Image
+                  source={require("@/assets/icons/google.png")}
+                  style={styles.googleIcon}
+                  resizeMode="contain"
+                />
+              </View>
+
+              <Text style={styles.googleCardTitle}>
+                Signed In with Google
+              </Text>
+
+              <Text style={styles.googleCardText}>
+                Your account is authenticated using your Google account (
+                <Text style={styles.googleEmailHighlight}>{user?.email}</Text>).
+              </Text>
+
+              <View style={styles.googleInfoBanner}>
+                <Ionicons
+                  name="information-circle"
+                  size={20}
+                  color="#08A8A8"
+                  style={{ marginRight: 8, marginTop: 1 }}
+                />
+                <Text style={styles.googleInfoText}>
+                  Your password and security credentials are managed directly by Google and cannot be changed from within CareLink.
+                </Text>
+              </View>
+
+              <Button
+                title="Back to Settings"
+                onPress={handleGoBack}
+                style={styles.googleBackButton}
+              />
+            </View>
           ) : (
             <>
               <Text style={styles.subtitle}>
@@ -208,5 +246,73 @@ const styles = StyleSheet.create({
     color: "#64748B",
     marginBottom: 20,
     lineHeight: 20,
+  },
+  googleCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+    width: "100%",
+    maxWidth: 400,
+  },
+  googleIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  googleIcon: {
+    width: 32,
+    height: 32,
+  },
+  googleCardTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  googleCardText: {
+    fontSize: 14,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  googleEmailHighlight: {
+    fontWeight: "600",
+    color: "#0F172A",
+  },
+  googleInfoBanner: {
+    flexDirection: "row",
+    backgroundColor: "#F0FDFA",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    marginBottom: 24,
+    alignItems: "flex-start",
+  },
+  googleInfoText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#0F766E",
+    lineHeight: 18,
+  },
+  googleBackButton: {
+    width: "100%",
+    backgroundColor: "#0AA7A8",
   },
 });

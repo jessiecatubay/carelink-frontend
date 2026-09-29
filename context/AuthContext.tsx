@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
+import GoogleLoadingModal from "@/components/ui/GoogleLoadingModal";
 import { closeSocket, initSocket } from "@/hooks/lib/socket";
 import { getMe, googleAuth, login } from "@/services/auth";
 import {
@@ -33,6 +34,12 @@ type ModalConfig = {
   onConfirm: () => void;
 };
 
+type GoogleLoadingState = {
+  visible: boolean;
+  status?: string;
+  subtext?: string;
+};
+
 type AuthContextType = {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -49,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);
+  const [googleLoadingState, setGoogleLoadingState] =
+    useState<GoogleLoadingState | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -170,78 +179,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    console.log("AuthContext: Starting Google Sign-In flow...");
-    const { firebaseIdToken } = await googleSignIn();
-    console.log("AuthContext: Received Firebase ID Token, verifying with backend...");
-
-    const result = await googleAuth(firebaseIdToken);
-    const { accessToken, refreshToken, user: apiUser } = result.data.data;
-
-    await setAuthTokens({ accessToken, refreshToken }, apiUser, true);
-    setUser(apiUser);
-    closeSocket();
-    initSocket();
-
-    if (apiUser.onBoarded === false && apiUser.role === "USER") {
-      setModalConfig({
+    try {
+      setGoogleLoadingState({
         visible: true,
-        title: "Login Successful",
-        message: "Let's finish setting up your account.",
-        hideButton: true,
-        autoDismissMs: 3000,
-        type: "success",
-        onConfirm: () => {
-          setModalConfig(null);
+        status: "Connecting to Google...",
+        subtext: "Opening Google Sign-In...",
+      });
+
+      console.log("AuthContext: Starting Google Sign-In flow...");
+      const { firebaseIdToken } = await googleSignIn();
+
+      setGoogleLoadingState({
+        visible: true,
+        status: "Authenticating Account...",
+        subtext: "Verifying your Google credentials with CareLink...",
+      });
+
+      console.log(
+        "AuthContext: Received Firebase ID Token, verifying with backend...",
+      );
+      const result = await googleAuth(firebaseIdToken);
+      const { accessToken, refreshToken, user: apiUser } = result.data.data;
+
+      setGoogleLoadingState({
+        visible: true,
+        status: "Success!",
+        subtext: "Setting up your workspace...",
+      });
+
+      await setAuthTokens({ accessToken, refreshToken }, apiUser, true);
+      setUser(apiUser);
+      closeSocket();
+      initSocket();
+
+      setTimeout(() => {
+        setGoogleLoadingState(null);
+
+        if (apiUser.onBoarded === false && apiUser.role === "USER") {
           router.replace("/user-onboarding");
-        },
-      });
-      return;
-    }
+          return;
+        }
 
-    if (apiUser.role === "NON_PATIENT") {
-      setModalConfig({
-        visible: true,
-        title: "Login Successful",
-        message: "Welcome back to CareLink.",
-        hideButton: true,
-        autoDismissMs: 3000,
-        type: "success",
-        onConfirm: () => {
-          setModalConfig(null);
+        if (apiUser.role === "NON_PATIENT") {
           router.replace("/nonpatient/dashboard");
-        },
-      });
-      return;
-    }
+          return;
+        }
 
-    if (apiUser.role === "PATIENT") {
-      setModalConfig({
-        visible: true,
-        title: "Login Successful",
-        message: "Welcome back to CareLink.",
-        hideButton: true,
-        autoDismissMs: 3000,
-        type: "success",
-        onConfirm: () => {
-          setModalConfig(null);
+        if (apiUser.role === "PATIENT") {
           router.replace("/patient/dashboard");
-        },
-      });
-      return;
-    }
+          return;
+        }
 
-    setModalConfig({
-      visible: true,
-      title: "Login Successful",
-      message: "Please continue setting up your account.",
-      hideButton: true,
-      autoDismissMs: 3000,
-      type: "success",
-      onConfirm: () => {
-        setModalConfig(null);
         router.replace("/(auth)/register");
-      },
-    });
+      }, 500);
+    } catch (error) {
+      setGoogleLoadingState(null);
+      throw error;
+    }
   };
 
   const updateUser = async (updatedUser: AuthUser) => {
@@ -277,6 +271,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {children}
+
+      {/* Google Sign-In Dedicated Loading Modal */}
+      {googleLoadingState ? (
+        <GoogleLoadingModal
+          visible={googleLoadingState.visible}
+          status={googleLoadingState.status}
+          subtext={googleLoadingState.subtext}
+        />
+      ) : null}
+
+      {/* General Alert Modal */}
       {modalConfig ? (
         <CustomAlertModal
           visible={modalConfig.visible}

@@ -1,8 +1,9 @@
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
+import { initSocket, onConnectionUpdated } from "@/hooks/lib/socket";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -40,32 +41,42 @@ export default function ManagePatientsScreen() {
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
-  console.log("user karunn", user);
 
-  useEffect(() => {
+  const loadConnections = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
       return;
     }
 
-    const loadConnections = async () => {
-      try {
-        const response = await axiosInstance.post(
-          "/api/user/v1/get-user-by-id",
-          { id: user.id },
-        );
-        const nextConnections = response.data?.data?.nonPatientConnections;
-        setConnections(Array.isArray(nextConnections) ? nextConnections : []);
-      } catch (error) {
-        console.error("Failed to load non-patient:", error);
-        Alert.alert("Unable to load non-patient", "Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConnections();
+    try {
+      const response = await axiosInstance.post(
+        "/api/user/v1/get-user-by-id",
+        { id: user.id },
+      );
+      const nextConnections = response.data?.data?.nonPatientConnections;
+      setConnections(Array.isArray(nextConnections) ? nextConnections : []);
+    } catch (error) {
+      console.error("Failed to load non-patient:", error);
+      Alert.alert("Unable to load non-patient", "Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    loadConnections();
+  }, [loadConnections]);
+
+  useEffect(() => {
+    initSocket();
+    const off = onConnectionUpdated(() => {
+      loadConnections();
+    });
+
+    return () => {
+      off();
+    };
+  }, [loadConnections]);
 
   const goBack = () => {
     if (router.canGoBack()) {

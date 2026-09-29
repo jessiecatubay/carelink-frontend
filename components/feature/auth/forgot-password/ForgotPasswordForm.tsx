@@ -25,6 +25,7 @@ export default function ForgotPasswordForm({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = async () => {
     const result = forgotPasswordSchema.safeParse({ email: email.trim() });
@@ -47,10 +48,10 @@ export default function ForgotPasswordForm({
 
         <Text style={styles.fieldLabel}>Email Address</Text>
 
-        <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
+        <View style={[styles.inputRow, isFocused ? styles.inputRowFocused : null, error ? styles.inputRowError : null]}>
           <Image
             source={require("@/assets/icons/email.png")}
-            style={styles.emailIcon}
+            style={[styles.emailIcon, isFocused ? styles.emailIconFocused : null]}
             resizeMode="contain"
           />
           <View style={styles.inputDivider} />
@@ -65,6 +66,8 @@ export default function ForgotPasswordForm({
               setEmail(text);
               if (error) setError(null);
             }}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
         </View>
 
@@ -134,12 +137,20 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E5E7EB",
     borderRadius: 18,
     height: 54,
     paddingHorizontal: 16,
     backgroundColor: "#FFFFFF",
+  },
+  inputRowFocused: {
+    borderColor: "#12A5B5",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputRowError: {
     borderColor: "#F16A66",
@@ -148,6 +159,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     tintColor: "#9CA3AF",
+  },
+  emailIconFocused: {
+    tintColor: "#12A5B5",
   },
   inputDivider: {
     width: 1,

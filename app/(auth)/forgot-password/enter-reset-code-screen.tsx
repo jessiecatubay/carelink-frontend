@@ -32,6 +32,7 @@ export default function EnterResetCodeScreen() {
   const [resetCode, setResetCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -166,8 +167,11 @@ export default function EnterResetCodeScreen() {
               maxLength={6}
               textAlign="center"
               editable={!loading && !resending}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               style={[
                 styles.codeInput,
+                isFocused && !error ? styles.codeInputFocused : undefined,
                 error ? styles.codeInputError : undefined,
               ]}
             />
@@ -188,18 +192,18 @@ export default function EnterResetCodeScreen() {
               The code expires after 15 minutes.
             </Text>
 
-            {/* Spam Folder Note Callout */}
-            <View style={styles.spamNoteBox}>
+            {/* Formal Spam / Junk Folder Advisory Notice */}
+            <View style={styles.spamNoticeCard}>
               <Ionicons
-                name="information-circle-outline"
+                name="mail-unread-outline"
                 size={18}
                 color="#0AA7A8"
-                style={styles.spamNoteIcon}
+                style={styles.spamNoticeIcon}
               />
-              <Text style={styles.spamNoteText}>
-                <Text style={styles.spamNoteBold}>Note:</Text> Can{"'"}t find the code? Please make sure to check your{" "}
-                <Text style={styles.spamNoteHighlight}>Spam</Text> or{" "}
-                <Text style={styles.spamNoteHighlight}>Junk</Text> folder.
+              <Text style={styles.spamNoticeText}>
+                If you cannot locate the verification email in your inbox, please check your{" "}
+                <Text style={styles.spamNoticeHighlight}>Spam</Text> or{" "}
+                <Text style={styles.spamNoticeHighlight}>Junk</Text> folder.
               </Text>
             </View>
 
@@ -305,13 +309,23 @@ const styles = StyleSheet.create({
 
   codeInput: {
     height: 58,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#CBD5E0",
     borderRadius: 12,
     fontSize: 26,
     fontWeight: "700",
     letterSpacing: 8,
     color: "#1A202C",
+    backgroundColor: "#FFFFFF",
+  },
+
+  codeInputFocused: {
+    borderColor: "#12A5B5",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   codeInputError: {
@@ -339,38 +353,34 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 
-  spamNoteBox: {
+  spamNoticeCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F0FDFA",
     borderWidth: 1,
     borderColor: "#CCFBF1",
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     marginTop: 16,
-    gap: 8,
+    width: "100%",
   },
 
-  spamNoteIcon: {
-    flexShrink: 0,
+  spamNoticeIcon: {
+    marginRight: 8,
   },
 
-  spamNoteText: {
+  spamNoticeText: {
     flex: 1,
-    fontSize: 12,
-    color: "#334155",
-    lineHeight: 17,
-  },
-
-  spamNoteBold: {
-    fontWeight: "700",
+    fontSize: 12.5,
+    lineHeight: 18,
     color: "#0F766E",
+    fontWeight: "500",
   },
 
-  spamNoteHighlight: {
+  spamNoticeHighlight: {
     fontWeight: "700",
-    color: "#0D9488",
+    color: "#0E7490",
   },
 
   resend: {

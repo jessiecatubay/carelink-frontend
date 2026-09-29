@@ -17,6 +17,8 @@ export type LogoutConfirmModalProps = {
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;
+  title?: string;
+  message?: string;
 };
 
 export default function LogoutConfirmModal({
@@ -24,6 +26,8 @@ export default function LogoutConfirmModal({
   onCancel,
   onConfirm,
   loading = false,
+  title,
+  message,
 }: LogoutConfirmModalProps) {
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -111,11 +115,24 @@ export default function LogoutConfirmModal({
           </View>
 
           {/* Title & Description */}
-          <Text style={styles.title}>Log Out</Text>
-          <Text style={styles.message}>
-            Are you sure you want to log out of CareLink? You will need to sign back
-            in to access your account and alerts.
+          <Text style={styles.title}>{title || "Confirm Log Out"}</Text>
+          <Text style={styles.subtitle}>
+            Are you sure you want to log out?
           </Text>
+
+          {/* Formal Warning Notice Callout */}
+          <View style={styles.warningBox}>
+            <Ionicons
+              name="alert-circle-outline"
+              size={20}
+              color="#DC2626"
+              style={styles.warningIcon}
+            />
+            <Text style={styles.warningText}>
+              {message ||
+                "Logging out means you will not receive real-time notifications from CareLink or incoming patient assistance requests until you sign back in."}
+            </Text>
+          </View>
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
@@ -179,8 +196,8 @@ const styles = StyleSheet.create({
     maxWidth: 350,
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingHorizontal: 22,
+    paddingTop: 30,
     paddingBottom: 24,
     alignItems: "center",
     shadowColor: "#DC2626",
@@ -199,24 +216,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#DC2626",
   },
   iconOuterRing: {
-    width: 84,
-    height: 84,
+    width: 80,
+    height: 80,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   iconPulseRing: {
     position: "absolute",
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: "#FEE2E2",
     opacity: 0.7,
   },
   iconInnerBadge: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     backgroundColor: "#FEF2F2",
     borderWidth: 2,
     borderColor: "#FECACA",
@@ -229,28 +246,49 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   title: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: "800",
     color: "#0F172A",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 6,
     letterSpacing: -0.3,
   },
-  message: {
+  subtitle: {
     fontSize: 14,
-    lineHeight: 21,
-    color: "#64748B",
+    fontWeight: "600",
+    color: "#475569",
     textAlign: "center",
-    marginBottom: 26,
-    paddingHorizontal: 6,
+    marginBottom: 14,
+  },
+  warningBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    padding: 12,
+    marginBottom: 20,
+    gap: 8,
+    width: "100%",
+  },
+  warningIcon: {
+    marginTop: 1,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: "#991B1B",
+    fontWeight: "500",
   },
   buttonContainer: {
     width: "100%",
-    gap: 12,
+    gap: 10,
   },
   logoutButton: {
     width: "100%",
-    height: 52,
+    height: 50,
     backgroundColor: "#DC2626",
     borderRadius: 14,
     justifyContent: "center",
@@ -277,7 +315,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     width: "100%",
-    height: 48,
+    height: 46,
     borderRadius: 14,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,

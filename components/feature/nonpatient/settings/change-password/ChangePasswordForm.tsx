@@ -1,4 +1,5 @@
 import Button from "@/components/ui/Button";
+import PasswordInput from "@/components/ui/PasswordInput";
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
@@ -7,11 +8,8 @@ import { type PasswordPolicyResult } from "@/services/passwordPolicy";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  Image,
-  Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import PasswordRequirements from "./PasswordRequirements";
@@ -32,10 +30,6 @@ export default function ChangePasswordForm({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [errors, setErrors] = useState<
     Partial<Record<keyof ChangePasswordFormValues, string>>
@@ -139,206 +133,82 @@ export default function ChangePasswordForm({
         </View>
       ) : null}
 
-      <View style={[styles.card, isLocked && styles.cardDisabled]}>
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, isLocked && styles.labelDisabled]}>
-            Current Password
-          </Text>
-
-          <View
-            style={[
-              styles.inputRow,
-              isLocked && styles.inputRowDisabled,
-              errors.currentPassword ? styles.inputRowError : null,
-            ]}
-          >
-            <Image
-              source={require("@/assets/icons/padlock.png")}
-              style={styles.padlockIcon}
-              resizeMode="contain"
-            />
-
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter current password"
-              placeholderTextColor="#9CA3AF"
-              secureTextEntry={!showCurrentPassword}
-              value={currentPassword}
-              editable={!isLocked}
-              onChangeText={(text) => {
-                setCurrentPassword(text);
-
-                if (errors.currentPassword) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    currentPassword: undefined,
-                  }));
-                }
-
-                if (formError) {
-                  setFormError(null);
-                }
-              }}
-            />
-
-            <Pressable
-              disabled={isLocked}
-              onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-              hitSlop={10}
-            >
-              <Image
-                source={
-                  showCurrentPassword
-                    ? require("@/assets/icons/view.png")
-                    : require("@/assets/icons/hide.png")
-                }
-                style={styles.eyeIcon}
-                resizeMode="contain"
-              />
-            </Pressable>
-          </View>
-
-          {errors.currentPassword ? (
-            <Text style={styles.fieldErrorText}>
-              {errors.currentPassword}
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, isLocked && styles.labelDisabled]}>
-            New Password
-          </Text>
-
-          <View
-            style={[
-              styles.inputRow,
-              isLocked && styles.inputRowDisabled,
-              errors.newPassword ? styles.inputRowError : null,
-            ]}
-          >
-            <Image
-              source={require("@/assets/icons/padlock.png")}
-              style={styles.padlockIcon}
-              resizeMode="contain"
-            />
-
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter new password"
-              placeholderTextColor="#9CA3AF"
-              secureTextEntry={!showNewPassword}
-              value={newPassword}
-              editable={!isLocked}
-              onChangeText={(text) => {
-                setNewPassword(text);
-
-                if (errors.newPassword) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    newPassword: undefined,
-                  }));
-                }
-
-                if (formError) {
-                  setFormError(null);
-                }
-              }}
-            />
-
-            <Pressable
-              disabled={isLocked}
-              onPress={() => setShowNewPassword(!showNewPassword)}
-              hitSlop={10}
-            >
-              <Image
-                source={
-                  showNewPassword
-                    ? require("@/assets/icons/view.png")
-                    : require("@/assets/icons/hide.png")
-                }
-                style={styles.eyeIcon}
-                resizeMode="contain"
-              />
-            </Pressable>
-          </View>
-
-          {errors.newPassword ? (
-            <Text style={styles.fieldErrorText}>
-              {errors.newPassword}
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, isLocked && styles.labelDisabled]}>
-            Confirm New Password
-          </Text>
-
-          <View
-            style={[
-              styles.inputRow,
-              isLocked && styles.inputRowDisabled,
-              errors.confirmPassword ? styles.inputRowError : null,
-            ]}
-          >
-            <Image
-              source={require("@/assets/icons/padlock.png")}
-              style={styles.padlockIcon}
-              resizeMode="contain"
-            />
-
-            <TextInput
-              style={styles.textInput}
-              placeholder="Re-enter new password"
-              placeholderTextColor="#9CA3AF"
-              secureTextEntry={!showConfirmPassword}
-              value={confirmPassword}
-              editable={!isLocked}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-
-                if (errors.confirmPassword) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    confirmPassword: undefined,
-                  }));
-                }
-
-                if (formError) {
-                  setFormError(null);
-                }
-              }}
-            />
-
-            <Pressable
-              disabled={isLocked}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              hitSlop={10}
-            >
-              <Image
-                source={
-                  showConfirmPassword
-                    ? require("@/assets/icons/view.png")
-                    : require("@/assets/icons/hide.png")
-                }
-                style={styles.eyeIcon}
-                resizeMode="contain"
-              />
-            </Pressable>
-          </View>
-
-          {errors.confirmPassword ? (
-            <Text style={styles.fieldErrorText}>
-              {errors.confirmPassword}
-            </Text>
-          ) : null}
-        </View>
-
-        <PasswordRequirements
-          password={newPassword}
-          confirmPassword={confirmPassword}
+      <View style={styles.fieldsContainer}>
+        {/* Current Password Field */}
+        <Text style={[styles.inputLabel, isLocked && styles.labelDisabled]}>
+          Current Password
+        </Text>
+        <PasswordInput
+          placeholder="Enter current password"
+          value={currentPassword}
+          editable={!isLocked}
+          error={errors.currentPassword}
+          onChangeText={(text) => {
+            setCurrentPassword(text);
+            if (errors.currentPassword) {
+              setErrors((prev) => ({
+                ...prev,
+                currentPassword: undefined,
+              }));
+            }
+            if (formError) {
+              setFormError(null);
+            }
+          }}
         />
+
+        {/* New Password Field */}
+        <Text style={[styles.inputLabel, isLocked && styles.labelDisabled]}>
+          New Password
+        </Text>
+        <PasswordInput
+          placeholder="Enter new password"
+          value={newPassword}
+          editable={!isLocked}
+          error={errors.newPassword}
+          onChangeText={(text) => {
+            setNewPassword(text);
+            if (errors.newPassword) {
+              setErrors((prev) => ({
+                ...prev,
+                newPassword: undefined,
+              }));
+            }
+            if (formError) {
+              setFormError(null);
+            }
+          }}
+        />
+
+        {/* Confirm New Password Field */}
+        <Text style={[styles.inputLabel, isLocked && styles.labelDisabled]}>
+          Confirm New Password
+        </Text>
+        <PasswordInput
+          placeholder="Re-enter new password"
+          value={confirmPassword}
+          editable={!isLocked}
+          error={errors.confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            if (errors.confirmPassword) {
+              setErrors((prev) => ({
+                ...prev,
+                confirmPassword: undefined,
+              }));
+            }
+            if (formError) {
+              setFormError(null);
+            }
+          }}
+        />
+
+        <View style={styles.requirementsWrapper}>
+          <PasswordRequirements
+            password={newPassword}
+            confirmPassword={confirmPassword}
+          />
+        </View>
       </View>
 
       <Button
@@ -401,86 +271,24 @@ const styles = StyleSheet.create({
     color: "#78350F",
   },
 
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 18,
+  fieldsContainer: {
     marginBottom: 20,
-    gap: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
   },
 
-  cardDisabled: {
-    backgroundColor: "#F9FAFB",
-    opacity: 0.85,
-  },
-
-  fieldGroup: {
-    gap: 6,
-  },
-
-  label: {
+  inputLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
-    marginLeft: 2,
+    color: "#475569",
+    marginBottom: 6,
+    marginTop: 10,
   },
 
   labelDisabled: {
     color: "#9CA3AF",
   },
 
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 14,
-    height: 52,
-    paddingHorizontal: 14,
-    backgroundColor: "#FFFFFF",
-  },
-
-  inputRowDisabled: {
-    backgroundColor: "#F3F4F6",
-    borderColor: "#E5E7EB",
-  },
-
-  inputRowError: {
-    borderColor: "#F16A66",
-  },
-
-  padlockIcon: {
-    width: 18,
-    height: 18,
-    tintColor: "#9CA3AF",
-    marginRight: 10,
-  },
-
-  eyeIcon: {
-    width: 20,
-    height: 20,
-    tintColor: "#9CA3AF",
-    marginLeft: 10,
-  },
-
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: "#1F2937",
-    height: "100%",
-  },
-
-  fieldErrorText: {
-    color: "#F16A66",
-    fontSize: 12,
-    marginLeft: 4,
+  requirementsWrapper: {
+    marginTop: 16,
   },
 
   errorBanner: {

@@ -16,6 +16,7 @@ export default function RegisterDeviceSection() {
   const {user} = useAuth();
   const [deviceId, setDeviceId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleRegisterDevice = async () => {
     const trimmedDeviceId = deviceId.trim();
@@ -77,8 +78,10 @@ export default function RegisterDeviceSection() {
         placeholderTextColor="#94A3B8"
         autoCapitalize="characters"
         autoCorrect={false}
-        style={styles.input}
+        style={[styles.input, isFocused ? styles.inputFocused : null]}
         editable={!loading}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
 
       <Text style={styles.helper}>
@@ -162,13 +165,22 @@ const styles = StyleSheet.create({
 
   input: {
     height: 48,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#CBD5E1",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 14,
     fontSize: 15,
     color: "#0F172A",
     backgroundColor: "#F8FAFC",
+  },
+  inputFocused: {
+    borderColor: "#12A5B5",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   helper: {

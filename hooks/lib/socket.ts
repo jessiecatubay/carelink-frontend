@@ -172,6 +172,38 @@ export function onPatientConnectionStatus(
 }
 
 /**
+ * Listen for real-time patient-caregiver pairing / connection updates
+ */
+export function onConnectionUpdated(
+  callback: (payload: {
+    patientId: string;
+    nonPatientId: string;
+    status: string;
+    timestamp: string;
+    [key: string]: any;
+  }) => void,
+) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return () => { };
+  }
+
+  const handleConnection = (payload: unknown) => {
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+    callback(payload as any);
+  };
+
+  currentSocket.on("connectionUpdated", handleConnection);
+
+  return () => {
+    currentSocket.off("connectionUpdated", handleConnection);
+  };
+}
+
+/**
  * Patient -> backend
  *
  * Use only when the logged-in user is a PATIENT.

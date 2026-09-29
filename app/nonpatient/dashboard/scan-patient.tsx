@@ -1,4 +1,7 @@
 import PairingSuccess from "@/components/feature/nonpatient/settings/PairingSuccess";
+import PatientPairingFlowModal, {
+  PatientPreviewData,
+} from "@/components/feature/nonpatient/settings/PatientPairingFlowModal";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { qrCodeSchema } from "@/schema/api";
@@ -22,6 +25,14 @@ export default function ScanPatientScreen() {
   const [scannerPaused, setScannerPaused] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Patient preview and pairing flow modal states
+  const [showPairingModal, setShowPairingModal] = useState(false);
+  const [patientPreview, setPatientPreview] = useState<PatientPreviewData | null>(
+    null,
+  );
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+
   if (!permission) {
     return <View />;
   }
@@ -41,14 +52,12 @@ export default function ScanPatientScreen() {
   }
 
   const handleBarcodeScanned = async ({ data }: BarcodeScanningResult) => {
-    // Don't allow another scan while processing
-    // or while the scanner is paused.
-    if (scanned || scannerPaused) {
+    // Don't allow another scan while processing or while paused
+    if (scanned || scannerPaused || showPairingModal) {
       return;
     }
 
-    // Pause scanner immediately so the same QR
-    // doesn't trigger multiple times.
+    // Pause scanner immediately
     setScannerPaused(true);
 
     try {
@@ -57,14 +66,6 @@ export default function ScanPatientScreen() {
       // -----------------------------------------
       const qrData = qrCodeSchema.parse(JSON.parse(data));
 
-      // -----------------------------------------
-      // Validate QR code
-      // -----------------------------------------
-      console.log("Connection Code:", qrData.connectionCode);
-
-      // -----------------------------------------
-      // Make sure user is logged in
-      // -----------------------------------------
       if (!user?.id) {
         Alert.alert(
           "Error",
@@ -77,30 +78,30 @@ export default function ScanPatientScreen() {
               },
             },
           ],
-          {
-            cancelable: false,
-          },
+          { cancelable: false },
         );
-
         return;
       }
 
-      // -----------------------------------------
-      // Connect caregiver/non-patient to patient
-      // -----------------------------------------
+      // Fetch patient preview from backend
+      setLoadingPreview(true);
+      setShowPairingModal(true);
+
       try {
-        const result = await axiosInstance.post(
-          "/api/patient-nonpatient/v1/connect",
+        const previewRes = await axiosInstance.post(
+          "/api/patient-nonpatient/v1/preview-patient",
           {
-            nonPatientId: user.id,
             connectionCode: qrData.connectionCode,
           },
         );
 
-        if (result.data.status === "error") {
+        if (previewRes.data?.status === "success" && previewRes.data?.data) {
+          setPatientPreview(previewRes.data.data);
+        } else {
+          setShowPairingModal(false);
           Alert.alert(
-            "Error",
-            `${result.data.message}`,
+            "Patient Not Found",
+            previewRes.data?.message || "Invalid patient QR code. Please try again.",
             [
               {
                 text: "OK",
@@ -109,42 +110,27 @@ export default function ScanPatientScreen() {
                 },
               },
             ],
-            {
-              cancelable: false,
-            },
           );
-
-          return;
         }
-
-        console.log("Successfully connected");
-
-        // Stop scanner permanently because connection was successful.
-        setScanned(true);
-        setIsSuccess(true);
-      } catch (error: any) {
-        console.error("Failed to connect patient:", error);
-
-        // Connection failed, so allow the user to scan another QR after closing alert.
-        Alert.alert(
-          "Connection Failed",
-          error?.response?.data?.message ??
-            "Unable to connect to this patient. Please try again.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                setScannerPaused(false);
-              },
-            },
-          ],
+      } catch (err: any) {
+        console.error("Failed to preview patient:", err);
+        setShowPairingModal(false);
+        const msg =
+          err?.response?.data?.message ||
+          "Could not find patient associated with this QR code.";
+        Alert.alert("Invalid QR Code", msg, [
           {
-            cancelable: false,
+            text: "OK",
+            onPress: () => {
+              setScannerPaused(false);
+            },
           },
-        );
+        ]);
+      } finally {
+        setLoadingPreview(false);
       }
     } catch (error) {
-      console.error("Invalid QR code:", error);
+      console.error("Invalid QR code format:", error);
 
       Alert.alert(
         "Invalid QR Code",
@@ -157,11 +143,52 @@ export default function ScanPatientScreen() {
             },
           },
         ],
-        {
-          cancelable: false,
-        },
+        { cancelable: false },
       );
     }
+  };
+
+  const handleConfirmConnection = async (relationship: string) => {
+    if (!user?.id || !patientPreview?.connectionCode) return;
+
+    setConnecting(true);
+    try {
+      const result = await axiosInstance.post(
+        "/api/patient-nonpatient/v1/connect",
+        {
+          nonPatientId: user.id,
+          connectionCode: patientPreview.connectionCode,
+          relationship: relationship.trim(),
+        },
+      );
+
+      if (result.data?.status === "error") {
+        Alert.alert(
+          "Connection Error",
+          result.data.message || "Failed to connect to patient.",
+        );
+        return;
+      }
+
+      // Connection succeeded
+      setShowPairingModal(false);
+      setScanned(true);
+      setIsSuccess(true);
+    } catch (error: any) {
+      console.error("Failed to connect patient:", error);
+      const msg =
+        error?.response?.data?.message ||
+        "Unable to connect to this patient. Please try again.";
+      Alert.alert("Connection Failed", msg);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleClosePairingModal = () => {
+    setShowPairingModal(false);
+    setPatientPreview(null);
+    setScannerPaused(false);
   };
 
   if (isSuccess) {
@@ -208,6 +235,15 @@ export default function ScanPatientScreen() {
           {scannerPaused ? "Scanning paused" : "Scan the patient's QR code"}
         </Text>
       </View>
+
+      <PatientPairingFlowModal
+        visible={showPairingModal}
+        patient={patientPreview}
+        loadingPatient={loadingPreview}
+        connecting={connecting}
+        onConnect={handleConfirmConnection}
+        onClose={handleClosePairingModal}
+      />
     </View>
   );
 }

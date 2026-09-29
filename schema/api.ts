@@ -1,3 +1,4 @@
+import { isValidPhilippinePhoneNumber } from "@/utils/phone";
 import { z } from "zod";
 
 export const commandSchema = z.enum([
@@ -64,22 +65,23 @@ export const patientOnboardingSchema = z.object({
 });
 
 export const nonPatientOnboardingSchema = z.object({
-  phoneNumber: z
+  fullName: z
     .string()
     .trim()
-    .min(1, "Emergency phone number is required.")
-    .regex(/^[+\d\s().-]+$/, "Enter a valid phone number.")
-    .refine((value) => value.replace(/\D/g, "").length >= 7, {
-      message: "Phone number must contain at least 7 digits.",
-    })
-    .refine((value) => value.replace(/\D/g, "").length <= 15, {
-      message: "Phone number must contain 15 digits or fewer.",
-    }),
+    .min(2, "Full name is required.")
+    .max(100, "Full name must be 100 characters or fewer."),
   relationship: z
     .string()
     .trim()
     .min(1, "Relationship is required.")
     .max(50, "Relationship must be 50 characters or fewer."),
+  phoneNumber: z
+    .string()
+    .trim()
+    .min(1, "Phone number is required.")
+    .refine((value) => isValidPhilippinePhoneNumber(value), {
+      message: "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
+    }),
 });
 
 export const vitalResponseSchema = z.object({

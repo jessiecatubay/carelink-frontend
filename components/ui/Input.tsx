@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Image, ImageSourcePropType, StyleSheet, Text, TextInput, View } from "react-native";
 
 type InputProps = {
@@ -7,6 +8,11 @@ type InputProps = {
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   error?: string;
   icon?: ImageSourcePropType;
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  autoComplete?: any;
+  textContentType?: any;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 export default function Input({
@@ -16,15 +22,27 @@ export default function Input({
   keyboardType = "default",
   error,
   icon,
+  autoCapitalize,
+  autoComplete,
+  textContentType,
+  onFocus,
+  onBlur,
 }: InputProps) {
+  const [isFocused, setIsFocused] = useState(false);
   const resolvedIcon = icon || require("@/assets/icons/user.png");
 
   return (
     <View>
-      <View style={[styles.container, error ? styles.errorContainer : null]}>
+      <View
+        style={[
+          styles.container,
+          isFocused ? styles.focusedContainer : null,
+          error ? styles.errorContainer : null,
+        ]}
+      >
         <Image
           source={resolvedIcon}
-          style={styles.icon}
+          style={[styles.icon, isFocused ? styles.iconFocused : null]}
           resizeMode="contain"
         />
 
@@ -35,6 +53,17 @@ export default function Input({
           value={value}
           onChangeText={onChangeText}
           keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
+          textContentType={textContentType}
+          onFocus={() => {
+            setIsFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur?.();
+          }}
         />
       </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -46,11 +75,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#CBD5E1",
+    borderRadius: 14,
     paddingHorizontal: 15,
     backgroundColor: "#FFF",
+    height: 55,
+  },
+  focusedContainer: {
+    borderColor: "#12A5B5",
+    backgroundColor: "#FFFFFF",
   },
   errorContainer: {
     borderColor: "#F16A66",
@@ -60,6 +94,9 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 10,
     tintColor: "#999",
+  },
+  iconFocused: {
+    tintColor: "#12A5B5",
   },
   input: {
     flex: 1,

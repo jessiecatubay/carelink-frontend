@@ -216,6 +216,21 @@ export default function VerifyEmailScreen() {
 
             <Text style={styles.email}>{email}</Text>
 
+            {/* Formal Spam / Junk Folder Advisory Notice */}
+            <View style={styles.spamNoticeCard}>
+              <Ionicons
+                name="mail-unread-outline"
+                size={18}
+                color="#0AA7A8"
+                style={styles.spamNoticeIcon}
+              />
+              <Text style={styles.spamNoticeText}>
+                If you cannot locate the verification email in your inbox, please check your{" "}
+                <Text style={styles.spamNoticeHighlight}>Spam</Text> or{" "}
+                <Text style={styles.spamNoticeHighlight}>Junk</Text> folder.
+              </Text>
+            </View>
+
             {error ? (
               <View style={styles.errorBanner}>
                 <Text style={styles.errorText}>{error}</Text>
@@ -450,8 +465,14 @@ const styles = StyleSheet.create({
   },
 
   codeBoxActive: {
-    borderColor: "#0AA7A8",
+    borderColor: "#12A5B5",
     borderWidth: 2,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   codeText: {
@@ -505,5 +526,32 @@ const styles = StyleSheet.create({
 
   resendTextDisabled: {
     color: "#9CA3AF",
+  },
+  spamNoticeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginTop: 12,
+    marginBottom: 16,
+    width: "100%",
+  },
+  spamNoticeIcon: {
+    marginRight: 8,
+  },
+  spamNoticeText: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: "#0F766E",
+    fontWeight: "500",
+  },
+  spamNoticeHighlight: {
+    fontWeight: "700",
+    color: "#0E7490",
   },
 });

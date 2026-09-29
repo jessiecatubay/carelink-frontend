@@ -1,9 +1,10 @@
+import EmergencyCountdownModal from "@/components/ui/EmergencyCountdownModal";
 import { useAuth } from "@/context/AuthContext";
-import { useEmergencyAlert } from "@/context/EmergencyAlertContext";
+import { triggerAppHaptic } from "@/context/HapticsContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, startPatientPresence } from "@/hooks/lib/socket";
 import { patientCommand } from "@/services/monitor";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import RemoteButton from "./RemoteButton";
 
@@ -13,42 +14,110 @@ export default function PatientRemote() {
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
 
+  // Emergency Modal State
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+
+  // 5-Second Cooldown on Satisfied button
+  const [satisfiedCooldown, setSatisfiedCooldown] = useState(0);
+  const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearCooldownTimer = () => {
+    if (cooldownIntervalRef.current) {
+      clearInterval(cooldownIntervalRef.current);
+      cooldownIntervalRef.current = null;
+    }
+  };
+
+  const startSatisfiedCooldown = () => {
+    clearCooldownTimer();
+    setSatisfiedCooldown(5);
+
+    let remaining = 5;
+    cooldownIntervalRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining >= 0) {
+        setSatisfiedCooldown(remaining);
+      }
+      if (remaining <= 0) {
+        clearCooldownTimer();
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => {
+      clearCooldownTimer();
+    };
+  }, []);
+
+  const sendPatientCommand = async (commandLabel: string) => {
+    if (!user?.id) {
+      console.log("No authenticated user id");
+      return;
+    }
+
+    try {
+      const result = await axiosInstance.post(
+        "/api/patient-nonpatient/v1/connected-nonpatients",
+        { userId: user.id },
+      );
+      const connectedNonpatients = result.data.data;
+      await patientCommand(
+        "ESP32-001",
+        commandLabel.toUpperCase(),
+        user.id,
+        connectedNonpatients,
+      );
+    } catch (error) {
+      console.error("Failed to send patient command:", error);
+    }
+  };
+
   const handlePress = async (label: string) => {
     if (!user) {
       console.log("No authenticated user");
       return;
     }
 
-    const userId = user.id;
-    if (!userId) {
-      console.log("No authenticated user id");
+    if (label === "Emergency") {
+      // Pop up the 5-second countdown modal
+      setShowEmergencyModal(true);
       return;
     }
 
-    setActiveAlert(label);
-
-    if (label === "Emergency") {
-      setPendingRequest("Emergency");
-    } else if (label === "Food" || label === "Water" || label === "Assistance") {
-      setPendingRequest(label);
-    } else if (label === "Satisfied") {
+    if (label === "Satisfied") {
+      if (satisfiedCooldown > 0) {
+        triggerAppHaptic("warning");
+        return;
+      }
+      clearCooldownTimer();
+      setSatisfiedCooldown(0);
       setPendingRequest(null);
+      setActiveAlert(null);
+      await sendPatientCommand("Satisfied");
+      return;
     }
 
-    try {
-      const result = await axiosInstance.post(
-        "/api/patient-nonpatient/v1/connected-nonpatients", { userId: user.id }
-      );
-      const connectedNonpatients = result.data.data;
-      await patientCommand(
-        "ESP32-001",
-        label.toUpperCase(),
-        userId,
-        connectedNonpatients,
-      );
-    } catch (error) {
-      console.error(error);
-    }
+    // Food, Water, Assistance
+    setActiveAlert(label);
+    setPendingRequest(label);
+
+    // Start 5-second cooldown for Satisfied button
+    startSatisfiedCooldown();
+
+    await sendPatientCommand(label);
+  };
+
+  const handleConfirmEmergency = async () => {
+    setShowEmergencyModal(false);
+    setActiveAlert("Emergency");
+    setPendingRequest("Emergency");
+    startSatisfiedCooldown();
+    await sendPatientCommand("Emergency");
+  };
+
+  const handleCancelEmergency = () => {
+    setShowEmergencyModal(false);
   };
 
   useEffect(() => {
@@ -76,10 +145,10 @@ export default function PatientRemote() {
       console.log("🔥 PATIENT ALERT RECEIVED:", payload);
     };
 
-    socket!.on("patientAlert", handleAlert);
+    socket?.on("patientAlert", handleAlert);
 
     return () => {
-      socket!.off("patientAlert", handleAlert);
+      socket?.off("patientAlert", handleAlert);
     };
   }, []);
 
@@ -157,9 +226,17 @@ export default function PatientRemote() {
             icon={require("@/assets/icons/satisfied.png")}
             onPress={() => handlePress("Satisfied")}
             cardStyle={styles.satisfiedCard}
+            cooldown={satisfiedCooldown}
           />
         </View>
       </View>
+
+      {/* 5-Second Emergency Countdown Modal */}
+      <EmergencyCountdownModal
+        visible={showEmergencyModal}
+        onCancel={handleCancelEmergency}
+        onConfirm={handleConfirmEmergency}
+      />
     </View>
   );
 }

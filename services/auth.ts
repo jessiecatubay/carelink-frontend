@@ -41,6 +41,17 @@ export const getMe = async () => {
   return axiosInstance.get("/api/user/v1/me");
 };
 
+export const updateUser = async (
+  email: string,
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    emergencyContact?: string;
+  }>
+) => {
+  return axiosInstance.put("/api/user/v1/update-user", { email, ...data });
+};
+
 export const forgotPassword = async (email: string) => {
   return axiosInstance.post("/api/user/v1/forgot-password", { email });
 };

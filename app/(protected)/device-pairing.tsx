@@ -1,4 +1,7 @@
 import PairingSuccess from "@/components/feature/nonpatient/settings/PairingSuccess";
+import PatientPairingFlowModal, {
+  PatientPreviewData,
+} from "@/components/feature/nonpatient/settings/PatientPairingFlowModal";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,12 +27,21 @@ export default function DevicePairingScreen() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Patient preview and pairing flow modal states
+  const [showPairingModal, setShowPairingModal] = useState(false);
+  const [patientPreview, setPatientPreview] = useState<PatientPreviewData | null>(
+    null,
+  );
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [connecting, setConnecting] = useState(false);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/(protected)/(non-patient)/settings");
+      router.replace("/nonpatient/dashboard");
     }
   };
 
@@ -37,7 +49,7 @@ export default function DevicePairingScreen() {
     router.push("/nonpatient/dashboard/scan-patient");
   };
 
-  const handleConnectByCode = async () => {
+  const handleInitiateConnect = async () => {
     const trimmed = code.trim();
     if (!trimmed) {
       Alert.alert("Input Required", "Please enter a valid connection code.");
@@ -49,13 +61,50 @@ export default function DevicePairingScreen() {
       return;
     }
 
-    setLoading(true);
+    setLoadingPreview(true);
+    setShowPairingModal(true);
+
+    try {
+      const previewRes = await axiosInstance.post(
+        "/api/patient-nonpatient/v1/preview-patient",
+        {
+          connectionCode: trimmed,
+        },
+      );
+
+      if (previewRes.data?.status === "success" && previewRes.data?.data) {
+        setPatientPreview(previewRes.data.data);
+      } else {
+        setShowPairingModal(false);
+        Alert.alert(
+          "Patient Not Found",
+          previewRes.data?.message || "Invalid connection code. Please check and try again.",
+        );
+      }
+    } catch (err: any) {
+      console.error("Failed to preview patient:", err);
+      setShowPairingModal(false);
+      const msg =
+        err?.response?.data?.message ||
+        "Could not find patient associated with this code.";
+      Alert.alert("Invalid Code", msg);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleConfirmConnection = async (relationship: string) => {
+    const trimmed = code.trim();
+    if (!user?.id || !trimmed) return;
+
+    setConnecting(true);
     try {
       const response = await axiosInstance.post(
         "/api/patient-nonpatient/v1/connect",
         {
           nonPatientId: user.id,
           connectionCode: trimmed,
+          relationship: relationship.trim(),
         },
       );
 
@@ -64,6 +113,7 @@ export default function DevicePairingScreen() {
         return;
       }
 
+      setShowPairingModal(false);
       setIsSuccess(true);
     } catch (error: any) {
       const msg =
@@ -71,8 +121,13 @@ export default function DevicePairingScreen() {
         "Unable to connect with this code. Please check and try again.";
       Alert.alert("Pairing Failed", msg);
     } finally {
-      setLoading(false);
+      setConnecting(false);
     }
+  };
+
+  const handleClosePairingModal = () => {
+    setShowPairingModal(false);
+    setPatientPreview(null);
   };
 
   return (
@@ -147,18 +202,20 @@ export default function DevicePairingScreen() {
               <View style={styles.card}>
                 <Text style={styles.inputLabel}>Connection Code</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, isFocused ? styles.inputFocused : null]}
                   placeholder="e.g. AB12CD"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="characters"
                   autoCorrect={false}
                   value={code}
                   onChangeText={setCode}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
                 />
                 <Pressable
                   accessibilityRole="button"
                   disabled={loading}
-                  onPress={handleConnectByCode}
+                  onPress={handleInitiateConnect}
                   style={({ pressed }) => [
                     styles.connectButton,
                     pressed && styles.buttonPressed,
@@ -176,6 +233,15 @@ export default function DevicePairingScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <PatientPairingFlowModal
+        visible={showPairingModal}
+        patient={patientPreview}
+        loadingPatient={loadingPreview}
+        connecting={connecting}
+        onConnect={handleConfirmConnection}
+        onClose={handleClosePairingModal}
+      />
     </SafeAreaView>
   );
 }
@@ -320,7 +386,7 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     height: 48,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#CBD5E1",
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -331,6 +397,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 2,
     fontWeight: "700",
+  },
+  inputFocused: {
+    borderColor: "#12A5B5",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   connectButton: {
     borderWidth: 1.5,

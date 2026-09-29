@@ -16,6 +16,7 @@ import {
   resendEmailVerification,
   verifyEmail,
 } from "@/services/auth";
+import { capitalizeWords, formatNameInput } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -125,7 +126,16 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   // Step 1: Submit Name -> Proceed to Step 2
   const handleStep1Submit = () => {
     setGeneralError(null);
-    const parsed = nameStepSchema.safeParse({ firstName, lastName });
+    const formattedFirst = capitalizeWords(firstName);
+    const formattedLast = capitalizeWords(lastName);
+
+    setFirstName(formattedFirst);
+    setLastName(formattedLast);
+
+    const parsed = nameStepSchema.safeParse({
+      firstName: formattedFirst,
+      lastName: formattedLast,
+    });
 
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
@@ -441,8 +451,9 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           <Input
             placeholder="First Name"
             value={firstName}
+            autoCapitalize="words"
             onChangeText={(text) => {
-              setFirstName(text);
+              setFirstName(formatNameInput(text));
               if (errors.firstName) {
                 setErrors((prev) => ({ ...prev, firstName: undefined }));
               }
@@ -456,8 +467,9 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           <Input
             placeholder="Last Name"
             value={lastName}
+            autoCapitalize="words"
             onChangeText={(text) => {
-              setLastName(text);
+              setLastName(formatNameInput(text));
               if (errors.lastName) {
                 setErrors((prev) => ({ ...prev, lastName: undefined }));
               }
@@ -557,6 +569,21 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       {step === 4 ? (
         <View style={styles.centerStepContent}>
           <Text style={styles.highlightEmail}>{email}</Text>
+
+          {/* Formal Spam / Junk Folder Advisory Notice */}
+          <View style={styles.spamNoticeCard}>
+            <Ionicons
+              name="mail-unread-outline"
+              size={18}
+              color="#0AA7A8"
+              style={styles.spamNoticeIcon}
+            />
+            <Text style={styles.spamNoticeText}>
+              If you cannot locate the verification email in your inbox, please check your{" "}
+              <Text style={styles.spamNoticeHighlight}>Spam</Text> or{" "}
+              <Text style={styles.spamNoticeHighlight}>Junk</Text> folder.
+            </Text>
+          </View>
 
           <TouchableOpacity
             activeOpacity={1}
@@ -868,8 +895,14 @@ const styles = StyleSheet.create({
   },
 
   codeBoxActive: {
-    borderColor: "#F16A66",
-    backgroundColor: "#FFF5F5",
+    borderColor: "#12A5B5",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   codeBoxFilled: {
@@ -952,5 +985,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     textAlign: "center",
+  },
+  spamNoticeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 16,
+    width: "100%",
+  },
+  spamNoticeIcon: {
+    marginRight: 8,
+  },
+  spamNoticeText: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: "#0F766E",
+    fontWeight: "500",
+  },
+  spamNoticeHighlight: {
+    fontWeight: "700",
+    color: "#0E7490",
   },
 });

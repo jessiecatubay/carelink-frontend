@@ -1,6 +1,10 @@
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { useAuth } from "@/context/AuthContext";
+import {
+  formatPhilippinePhoneNumber,
+  isValidPhilippinePhoneNumber,
+} from "@/utils/phone";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -42,8 +46,8 @@ export default function EditPhoneScreen() {
       return;
     }
 
-    if (trimmedPhone.length < 7) {
-      setError("Please enter a valid phone number");
+    if (!isValidPhilippinePhoneNumber(trimmedPhone)) {
+      setError("Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX)");
       return;
     }
 
@@ -117,12 +121,11 @@ export default function EditPhoneScreen() {
           <View style={styles.formCard}>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Phone Number</Text>
-              <Input
-                placeholder="+63 9XX XXX XXXX"
-                keyboardType="phone-pad"
+              <PhoneInput
+                placeholder="900 000 0000"
                 value={phoneNumber}
-                onChangeText={(text) => {
-                  setPhoneNumber(text);
+                onChangeText={(formatted) => {
+                  setPhoneNumber(formatted);
                   if (error) {
                     setError(undefined);
                   }

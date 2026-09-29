@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import {
   initSocket,
+  onConnectionUpdated,
   onPatientConnectionStatus,
   onPatientVitals,
 } from "@/hooks/lib/socket";
@@ -13,8 +14,8 @@ import {
   formatPhilippineTime,
   isSamePhilippineDay,
 } from "@/utils/date";
-import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -53,6 +54,53 @@ export default function Home() {
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
   const [isTourActive, setIsTourActive] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
+
+  const getUserById = useCallback(async () => {
+    if (!user?.id) return;
+    setPatientLoading(true);
+
+    try {
+      const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+        id: user.id,
+      });
+      const connections = result.data.data.nonPatientConnections;
+
+      let activePatient: User | undefined;
+
+      if (Array.isArray(connections) && connections.length > 0) {
+        const found =
+          connections.find((c: any) => c.currentPatient && c.patient) ||
+          connections.find((c: any) => c.patient) ||
+          connections[0];
+
+        if (found?.patient) {
+          activePatient = found.patient;
+          setPatient(found.patient);
+          setConnected(found.status || "CONNECTED");
+        }
+      }
+
+      // 1. If user has no connected patient -> force connect prompt
+      if (!activePatient) {
+        setPatient(undefined);
+        setShowConnectPrompt(true);
+      } else {
+        setShowConnectPrompt(false);
+        // 2. Once patient is connected, start feature tour if not completed
+        const tourDone = await AsyncStorage.getItem(TOUR_STORAGE_KEY);
+        if (!tourDone) {
+          setTimeout(() => {
+            setIsTourActive(true);
+            setTourStepIndex(0);
+          }, 600);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to get patient:", error);
+    } finally {
+      setPatientLoading(false);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     const off = onPatientConnectionStatus((payload) => {
@@ -165,59 +213,15 @@ export default function Home() {
     };
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      getUserById();
+    }, [getUserById]),
+  );
+
   useEffect(() => {
-    if (!user?.id) return;
-
-    const getUserById = async () => {
-      setPatientLoading(true);
-      setPatient(undefined);
-
-      try {
-        const result = await axiosInstance.post("/api/user/v1/get-user-by-id", {
-          id: user.id,
-        });
-        const connections = result.data.data.nonPatientConnections;
-
-
-
-        let activePatient: User | undefined;
-
-        if (Array.isArray(connections)) {
-          for (const connection of connections) {
-            if (!connection.currentPatient) {
-              continue;
-            }
-
-            activePatient = connection.patient;
-            setPatient(connection.patient);
-            setConnected(connection.status);
-            break;
-          }
-        }
-
-        // 1. If user has no connected patient -> force connect prompt
-        if (!activePatient) {
-          setShowConnectPrompt(true);
-        } else {
-          setShowConnectPrompt(false);
-          // 2. Once patient is connected, start feature tour if not completed
-          const tourDone = await AsyncStorage.getItem(TOUR_STORAGE_KEY);
-          if (!tourDone) {
-            setTimeout(() => {
-              setIsTourActive(true);
-              setTourStepIndex(0);
-            }, 600);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to get patient:", error);
-      } finally {
-        setPatientLoading(false);
-      }
-    };
-
     getUserById();
-  }, [user?.id]);
+  }, [getUserById]);
 
   useEffect(() => {
     const socket = initSocket();
@@ -229,18 +233,24 @@ export default function Home() {
 
     console.log("NON-PATIENT SOCKET:", socket.id);
 
-    socket!.on("patientAlert", (payload) => {
+    const offConn = onConnectionUpdated((payload) => {
+      console.log("🔗 Real-time connection update received in NonPatient dashboard:", payload);
+      getUserById();
+    });
+
+    socket.on("patientAlert", (payload) => {
       console.log("🔥 NON-PATIENT RECEIVED:", payload);
     });
 
-    socket!.on("patientConnectionStatus", (payload) => {
+    socket.on("patientConnectionStatus", (payload) => {
       console.log("🌐 PATIENT CONNECTION STATUS:", payload);
     });
 
     return () => {
-      socket!.off("patientAlert");
+      offConn();
+      socket.off("patientAlert");
     };
-  }, []);
+  }, [getUserById]);
 
   // Handle tour step changes & auto-scroll to feature
   const handleTourStep = (newIndex: number) => {
@@ -398,14 +408,16 @@ export default function Home() {
 
       {/* Mandatory Modal: Connect Patient First */}
       <ConnectPatientPromptModal
-        visible={showConnectPrompt && !patientLoading && !patient}
+        role="NON_PATIENT"
+        visible={!patientLoading && showConnectPrompt && !patient}
         onScanQR={() => {
-          setShowConnectPrompt(false);
           router.push("/nonpatient/dashboard/scan-patient");
         }}
-        onManualPair={() => {
-          setShowConnectPrompt(false);
-          router.push("/nonpatient/dashboard/manage-patients");
+        onEnterCode={() => {
+          router.push("/(protected)/device-pairing");
+        }}
+        onOpenSettings={() => {
+          router.push("/nonpatient/dashboard/settings");
         }}
       />
 
