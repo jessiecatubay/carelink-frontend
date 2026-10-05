@@ -33,6 +33,7 @@ export interface Vital {
   temperature: number;
   heartRate: number;
   sensorContact: boolean;
+  batteryLevel: number | null;
   recordedAt: string;
 }
 

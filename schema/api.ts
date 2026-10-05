@@ -22,6 +22,7 @@ export const patientVitalsSchema = z
     patientId: z.string().uuid().optional(),
     temperature: z.number().finite().optional(),
     heartRate: z.number().finite().optional(),
+    batteryLevel: z.number().int().min(0).max(100).optional(),
     sensorContact: z.boolean().optional(),
     receivedAt: z.string().datetime({ offset: true }).optional(),
   })
@@ -90,6 +91,7 @@ export const vitalResponseSchema = z.object({
   temperature: z.number().finite(),
   heartRate: z.number().finite(),
   sensorContact: z.boolean(),
+  batteryLevel: z.number().int().min(0).max(100),
   recordedAt: z.string().datetime({ offset: true }),
 });
 

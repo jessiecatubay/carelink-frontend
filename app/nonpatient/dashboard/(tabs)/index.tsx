@@ -41,6 +41,7 @@ export default function Home() {
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
   const [heartHistory, setHeartHistory] = useState<number[]>([]);
   const [tempHistory, setTempHistory] = useState<number[]>([]);
   const [patient, setPatient] = useState<User>();
@@ -147,6 +148,7 @@ export default function Home() {
         const temperatures = vitals.map((vital: Vital) => vital.temperature);
         const heartRates = vitals.map((vital: Vital) => vital.heartRate);
         const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
+        const batteryLevels = vitals.map((vital: Vital) => vital.batteryLevel);
 
         const formatLastUpdated = (dateString: string): string => {
           if (isSamePhilippineDay(dateString, new Date().toISOString())) {
@@ -167,6 +169,7 @@ export default function Home() {
         setHeartHistory(reversedHeartRates);
 
         setLastUpdated(formattedTime);
+        setBatteryLevel(batteryLevels[0] ?? null);
       } catch (error) {
         console.error("Failed to get patient vitals:", error);
       }
@@ -203,6 +206,8 @@ export default function Home() {
             ? `Today, ${formatPhilippineTime(payload.receivedAt)}`
             : `${formatPhilippineDate(payload.receivedAt)} ${formatPhilippineTime(payload.receivedAt)}`,
         );
+
+        setBatteryLevel(payload.batteryLevel ?? null);
       }
 
       console.log("Received patientVitals via socket", payload);
@@ -367,7 +372,7 @@ export default function Home() {
             </View>
           ) : null}
           <PatientCurrentStatus patientId={patient?.id} />
-          <LastUpdatedCard lastUpdated={lastUpdated} />
+          <LastUpdatedCard lastUpdated={lastUpdated} batteryLevel={batteryLevel} />
         </View>
 
         {/* Step 4 Highlight: Quick Actions & AI Help */}
