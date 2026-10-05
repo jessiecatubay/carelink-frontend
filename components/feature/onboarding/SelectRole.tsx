@@ -1,15 +1,16 @@
+import { Ionicons } from "@expo/vector-icons";
 import Logo from "@/components/common/Logo";
 import Button from "@/components/ui/Button";
 import RadioButton from "@/components/ui/RadioButton";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const COLOR_PATIENT = "#12A5B5";
 const COLOR_NONPATIENT = "#F16A66";
 
-export default function SelectRole() {
+export default function SelectRole({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
   const { setData } = useOnboarding();
 
@@ -34,6 +35,19 @@ export default function SelectRole() {
 
   return (
     <View style={styles.container}>
+      {onBack ? (
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={20} color="#374151" />
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       <Text style={styles.title}>How will you use</Text>
 
       <Logo />
@@ -133,9 +147,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFF",
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 40,
     paddingBottom: 30,
     alignItems: "center",
+  },
+  headerRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "#F3F4F6",
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginLeft: 4,
   },
   title: {
     fontSize: 26,

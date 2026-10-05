@@ -65,7 +65,7 @@ export function startPatientPresence() {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const sendHeartbeat = () => {
@@ -92,7 +92,7 @@ export function onPatientVitals(callback: (payload: PatientVitals) => void) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const handleVitals = (payload: unknown) => {
@@ -114,7 +114,7 @@ export function onPatientAlert(callback: (payload: PatientAlert) => void) {
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const handleAlert = (payload: unknown) => {
@@ -139,7 +139,7 @@ export function onPatientConnectionStatus(
   const currentSocket = initSocket();
 
   if (!currentSocket) {
-    return () => {};
+    return () => { };
   }
 
   const handleStatus = (payload: unknown) => {
@@ -168,6 +168,38 @@ export function onPatientConnectionStatus(
 
   return () => {
     currentSocket.off("patientConnectionStatus", handleStatus);
+  };
+}
+
+/**
+ * Listen for real-time patient-caregiver pairing / connection updates
+ */
+export function onConnectionUpdated(
+  callback: (payload: {
+    patientId: string;
+    nonPatientId: string;
+    status: string;
+    timestamp: string;
+    [key: string]: any;
+  }) => void,
+) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return () => { };
+  }
+
+  const handleConnection = (payload: unknown) => {
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+    callback(payload as any);
+  };
+
+  currentSocket.on("connectionUpdated", handleConnection);
+
+  return () => {
+    currentSocket.off("connectionUpdated", handleConnection);
   };
 }
 

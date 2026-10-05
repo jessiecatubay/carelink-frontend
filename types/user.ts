@@ -6,6 +6,9 @@ export interface AuthUser {
   firstName?: string;
   lastName?: string;
   emergencyContact?: string;
+  emergencyContactName?: string;
+  googleId?: string | null;
+  hasPassword?: boolean;
   nonPatientProfile?: NonPatientProfile | null;
   patientProfile?: PatientProfile | null;
 }
@@ -18,6 +21,9 @@ export interface UserOnBoardingData {
   gender?: string;
   medicalConditions?: string;
   notes?: string;
+  emergencyContactName?: string;
+  emergencyContact?: string;
+  relationship?: string;
   onBoarded?: boolean;
 }
 
@@ -27,6 +33,7 @@ export interface Vital {
   temperature: number;
   heartRate: number;
   sensorContact: boolean;
+  batteryLevel: number | null;
   recordedAt: string;
 }
 
@@ -40,6 +47,8 @@ export interface User {
   role: "PATIENT" | "NON-PATIENT" | "USER";
   onBoarded: boolean;
   updatedAt: Date;
+  emergencyContact?: string | null;
+  emergencyContactName?: string | null;
   nonPatientProfile: NonPatientProfile | null;
   patientProfile: PatientProfile | null;
   patientConnections: PatientNonPatient[];
@@ -49,7 +58,8 @@ export interface User {
 export interface NonPatientProfile {
   id: string;
   userId: string;
-  emergencyContact: number | null;
+  emergencyContact: string | number | null;
+  emergencyContactName?: string | null;
   relationship: string | null;
 }
 
@@ -69,8 +79,11 @@ export interface PatientNonPatient {
   patientId: string;
   nonPatientId: string;
   status: "CONNECTED" | "DISCONNECTED";
-  createdAt: Date;
-  updatedAt: Date;
+  currentPatient?: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  nonPatient?: User | AuthUser | null;
+  patient?: User | AuthUser | null;
 }
 
 export interface QrCodeData {

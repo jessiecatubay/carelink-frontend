@@ -1,3 +1,4 @@
+import { isValidPhilippinePhoneNumber } from "@/utils/phone";
 import { z } from "zod";
 
 export const commandSchema = z.enum([
@@ -21,6 +22,7 @@ export const patientVitalsSchema = z
     patientId: z.string().uuid().optional(),
     temperature: z.number().finite().optional(),
     heartRate: z.number().finite().optional(),
+    batteryLevel: z.number().int().min(0).max(100).optional(),
     sensorContact: z.boolean().optional(),
     receivedAt: z.string().datetime({ offset: true }).optional(),
   })
@@ -64,22 +66,23 @@ export const patientOnboardingSchema = z.object({
 });
 
 export const nonPatientOnboardingSchema = z.object({
-  phoneNumber: z
+  fullName: z
     .string()
     .trim()
-    .min(1, "Emergency phone number is required.")
-    .regex(/^[+\d\s().-]+$/, "Enter a valid phone number.")
-    .refine((value) => value.replace(/\D/g, "").length >= 7, {
-      message: "Phone number must contain at least 7 digits.",
-    })
-    .refine((value) => value.replace(/\D/g, "").length <= 15, {
-      message: "Phone number must contain 15 digits or fewer.",
-    }),
+    .min(2, "Full name is required.")
+    .max(100, "Full name must be 100 characters or fewer."),
   relationship: z
     .string()
     .trim()
     .min(1, "Relationship is required.")
     .max(50, "Relationship must be 50 characters or fewer."),
+  phoneNumber: z
+    .string()
+    .trim()
+    .min(1, "Phone number is required.")
+    .refine((value) => isValidPhilippinePhoneNumber(value), {
+      message: "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
+    }),
 });
 
 export const vitalResponseSchema = z.object({
@@ -88,6 +91,7 @@ export const vitalResponseSchema = z.object({
   temperature: z.number().finite(),
   heartRate: z.number().finite(),
   sensorContact: z.boolean(),
+  batteryLevel: z.number().int().min(0).max(100),
   recordedAt: z.string().datetime({ offset: true }),
 });
 

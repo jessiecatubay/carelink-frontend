@@ -4,8 +4,9 @@ import DashboardTourModal from "@/components/ui/DashboardTourModal";
 import { useAuth } from "@/context/AuthContext";
 import { triggerAppHaptic } from "@/context/HapticsContext";
 import axiosInstance from "@/hooks/lib/axios";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { initSocket, onConnectionUpdated } from "@/hooks/lib/socket";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -13,30 +14,94 @@ export default function PatientDashboardHome() {
   const router = useRouter();
   const { user } = useAuth();
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+
+  const checkFamilyConnections = useCallback(async () => {
+    if (!user?.id) {
+      setIsCheckingConnection(false);
+      return;
+    }
+    try {
+      // 1. Check connected caregivers
+      const response = await axiosInstance.post(
+        "/api/patient-nonpatient/v1/connected-caregivers",
+        { patientId: user.id },
+      );
+
+      const caregivers = response.data?.data;
+      if (Array.isArray(caregivers) && caregivers.length > 0) {
+        setShowConnectPrompt(false);
+        setIsCheckingConnection(false);
+        return;
+      }
+
+      // 2. Check connected-nonpatients
+      const nonPatientsRes = await axiosInstance.post(
+        "/api/patient-nonpatient/v1/connected-nonpatients",
+        { userId: user.id },
+      );
+
+      const connected = nonPatientsRes.data?.data;
+      if (Array.isArray(connected) && connected.length > 0) {
+        setShowConnectPrompt(false);
+        setIsCheckingConnection(false);
+        return;
+      }
+
+      // 3. Check get-user-by-id
+      const userRes = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+        id: user.id,
+      });
+      const patientConnections = userRes.data?.data?.patientConnections;
+      if (Array.isArray(patientConnections) && patientConnections.length > 0) {
+        setShowConnectPrompt(false);
+        setIsCheckingConnection(false);
+        return;
+      }
+
+      setShowConnectPrompt(true);
+    } catch (error) {
+      console.log("Check patient family connections failed:", error);
+      try {
+        const userRes = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+          id: user.id,
+        });
+        const conns = userRes.data?.data?.patientConnections;
+        if (Array.isArray(conns) && conns.length > 0) {
+          setShowConnectPrompt(false);
+          setIsCheckingConnection(false);
+          return;
+        }
+      } catch (e) {
+        // ignore
+      }
+      setShowConnectPrompt(true);
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkFamilyConnections();
+    }, [checkFamilyConnections]),
+  );
 
   useEffect(() => {
-    if (!user?.id) return;
-
-    const checkFamilyConnections = async () => {
-      try {
-        const response = await axiosInstance.post(
-          "/api/patient-nonpatient/v1/connected-nonpatients",
-          { userId: user.id },
-        );
-
-        const connected = response.data?.data;
-        if (!connected || (Array.isArray(connected) && connected.length === 0)) {
-          setShowConnectPrompt(true);
-        }
-      } catch (error) {
-        console.log("Check patient family connections failed:", error);
-        // Show prompt if not yet connected
-        setShowConnectPrompt(true);
-      }
-    };
-
     checkFamilyConnections();
-  }, [user?.id]);
+  }, [checkFamilyConnections]);
+
+  useEffect(() => {
+    initSocket();
+    const off = onConnectionUpdated((payload) => {
+      console.log("🔗 Real-time connection update received in Patient dashboard:", payload);
+      checkFamilyConnections();
+    });
+
+    return () => {
+      off();
+    };
+  }, [checkFamilyConnections]);
 
   const handleOpenSettings = () => {
     triggerAppHaptic("light");
@@ -75,16 +140,21 @@ export default function PatientDashboardHome() {
         </View>
       </View>
 
-      {/* Connect a Family First Prompt Modal for New/Unconnected Patients */}
+      {/* Connect to Family First Prompt Modal for New/Unconnected Patients */}
       <ConnectPatientPromptModal
         role="PATIENT"
-        visible={showConnectPrompt}
+        title="Connect to Family First"
+        primaryButtonText="View QR Code"
+        secondaryButtonText="Go to Settings"
+        visible={!isCheckingConnection && showConnectPrompt}
         onPrimaryAction={() => {
-          setShowConnectPrompt(false);
           router.push("/patient/dashboard/qrcode");
         }}
         onSecondaryAction={() => {
-          setShowConnectPrompt(false);
+          router.push("/patient/dashboard/settings");
+        }}
+        onOpenSettings={() => {
+          router.push("/patient/dashboard/settings");
         }}
       />
 

@@ -9,6 +9,7 @@ type ChatInputProps = {
 
 export default function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSend = () => {
     if (!input.trim() || disabled) return;
@@ -19,11 +20,13 @@ export default function ChatInput({ onSend, disabled = false }: ChatInputProps) 
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, isFocused && styles.inputFocused]}
         placeholder="Ask for help..."
         placeholderTextColor="#9CA3AF"
         value={input}
         onChangeText={setInput}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         onSubmitEditing={handleSend}
         returnKeyType="send"
       />
@@ -63,6 +66,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
+  },
+  inputFocused: {
+    borderColor: "#12A5B5",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sendButton: {
     width: 44,

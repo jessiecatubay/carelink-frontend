@@ -42,8 +42,7 @@
       "expo-asset",
       "expo-font",
       "expo-secure-store",
-      "expo-notifications",
-      "expo-audio"
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

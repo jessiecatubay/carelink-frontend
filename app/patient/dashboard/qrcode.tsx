@@ -14,11 +14,30 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import QRCode from "react-qr-code";
 
+import { initSocket, onConnectionUpdated } from "@/hooks/lib/socket";
+
 export default function PatientQRCodeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [code, setCode] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    initSocket();
+    const off = onConnectionUpdated((payload) => {
+      console.log("🔗 Real-time connection update received in QR code screen:", payload);
+      // When a caregiver pairs, return back to dashboard where connect prompt dismisses
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace("/patient/dashboard");
+      }
+    });
+
+    return () => {
+      off();
+    };
+  }, [router]);
 
   useEffect(() => {
     const getGeneratedCode = async () => {
@@ -64,7 +83,7 @@ export default function PatientQRCodeScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/patient/dashboard/settings");
+      router.replace("/patient/dashboard");
     }
   };
 

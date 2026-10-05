@@ -6,18 +6,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "@/components/ui/Button";
 import PaginationDots from "@/components/ui/PaginationDots";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { useOnboarding } from "@/context/OnboardingContext";
 import {
   nonPatientOnboardingSchema,
   type NonPatientOnboardingInput,
 } from "@/schema/api";
+import { formatPhilippinePhoneNumber } from "@/utils/phone";
+import { capitalizeWords, formatNameInput } from "@/utils/string";
 
 type FieldName = keyof NonPatientOnboardingInput;
 type FormErrors = Partial<Record<FieldName, string>>;
 
 const initialForm: NonPatientOnboardingInput = {
-  phoneNumber: "",
+  fullName: "",
   relationship: "",
+  phoneNumber: "",
 };
 
 function getFormErrors(form: NonPatientOnboardingInput): FormErrors {
@@ -40,38 +44,57 @@ export default function EmergencyContactScreen() {
   const router = useRouter();
   const { setData } = useOnboarding();
   const [form, setForm] = useState(initialForm);
-  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>(
-    {},
-  );
-
-  const errors = getFormErrors(form);
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const updateField = (field: FieldName, value: string) => {
-    setForm((currentForm) => ({ ...currentForm, [field]: value }));
-    setTouched((currentTouched) => ({ ...currentTouched, [field]: true }));
+    let sanitized = value;
+    if (field === "phoneNumber") {
+      sanitized = formatPhilippinePhoneNumber(value.replace(/[\r\n]/g, ""));
+    } else if (field === "fullName" || field === "relationship") {
+      sanitized = formatNameInput(value);
+    }
+
+    setForm((currentForm) => ({ ...currentForm, [field]: sanitized }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   const handleContinue = () => {
-    const result = nonPatientOnboardingSchema.safeParse(form);
-    setTouched({ phoneNumber: true, relationship: true });
+    const formattedFullName = capitalizeWords(form.fullName);
+    const formattedRelationship = capitalizeWords(form.relationship);
+
+    const submissionForm = {
+      ...form,
+      fullName: formattedFullName,
+      relationship: formattedRelationship,
+    };
+
+    const result = nonPatientOnboardingSchema.safeParse(submissionForm);
 
     if (!result.success) {
+      const errors: FormErrors = {};
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0] as FieldName;
+        if (!errors[field]) {
+          errors[field] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
       return;
     }
 
+    setFieldErrors({});
     setData((prev) => ({
       ...prev,
+      emergencyContactName: formattedFullName,
       emergencyContact: result.data.phoneNumber,
-      relationship: result.data.relationship,
+      relationship: formattedRelationship,
     }));
     // Navigate to notification setup
     router.push("/(onboarding)/nonpatient/notificationsetup");
   };
-
-  const renderError = (field: FieldName) =>
-    touched[field] && errors[field] ? (
-      <Text style={styles.error}>{errors[field]}</Text>
-    ) : null;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -95,31 +118,48 @@ export default function EmergencyContactScreen() {
             <TextInput
               style={[
                 styles.input,
-                touched.phoneNumber && errors.phoneNumber
-                  ? styles.inputError
-                  : null,
+                focusedField === "fullName" ? styles.inputFocused : null,
+                fieldErrors.fullName ? styles.inputError : null,
               ]}
-              placeholder="Phone Number"
+              placeholder="Full Name"
               placeholderTextColor="#8E8E93"
-              value={form.phoneNumber}
-              onChangeText={(value) => updateField("phoneNumber", value)}
-              keyboardType="phone-pad"
+              value={form.fullName}
+              onChangeText={(value) => updateField("fullName", value)}
+              onFocus={() => setFocusedField("fullName")}
+              onBlur={() => setFocusedField(null)}
+              autoCapitalize="words"
+              textContentType="name"
+              autoComplete="name"
             />
-            {renderError("phoneNumber")}
+            {fieldErrors.fullName ? (
+              <Text style={styles.error}>{fieldErrors.fullName}</Text>
+            ) : null}
 
             <TextInput
               style={[
                 styles.input,
-                touched.relationship && errors.relationship
-                  ? styles.inputError
-                  : null,
+                focusedField === "relationship" ? styles.inputFocused : null,
+                fieldErrors.relationship ? styles.inputError : null,
               ]}
-              placeholder="Relationship"
+              placeholder="Relationship (e.g. Daughter, Spouse)"
               placeholderTextColor="#8E8E93"
               value={form.relationship}
               onChangeText={(value) => updateField("relationship", value)}
+              onFocus={() => setFocusedField("relationship")}
+              onBlur={() => setFocusedField(null)}
+              autoCapitalize="words"
+              autoComplete="off"
             />
-            {renderError("relationship")}
+            {fieldErrors.relationship ? (
+              <Text style={styles.error}>{fieldErrors.relationship}</Text>
+            ) : null}
+
+            <PhoneInput
+              placeholder="900 000 0000"
+              value={form.phoneNumber}
+              onChangeText={(value) => updateField("phoneNumber", value)}
+              error={fieldErrors.phoneNumber}
+            />
           </View>
 
           {/* Note */}
@@ -193,12 +233,21 @@ const styles = StyleSheet.create({
   input: {
     height: 56,
     borderRadius: 28,
-    borderWidth: 1,
-    borderColor: "#7A7A7A",
+    borderWidth: 1.5,
+    borderColor: "#CBD5E1",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
     fontSize: 16,
     color: "#111111",
+  },
+  inputFocused: {
+    borderColor: "#12A5B5",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputError: {
     borderColor: "#F16A66",

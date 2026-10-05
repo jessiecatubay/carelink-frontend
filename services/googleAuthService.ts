@@ -20,13 +20,20 @@ export const signInWithGoogle = async () => {
     try {
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
+        // Clear any previous sign-in session so Google account picker allows choosing any account
+        try {
+            await GoogleSignin.signOut();
+        } catch {
+            // Ignore if no active session
+        }
+
         const response = await GoogleSignin.signIn();
 
         if (response.type !== "success" || !response.data) {
             throw new Error("Google Sign-In was cancelled.");
         }
 
-        const { idToken } = response.data;
+        const idToken = response.data.idToken || (response as any).idToken;
 
         if (!idToken) {
             throw new Error("Google Sign-In did not return an ID token.");

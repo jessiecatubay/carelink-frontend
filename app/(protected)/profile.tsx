@@ -5,6 +5,11 @@ import RoleInformation from "@/components/feature/nonpatient/settings/profile/Ro
 import PatientMedicalInformation from "@/components/feature/patient/settings/PatientMedicalInformation";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
+import {
+  formatPhilippinePhoneNumber,
+  isValidPhilippinePhoneNumber,
+} from "@/utils/phone";
+import { capitalizeWords, formatNameInput } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -51,7 +56,7 @@ export default function ProfileScreen() {
   }, [user, isEditing]);
 
   const fullName =
-    [firstName, lastName].filter(Boolean).join(" ") ||
+    capitalizeWords([firstName, lastName].filter(Boolean).join(" ")) ||
     (user?.role === "PATIENT" ? "Patient" : "Caregiver / Family");
 
   const email = user?.email || "";
@@ -92,12 +97,15 @@ export default function ProfileScreen() {
       return;
     }
 
-    if (!firstName.trim()) {
+    const formattedFirst = capitalizeWords(firstName);
+    const formattedLast = capitalizeWords(lastName);
+
+    if (!formattedFirst) {
       Alert.alert("Invalid Information", "First name is required.");
       return;
     }
 
-    if (!lastName.trim()) {
+    if (!formattedLast) {
       Alert.alert("Invalid Information", "Last name is required.");
       return;
     }
@@ -107,14 +115,22 @@ export default function ProfileScreen() {
       return;
     }
 
+    if (!isValidPhilippinePhoneNumber(phoneNumber.trim())) {
+      Alert.alert(
+        "Invalid Phone Number",
+        "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
+      );
+      return;
+    }
+
     try {
       setSaving(true);
 
       const formData = new FormData();
 
       formData.append("email", user.email);
-      formData.append("firstName", firstName.trim());
-      formData.append("lastName", lastName.trim());
+      formData.append("firstName", formattedFirst);
+      formData.append("lastName", formattedLast);
       formData.append("emergencyContact", phoneNumber.trim());
 
       if (user.role === "PATIENT") {
@@ -142,8 +158,8 @@ export default function ProfileScreen() {
       } else {
         await updateUser({
           ...user,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          firstName: formattedFirst,
+          lastName: formattedLast,
           emergencyContact: phoneNumber.trim(),
           patientProfile:
             user.role === "PATIENT"
@@ -163,6 +179,8 @@ export default function ProfileScreen() {
         });
       }
 
+      setFirstName(formattedFirst);
+      setLastName(formattedLast);
       setIsEditing(false);
 
       Alert.alert(
@@ -214,9 +232,11 @@ export default function ProfileScreen() {
           email={email}
           phoneNumber={phoneNumber}
           editable={isEditing}
-          onFirstNameChange={setFirstName}
-          onLastNameChange={setLastName}
-          onPhoneNumberChange={setPhoneNumber}
+          onFirstNameChange={(val) => setFirstName(formatNameInput(val))}
+          onLastNameChange={(val) => setLastName(formatNameInput(val))}
+          onPhoneNumberChange={(val) =>
+            setPhoneNumber(formatPhilippinePhoneNumber(val.replace(/[\r\n]/g, "")))
+          }
         />
 
         {user?.role === "PATIENT" && (

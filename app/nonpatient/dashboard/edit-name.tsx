@@ -1,6 +1,7 @@
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/context/AuthContext";
+import { capitalizeWords, formatNameInput } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -34,12 +35,18 @@ export default function EditNameScreen() {
   };
 
   const handleSave = async () => {
+    const formattedFirst = capitalizeWords(firstName);
+    const formattedLast = capitalizeWords(lastName);
+
+    setFirstName(formattedFirst);
+    setLastName(formattedLast);
+
     const newErrors: { firstName?: string; lastName?: string } = {};
 
-    if (!firstName.trim()) {
+    if (!formattedFirst) {
       newErrors.firstName = "First name is required";
     }
-    if (!lastName.trim()) {
+    if (!formattedLast) {
       newErrors.lastName = "Last name is required";
     }
 
@@ -55,8 +62,8 @@ export default function EditNameScreen() {
       if (user) {
         await updateUser({
           ...user,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          firstName: formattedFirst,
+          lastName: formattedLast,
         });
       }
 
@@ -122,8 +129,9 @@ export default function EditNameScreen() {
               <Input
                 placeholder="First Name"
                 value={firstName}
+                autoCapitalize="words"
                 onChangeText={(text) => {
-                  setFirstName(text);
+                  setFirstName(formatNameInput(text));
                   if (errors.firstName) {
                     setErrors((prev) => ({ ...prev, firstName: undefined }));
                   }
@@ -137,8 +145,9 @@ export default function EditNameScreen() {
               <Input
                 placeholder="Last Name"
                 value={lastName}
+                autoCapitalize="words"
                 onChangeText={(text) => {
-                  setLastName(text);
+                  setLastName(formatNameInput(text));
                   if (errors.lastName) {
                     setErrors((prev) => ({ ...prev, lastName: undefined }));
                   }

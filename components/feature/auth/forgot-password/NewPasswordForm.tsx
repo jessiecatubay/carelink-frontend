@@ -23,6 +23,7 @@ export default function NewPasswordForm({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -47,12 +48,16 @@ export default function NewPasswordForm({
         <View
           style={[
             styles.inputRow,
+            focusedField === "password" ? styles.inputRowFocused : null,
             error && !password ? styles.inputRowError : null,
           ]}
         >
           <Image
             source={require("@/assets/icons/padlock.png")}
-            style={styles.padlockIcon}
+            style={[
+              styles.padlockIcon,
+              focusedField === "password" ? styles.iconFocused : null,
+            ]}
             resizeMode="contain"
           />
           <TextInput
@@ -61,6 +66,8 @@ export default function NewPasswordForm({
             placeholderTextColor="#9CA3AF"
             secureTextEntry={!showPassword}
             value={password}
+            onFocus={() => setFocusedField("password")}
+            onBlur={() => setFocusedField(null)}
             onChangeText={(text) => {
               setPassword(text);
               if (error) setError(null);
@@ -86,6 +93,7 @@ export default function NewPasswordForm({
         <View
           style={[
             styles.inputRow,
+            focusedField === "confirmPassword" ? styles.inputRowFocused : null,
             error && (!confirmPassword || password !== confirmPassword)
               ? styles.inputRowError
               : null,
@@ -93,7 +101,10 @@ export default function NewPasswordForm({
         >
           <Image
             source={require("@/assets/icons/padlock.png")}
-            style={styles.padlockIcon}
+            style={[
+              styles.padlockIcon,
+              focusedField === "confirmPassword" ? styles.iconFocused : null,
+            ]}
             resizeMode="contain"
           />
           <TextInput
@@ -102,6 +113,8 @@ export default function NewPasswordForm({
             placeholderTextColor="#9CA3AF"
             secureTextEntry={!showConfirmPassword}
             value={confirmPassword}
+            onFocus={() => setFocusedField("confirmPassword")}
+            onBlur={() => setFocusedField(null)}
             onChangeText={(text) => {
               setConfirmPassword(text);
               if (error) setError(null);
@@ -157,12 +170,20 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E5E7EB",
     borderRadius: 18,
     height: 54,
     paddingHorizontal: 16,
     backgroundColor: "#FFFFFF",
+  },
+  inputRowFocused: {
+    borderColor: "#12A5B5",
+    shadowColor: "#12A5B5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputRowError: {
     borderColor: "#F16A66",
@@ -172,6 +193,9 @@ const styles = StyleSheet.create({
     height: 20,
     tintColor: "#9CA3AF",
     marginRight: 10,
+  },
+  iconFocused: {
+    tintColor: "#12A5B5",
   },
   eyeIcon: {
     width: 20,

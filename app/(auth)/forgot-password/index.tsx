@@ -47,7 +47,7 @@ export default function ForgotPasswordIndexScreen() {
         >
           <ForgotPasswordHeader
             title="Forgot Password"
-            icon={require("@/assets/icons/mail-lock.png")}
+            icon={require("@/assets/icons/forgot-password.png")}
           />
           <ForgotPasswordForm
             onSubmit={handleSendResetLink}
