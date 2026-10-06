@@ -19,6 +19,12 @@ import {
 } from "@/schema/api";
 
 type PatientProfileProps = {
+  initialValues?: {
+    age?: string | number;
+    gender?: string;
+    medicalConditions?: string;
+    notes?: string;
+  };
   onContinue: (profileData: {
     age: number;
     gender: string;
@@ -29,13 +35,6 @@ type PatientProfileProps = {
 
 type FieldName = keyof PatientOnboardingInput;
 type FormErrors = Partial<Record<FieldName, string>>;
-
-const initialForm: PatientOnboardingInput = {
-  age: "",
-  gender: "",
-  medicalConditions: "",
-  notes: "",
-};
 
 const GENDER_OPTIONS = [
   { label: "Male", value: "Male", icon: "male" as const },
@@ -58,8 +57,16 @@ function getFormErrors(form: PatientOnboardingInput): FormErrors {
   }, {});
 }
 
-export default function PatientProfile({ onContinue }: PatientProfileProps) {
-  const [form, setForm] = useState(initialForm);
+export default function PatientProfile({ initialValues, onContinue }: PatientProfileProps) {
+  const [form, setForm] = useState<PatientOnboardingInput>({
+    age:
+      initialValues?.age !== undefined && initialValues?.age !== null
+        ? String(initialValues.age)
+        : "",
+    gender: initialValues?.gender || "",
+    medicalConditions: initialValues?.medicalConditions || "",
+    notes: initialValues?.notes || "",
+  });
   const [isGenderOpen, setIsGenderOpen] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>(

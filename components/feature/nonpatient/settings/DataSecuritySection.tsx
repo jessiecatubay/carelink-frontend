@@ -7,7 +7,13 @@ export default function DataSecuritySection() {
   const router = useRouter();
 
   return (
-    <SettingsSection title="DATA & SECURITY">
+    <SettingsSection title="HELP & LEGAL">
+      <SettingsItem
+        icon="book-outline"
+        title="User Manual & Guide"
+        subtitle="How CareLink devices, alerts and pairing work"
+        onPress={() => router.push("/nonpatient/dashboard/user-manual")}
+      />
       <SettingsItem
         icon="document-text-outline"
         title="Terms & Conditions"
