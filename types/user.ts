@@ -16,7 +16,7 @@ export interface AuthUser {
 export interface UserOnBoardingData {
   userId?: string;
   email?: string;
-  role?: "PATIENT" | "NON-PATIENT";
+  role?: "PATIENT" | "NON-PATIENT" | "NON_PATIENT";
   age?: number;
   gender?: string;
   medicalConditions?: string;

@@ -525,7 +525,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       {step === 3 ? (
         <View>
           <PasswordInput
-            placeholder="Password (min. 8 characters)"
+            placeholder="Password (min. 8 chars, 1 uppercase, 1 number)"
             value={password}
             onChangeText={(text) => {
               setPassword(text);

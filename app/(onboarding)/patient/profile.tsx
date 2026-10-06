@@ -6,18 +6,24 @@ import { useOnboarding } from "@/context/OnboardingContext";
 
 export default function PatientProfileScreen() {
   const router = useRouter();
-  const { setData } = useOnboarding();
+  const { data, setData } = useOnboarding();
 
   const handleContinue = (profileData: any) => {
-    setData((prev) => ({ ...prev, ...profileData }))
-    console.log("Saving patient profile data:", profileData);
-    // Navigate to step 5 (vitals/button testing screen)
+    setData((prev) => ({ ...prev, ...profileData }));
     router.push("/(onboarding)/patient/qrcode");
   };
 
   return (
     <SafeAreaView style={styles.screen}>
-      <PatientProfile onContinue={handleContinue} />
+      <PatientProfile
+        initialValues={{
+          age: data.age,
+          gender: data.gender,
+          medicalConditions: data.medicalConditions,
+          notes: data.notes,
+        }}
+        onContinue={handleContinue}
+      />
     </SafeAreaView>
   );
 }

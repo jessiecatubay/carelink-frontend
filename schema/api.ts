@@ -62,7 +62,12 @@ export const patientOnboardingSchema = z.object({
     .string()
     .trim()
     .min(1, "Medical conditions are required."),
-  notes: z.string().trim().max(500, "Notes must be 500 characters or fewer."),
+  notes: z
+    .string()
+    .trim()
+    .max(500, "Notes must be 500 characters or fewer.")
+    .optional()
+    .default(""),
 });
 
 export const nonPatientOnboardingSchema = z.object({

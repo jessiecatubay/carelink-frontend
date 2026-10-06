@@ -117,6 +117,7 @@ export default function HistoryScreen() {
         heartRate: payload.heartRate,
         temperature: payload.temperature,
         sensorContact: Boolean(payload.sensorContact),
+        batteryLevel: payload.batteryLevel ?? null,
         recordedAt: payload.recordedAt ?? new Date().toISOString(),
       };
 
