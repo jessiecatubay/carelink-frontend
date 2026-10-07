@@ -5,7 +5,7 @@ import { closeSocket, initSocket } from "@/hooks/lib/socket";
 import { userOnboarding } from "@/services/auth";
 import { setAuthTokens } from "@/services/token";
 import { Href, useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,6 +14,7 @@ export default function SetupCompleteScreen() {
   const { data } = useOnboarding();
   const { user, updateUser } = useAuth();
   const isCompletedRef = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -21,6 +22,7 @@ export default function SetupCompleteScreen() {
     const finalizeOnboarding = async () => {
       if (isCompletedRef.current) return;
       isCompletedRef.current = true;
+      let onboardingSaved = false;
 
       try {
         const payload = {
@@ -37,37 +39,28 @@ export default function SetupCompleteScreen() {
         const accessToken = responseData?.accessToken;
         const refreshToken = responseData?.refreshToken;
 
-        if (accessToken && refreshToken && updatedUser) {
-          await setAuthTokens({ accessToken, refreshToken }, updatedUser, true);
-          await updateUser(updatedUser);
-        } else if (updatedUser) {
-          await updateUser(updatedUser);
-        } else if (user) {
-          await updateUser({
-            ...user,
-            role: "PATIENT",
-            onBoarded: true,
-          });
+        if (response?.data?.status !== "success" || !updatedUser?.id) {
+          throw new Error("The server did not confirm onboarding was saved.");
         }
+
+        if (accessToken && refreshToken) {
+          await setAuthTokens({ accessToken, refreshToken }, updatedUser, true);
+        }
+        await updateUser(updatedUser);
+        onboardingSaved = true;
 
         closeSocket();
         initSocket();
       } catch (error) {
         console.error("Patient SetupComplete onboarding failed:", error);
-        if (user) {
-          await updateUser({
-            ...user,
-            role: "PATIENT",
-            onBoarded: true,
-          });
-        }
-        closeSocket();
-        initSocket();
+        setSaveFailed(true);
       } finally {
-        timer = setTimeout(() => {
-          router.dismissAll();
-          router.replace("/patient/dashboard" as Href);
-        }, 3000);
+        if (onboardingSaved) {
+          timer = setTimeout(() => {
+            router.dismissAll();
+            router.replace("/patient/dashboard" as Href);
+          }, 3000);
+        }
       }
     };
 
@@ -85,7 +78,9 @@ export default function SetupCompleteScreen() {
         <Text style={styles.title}>Setup Complete</Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>You{"'"}re all set!</Text>
+        <Text style={styles.subtitle}>
+          {saveFailed ? "Your setup could not be saved." : "You are all set!"}
+        </Text>
 
         {/* Animated Checkmark */}
         <AnimatedCheckmark
@@ -102,7 +97,11 @@ export default function SetupCompleteScreen() {
           CareLink is now connected{"\n"}and ready.
         </Text>
 
-        <Text style={styles.redirectText}>Opening dashboard...</Text>
+        <Text style={styles.redirectText}>
+          {saveFailed
+            ? "Your account was not marked complete. Go back and try again."
+            : "Opening dashboard..."}
+        </Text>
       </View>
     </SafeAreaView>
   );
