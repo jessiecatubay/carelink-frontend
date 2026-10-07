@@ -16,7 +16,8 @@ import {
 } from "@/utils/date";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
@@ -29,9 +30,18 @@ import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActi
 import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
 import ConnectPatientPromptModal from "@/components/ui/ConnectPatientPromptModal";
 import DashboardFeatureTour from "@/components/ui/DashboardFeatureTour";
+import PillReminderModal from "@/components/feature/nonpatient/dashboard/PillReminderModal";
 
 const MAX_HISTORY = 8;
 const TOUR_STORAGE_KEY = "@carelink_dashboard_tour_completed_v1";
+
+type PillReminder = {
+  id: string;
+  title: string;
+  description: string | null;
+  scheduledAt: string;
+  status: "PENDING" | "SENT" | "CANCELLED";
+};
 
 export default function Home() {
   const router = useRouter();
@@ -51,6 +61,8 @@ export default function Home() {
     "CONNECTED" | "DISCONNECTED"
   >("DISCONNECTED");
   const [patientLoading, setPatientLoading] = useState(true);
+  const [pillReminders, setPillReminders] = useState<PillReminder[]>([]);
+  const [showPillReminderModal, setShowPillReminderModal] = useState(false);
 
   // Connection Prompt & Feature Spotlight Tour States
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
@@ -180,6 +192,59 @@ export default function Home() {
   }, [patient]);
 
   useEffect(() => {
+    if (!patient?.id) {
+      setPillReminders([]);
+      return;
+    }
+
+    let isCurrent = true;
+    axiosInstance
+      .get("/api/pill-reminders/v1/list", { params: { patientId: patient.id } })
+      .then((result) => {
+        if (!isCurrent) return;
+        const reminders = result.data?.data;
+        setPillReminders(Array.isArray(reminders) ? reminders : []);
+      })
+      .catch((error) => {
+        console.error("Failed to get pill reminders:", error);
+        if (isCurrent) setPillReminders([]);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [patient?.id]);
+
+  const savePillReminder = async (
+    title: string,
+    description: string,
+    scheduledAt: Date,
+  ) => {
+    if (!patient?.id) {
+      throw new Error("Connect a patient before creating a pill reminder.");
+    }
+
+    const result = await axiosInstance.post("/api/pill-reminders/v1/create", {
+      patientId: patient.id,
+      title,
+      description,
+      scheduledAt: scheduledAt.toISOString(),
+    });
+
+    if (result.data?.status !== "success" || !result.data.data) {
+      throw new Error(result.data?.message || "Unable to save this reminder.");
+    }
+
+    setPillReminders((current) =>
+      [...current, result.data.data].sort(
+        (first, second) =>
+          new Date(first.scheduledAt).getTime() -
+          new Date(second.scheduledAt).getTime(),
+      ),
+    );
+  };
+
+  useEffect(() => {
     initSocket();
 
     const off = onPatientVitals((payload: any) => {
@@ -240,7 +305,10 @@ export default function Home() {
     console.log("NON-PATIENT SOCKET:", socket.id);
 
     const offConn = onConnectionUpdated((payload) => {
-      console.log("🔗 Real-time connection update received in NonPatient dashboard:", payload);
+      console.log(
+        "🔗 Real-time connection update received in NonPatient dashboard:",
+        payload,
+      );
       getUserById();
     });
 
@@ -302,7 +370,9 @@ export default function Home() {
         >
           {isTourActive && tourStepIndex === 0 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#0284C7" }]}>
-              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: PATIENT STATUS ✦</Text>
+              <Text style={styles.spotlightTagText}>
+                ✦ CURRENT FEATURE: PATIENT STATUS ✦
+              </Text>
             </View>
           ) : null}
           <PatientCard
@@ -327,7 +397,9 @@ export default function Home() {
         >
           {isTourActive && tourStepIndex === 1 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#F16A66" }]}>
-              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: REAL-TIME VITALS ✦</Text>
+              <Text style={styles.spotlightTagText}>
+                ✦ CURRENT FEATURE: REAL-TIME VITALS ✦
+              </Text>
             </View>
           ) : null}
           <CurrentVitals />
@@ -369,11 +441,16 @@ export default function Home() {
         >
           {isTourActive && tourStepIndex === 2 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#10B981" }]}>
-              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: POSTURE & SAFETY ✦</Text>
+              <Text style={styles.spotlightTagText}>
+                ✦ CURRENT FEATURE: POSTURE & SAFETY ✦
+              </Text>
             </View>
           ) : null}
           <PatientCurrentStatus patientId={patient?.id} />
-          <LastUpdatedCard lastUpdated={lastUpdated} batteryLevel={batteryLevel} />
+          <LastUpdatedCard
+            lastUpdated={lastUpdated}
+            batteryLevel={batteryLevel}
+          />
         </View>
 
         {/* Step 4 Highlight: Quick Actions & AI Help */}
@@ -385,7 +462,9 @@ export default function Home() {
         >
           {isTourActive && tourStepIndex === 3 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#D97706" }]}>
-              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: AI & ALERTS ✦</Text>
+              <Text style={styles.spotlightTagText}>
+                ✦ CURRENT FEATURE: AI & ALERTS ✦
+              </Text>
             </View>
           ) : null}
           <QuickActions
@@ -405,12 +484,78 @@ export default function Home() {
         >
           {isTourActive && tourStepIndex === 4 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#8B5CF6" }]}>
-              <Text style={styles.spotlightTagText}>✦ CURRENT FEATURE: ACTIVITY LOG ✦</Text>
+              <Text style={styles.spotlightTagText}>
+                ✦ CURRENT FEATURE: ACTIVITY LOG ✦
+              </Text>
             </View>
           ) : null}
           <RecentActivity patientId={patient?.id} />
         </View>
+
+        <View style={styles.remindersSection}>
+          <View style={styles.remindersHeadingRow}>
+            <View>
+              <Text style={styles.remindersEyebrow}>CARE PLAN</Text>
+              <Text style={styles.remindersHeading}>Pill reminders</Text>
+            </View>
+            <Text style={styles.remindersCount}>{pillReminders.length}</Text>
+          </View>
+          {pillReminders.length ? (
+            pillReminders.map((reminder) => (
+              <View key={reminder.id} style={styles.reminderRow}>
+                <View style={styles.reminderIcon}>
+                  <Ionicons name="medical-outline" size={18} color="#0B8F91" />
+                </View>
+                <View style={styles.reminderCopy}>
+                  <Text style={styles.reminderTitle}>{reminder.title}</Text>
+                  {reminder.description ? (
+                    <Text style={styles.reminderDescription} numberOfLines={2}>
+                      {reminder.description}
+                    </Text>
+                  ) : null}
+                  <Text style={styles.reminderTime}>
+                    {isSamePhilippineDay(
+                      reminder.scheduledAt,
+                      new Date().toISOString(),
+                    )
+                      ? `Today, ${formatPhilippineTime(reminder.scheduledAt)}`
+                      : `${formatPhilippineDate(reminder.scheduledAt)} ${formatPhilippineTime(reminder.scheduledAt)}`}
+                  </Text>
+                </View>
+                <View style={styles.pendingBadge}>
+                  <Text style={styles.pendingBadgeText}>{reminder.status}</Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyReminders}>
+              No pill reminders scheduled.
+            </Text>
+          )}
+        </View>
       </ScrollView>
+
+      {!isTourActive ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add pill reminder"
+          onPress={() => setShowPillReminderModal(true)}
+          disabled={!patient?.id}
+          style={({ pressed }) => [
+            styles.addReminderButton,
+            !patient?.id && styles.addReminderButtonDisabled,
+            pressed && patient?.id && styles.addReminderButtonPressed,
+          ]}
+        >
+          <Ionicons name="add" size={30} color="#FFFFFF" />
+        </Pressable>
+      ) : null}
+
+      <PillReminderModal
+        visible={showPillReminderModal}
+        onClose={() => setShowPillReminderModal(false)}
+        onSave={savePillReminder}
+      />
 
       {/* Mandatory Modal: Connect Patient First */}
       <ConnectPatientPromptModal
@@ -496,5 +641,120 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 10,
+  },
+  remindersSection: {
+    marginBottom: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: "#E3ECEE",
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+  },
+  remindersHeadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  remindersEyebrow: {
+    color: "#0B8F91",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  remindersHeading: {
+    marginTop: 3,
+    color: "#172B35",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  remindersCount: {
+    minWidth: 28,
+    height: 28,
+    overflow: "hidden",
+    textAlign: "center",
+    textAlignVertical: "center",
+    borderRadius: 14,
+    backgroundColor: "#E8F7F6",
+    color: "#0B8F91",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  reminderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#EDF2F3",
+  },
+  reminderIcon: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 11,
+    backgroundColor: "#E8F7F6",
+  },
+  reminderCopy: {
+    flex: 1,
+  },
+  reminderTitle: {
+    color: "#243B45",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  reminderDescription: {
+    marginTop: 3,
+    color: "#647780",
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  reminderTime: {
+    marginTop: 4,
+    color: "#0B8F91",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  pendingBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "#FFF4DF",
+  },
+  pendingBadgeText: {
+    color: "#986515",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  emptyReminders: {
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#EDF2F3",
+    color: "#70828A",
+    fontSize: 13,
+  },
+  addReminderButton: {
+    position: "absolute",
+    right: 22,
+    bottom: 20,
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 29,
+    backgroundColor: "#0B8F91",
+    shadowColor: "#12383B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 7,
+  },
+  addReminderButtonDisabled: {
+    opacity: 0.5,
+  },
+  addReminderButtonPressed: {
+    transform: [{ scale: 0.96 }],
   },
 });
