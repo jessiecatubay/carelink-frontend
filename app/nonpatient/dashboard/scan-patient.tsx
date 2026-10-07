@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import PairingSuccess from "@/components/feature/nonpatient/settings/PairingSuccess";
 import PatientPairingFlowModal, {
   PatientPreviewData,
@@ -12,8 +13,8 @@ import {
   useCameraPermissions,
 } from "expo-camera";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ScanPatientScreen() {
@@ -32,6 +33,21 @@ export default function ScanPatientScreen() {
   );
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [connecting, setConnecting] = useState(false);
+
+  // Custom Alert Modal State
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   if (!permission) {
     return <View />;
@@ -67,19 +83,17 @@ export default function ScanPatientScreen() {
       const qrData = qrCodeSchema.parse(JSON.parse(data));
 
       if (!user?.id) {
-        Alert.alert(
-          "Error",
-          "Unable to identify the current user.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                setScannerPaused(false);
-              },
-            },
-          ],
-          { cancelable: false },
-        );
+        setAlertModal({
+          visible: true,
+          type: "error",
+          title: "Session Error",
+          message: "Unable to identify the current user. Please log in again.",
+          confirmText: "OK",
+          onConfirm: () => {
+            setAlertModal((prev) => ({ ...prev, visible: false }));
+            setScannerPaused(false);
+          },
+        });
         return;
       }
 
@@ -99,18 +113,19 @@ export default function ScanPatientScreen() {
           setPatientPreview(previewRes.data.data);
         } else {
           setShowPairingModal(false);
-          Alert.alert(
-            "Patient Not Found",
-            previewRes.data?.message || "Invalid patient QR code. Please try again.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  setScannerPaused(false);
-                },
-              },
-            ],
-          );
+          setAlertModal({
+            visible: true,
+            type: "warning",
+            title: "Patient Not Found",
+            message:
+              previewRes.data?.message ||
+              "Invalid patient QR code. Please check and try again.",
+            confirmText: "Scan Again",
+            onConfirm: () => {
+              setAlertModal((prev) => ({ ...prev, visible: false }));
+              setScannerPaused(false);
+            },
+          });
         }
       } catch (err: any) {
         console.error("Failed to preview patient:", err);
@@ -118,33 +133,33 @@ export default function ScanPatientScreen() {
         const msg =
           err?.response?.data?.message ||
           "Could not find patient associated with this QR code.";
-        Alert.alert("Invalid QR Code", msg, [
-          {
-            text: "OK",
-            onPress: () => {
-              setScannerPaused(false);
-            },
+        setAlertModal({
+          visible: true,
+          type: "error",
+          title: "Invalid QR Code",
+          message: msg,
+          confirmText: "Try Again",
+          onConfirm: () => {
+            setAlertModal((prev) => ({ ...prev, visible: false }));
+            setScannerPaused(false);
           },
-        ]);
+        });
       } finally {
         setLoadingPreview(false);
       }
     } catch (error) {
       console.error("Invalid QR code format:", error);
-
-      Alert.alert(
-        "Invalid QR Code",
-        "This is not a valid patient QR code. Please scan again.",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              setScannerPaused(false);
-            },
-          },
-        ],
-        { cancelable: false },
-      );
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Invalid QR Code",
+        message: "This is not a valid patient QR code. Please scan again.",
+        confirmText: "OK",
+        onConfirm: () => {
+          setAlertModal((prev) => ({ ...prev, visible: false }));
+          setScannerPaused(false);
+        },
+      });
     }
   };
 
@@ -163,10 +178,14 @@ export default function ScanPatientScreen() {
       );
 
       if (result.data?.status === "error") {
-        Alert.alert(
-          "Connection Error",
-          result.data.message || "Failed to connect to patient.",
-        );
+        setAlertModal({
+          visible: true,
+          type: "error",
+          title: "Connection Error",
+          message: result.data.message || "Failed to connect to patient.",
+          confirmText: "OK",
+          onConfirm: () => setAlertModal((prev) => ({ ...prev, visible: false })),
+        });
         return;
       }
 
@@ -179,7 +198,14 @@ export default function ScanPatientScreen() {
       const msg =
         error?.response?.data?.message ||
         "Unable to connect to this patient. Please try again.";
-      Alert.alert("Connection Failed", msg);
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Connection Failed",
+        message: msg,
+        confirmText: "OK",
+        onConfirm: () => setAlertModal((prev) => ({ ...prev, visible: false })),
+      });
     } finally {
       setConnecting(false);
     }
@@ -196,7 +222,10 @@ export default function ScanPatientScreen() {
       <SafeAreaView style={styles.successScreen}>
         <PairingSuccess
           onContinue={() => {
-            router.replace("/nonpatient/dashboard");
+            router.replace({
+              pathname: "/nonpatient/dashboard",
+              params: { startTour: "true" },
+            } as any);
           }}
         />
       </SafeAreaView>
@@ -234,6 +263,14 @@ export default function ScanPatientScreen() {
         <Text style={styles.instruction}>
           {scannerPaused ? "Scanning paused" : "Scan the patient's QR code"}
         </Text>
+
+        <Pressable
+          style={styles.manualCodeButton}
+          onPress={() => router.push("/(protected)/device-pairing")}
+        >
+          <Ionicons name="keypad-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+          <Text style={styles.manualCodeButtonText}>Enter Code Manually</Text>
+        </Pressable>
       </View>
 
       <PatientPairingFlowModal
@@ -243,6 +280,19 @@ export default function ScanPatientScreen() {
         connecting={connecting}
         onConnect={handleConfirmConnection}
         onClose={handleClosePairingModal}
+      />
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText}
+        onConfirm={
+          alertModal.onConfirm ||
+          (() => setAlertModal((prev) => ({ ...prev, visible: false })))
+        }
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
       />
     </View>
   );
@@ -291,6 +341,24 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     marginTop: 30,
+    fontWeight: "600",
+  },
+
+  manualCodeButton: {
+    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+  },
+
+  manualCodeButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "600",
   },
 

@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import PairingSuccess from "@/components/feature/nonpatient/settings/PairingSuccess";
 import PatientPairingFlowModal, {
   PatientPreviewData,
@@ -9,7 +10,6 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -37,6 +37,20 @@ export default function DevicePairingScreen() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
   const handleGoBack = () => {
     if (router.canGoBack()) {
       router.back();
@@ -52,12 +66,24 @@ export default function DevicePairingScreen() {
   const handleInitiateConnect = async () => {
     const trimmed = code.trim();
     if (!trimmed) {
-      Alert.alert("Input Required", "Please enter a valid connection code.");
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Input Required",
+        message: "Please enter a valid connection code.",
+        confirmText: "OK",
+      });
       return;
     }
 
     if (!user?.id) {
-      Alert.alert("Error", "User session not found. Please log in again.");
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Session Error",
+        message: "User session not found. Please log in again.",
+        confirmText: "OK",
+      });
       return;
     }
 
@@ -76,10 +102,15 @@ export default function DevicePairingScreen() {
         setPatientPreview(previewRes.data.data);
       } else {
         setShowPairingModal(false);
-        Alert.alert(
-          "Patient Not Found",
-          previewRes.data?.message || "Invalid connection code. Please check and try again.",
-        );
+        setAlertModal({
+          visible: true,
+          type: "warning",
+          title: "Patient Not Found",
+          message:
+            previewRes.data?.message ||
+            "Invalid connection code. Please check and try again.",
+          confirmText: "OK",
+        });
       }
     } catch (err: any) {
       console.error("Failed to preview patient:", err);
@@ -87,7 +118,13 @@ export default function DevicePairingScreen() {
       const msg =
         err?.response?.data?.message ||
         "Could not find patient associated with this code.";
-      Alert.alert("Invalid Code", msg);
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Invalid Code",
+        message: msg,
+        confirmText: "OK",
+      });
     } finally {
       setLoadingPreview(false);
     }
@@ -109,7 +146,13 @@ export default function DevicePairingScreen() {
       );
 
       if (response.data.status === "error") {
-        Alert.alert("Connection Error", response.data.message || "Failed to pair device.");
+        setAlertModal({
+          visible: true,
+          type: "error",
+          title: "Connection Error",
+          message: response.data.message || "Failed to pair device.",
+          confirmText: "OK",
+        });
         return;
       }
 
@@ -119,7 +162,13 @@ export default function DevicePairingScreen() {
       const msg =
         error?.response?.data?.message ||
         "Unable to connect with this code. Please check and try again.";
-      Alert.alert("Pairing Failed", msg);
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Pairing Failed",
+        message: msg,
+        confirmText: "OK",
+      });
     } finally {
       setConnecting(false);
     }
@@ -165,7 +214,12 @@ export default function DevicePairingScreen() {
         >
           {isSuccess ? (
             <PairingSuccess
-              onContinue={() => router.replace("/nonpatient/dashboard")}
+              onContinue={() =>
+                router.replace({
+                  pathname: "/nonpatient/dashboard",
+                  params: { startTour: "true" },
+                } as any)
+              }
             />
           ) : (
             <>
@@ -241,6 +295,16 @@ export default function DevicePairingScreen() {
         connecting={connecting}
         onConnect={handleConfirmConnection}
         onClose={handleClosePairingModal}
+      />
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        onConfirm={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
       />
     </SafeAreaView>
   );

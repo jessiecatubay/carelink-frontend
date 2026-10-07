@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Href, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -5,8 +6,12 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -179,13 +184,14 @@ const CHAPTERS: ManualChapter[] = [
         color: "#10B981",
       },
     ],
-    tipText: "You're all set! Tap 'Proceed to Scan' below to launch the camera scanner.",
+    tipText: "You're all set! Tap 'Proceed to Pair Patient' below to scan a QR code or enter a code manually.",
   },
 ];
 
 export default function UserManualScreen() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showPairOptionsModal, setShowPairOptionsModal] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -205,7 +211,7 @@ export default function UserManualScreen() {
       });
       setCurrentIndex(nextIndex);
     } else {
-      handleProceedToScan();
+      setShowPairOptionsModal(true);
     }
   };
 
@@ -220,76 +226,100 @@ export default function UserManualScreen() {
     }
   };
 
-  const handleProceedToScan = () => {
-    router.replace("/nonpatient/dashboard/scan-patient" as Href);
+  const handleSelectScan = async () => {
+    setShowPairOptionsModal(false);
+    try {
+      await AsyncStorage.setItem("@carelink_user_manual_seen", "true");
+    } catch (e) {
+      console.log("Error saving manual seen:", e);
+    }
+    router.push("/nonpatient/dashboard/scan-patient" as Href);
+  };
+
+  const handleSelectEnterCode = async () => {
+    setShowPairOptionsModal(false);
+    try {
+      await AsyncStorage.setItem("@carelink_user_manual_seen", "true");
+    } catch (e) {
+      console.log("Error saving manual seen:", e);
+    }
+    router.push("/(protected)/device-pairing" as Href);
   };
 
   const isLastChapter = currentIndex === CHAPTERS.length - 1;
 
   const renderChapter = ({ item }: { item: ManualChapter }) => {
     return (
-      <View style={styles.slideContainer}>
-        <View style={styles.cardHeader}>
-          <View
-            style={[
-              styles.tagBadge,
-              { backgroundColor: item.badgeColor },
-            ]}
-          >
-            <Text
+      <View style={styles.slideWrapper}>
+        <ScrollView
+          style={styles.slideScroll}
+          contentContainerStyle={styles.slideContainer}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          bounces={true}
+        >
+          <View style={styles.cardHeader}>
+            <View
               style={[
-                styles.tagBadgeText,
-                { color: item.badgeTextColor },
+                styles.tagBadge,
+                { backgroundColor: item.badgeColor },
               ]}
             >
-              {item.tag} • CHAPTER {item.chapterNumber}
-            </Text>
-          </View>
-
-          <Text style={styles.slideTitle}>{item.title}</Text>
-          <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
-        </View>
-
-        {/* Content Items */}
-        <View style={styles.itemsContainer}>
-          {item.content.map((point, idx) => (
-            <View key={idx} style={styles.pointCard}>
-              <View
+              <Text
                 style={[
-                  styles.iconWrap,
-                  { backgroundColor: `${point.color || "#12A5B5"}15` },
+                  styles.tagBadgeText,
+                  { color: item.badgeTextColor },
                 ]}
               >
-                {point.localIcon ? (
-                  <Image
-                    source={point.localIcon}
-                    style={styles.localIcon}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <Ionicons
-                    name={point.iconName || "information-circle-outline"}
-                    size={24}
-                    color={point.color || "#12A5B5"}
-                  />
-                )}
-              </View>
-
-              <View style={styles.pointTextContent}>
-                <Text style={styles.pointHeading}>{point.heading}</Text>
-                <Text style={styles.pointDesc}>{point.description}</Text>
-              </View>
+                {item.tag} • CHAPTER {item.chapterNumber}
+              </Text>
             </View>
-          ))}
-        </View>
 
-        {/* Pro Tip Box */}
-        {item.tipText ? (
-          <View style={styles.tipBox}>
-            <Ionicons name="bulb-outline" size={18} color="#D97706" />
-            <Text style={styles.tipText}>{item.tipText}</Text>
+            <Text style={styles.slideTitle}>{item.title}</Text>
+            <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
           </View>
-        ) : null}
+
+          {/* Content Items */}
+          <View style={styles.itemsContainer}>
+            {item.content.map((point, idx) => (
+              <View key={idx} style={styles.pointCard}>
+                <View
+                  style={[
+                    styles.iconWrap,
+                    { backgroundColor: `${point.color || "#12A5B5"}15` },
+                  ]}
+                >
+                  {point.localIcon ? (
+                    <Image
+                      source={point.localIcon}
+                      style={styles.localIcon}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Ionicons
+                      name={point.iconName || "information-circle-outline"}
+                      size={24}
+                      color={point.color || "#12A5B5"}
+                    />
+                  )}
+                </View>
+
+                <View style={styles.pointTextContent}>
+                  <Text style={styles.pointHeading}>{point.heading}</Text>
+                  <Text style={styles.pointDesc}>{point.description}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Pro Tip Box */}
+          {item.tipText ? (
+            <View style={styles.tipBox}>
+              <Ionicons name="bulb-outline" size={18} color="#D97706" />
+              <Text style={styles.tipText}>{item.tipText}</Text>
+            </View>
+          ) : null}
+        </ScrollView>
       </View>
     );
   };
@@ -304,11 +334,11 @@ export default function UserManualScreen() {
         </View>
 
         <TouchableOpacity
-          onPress={handleProceedToScan}
+          onPress={() => setShowPairOptionsModal(true)}
           style={styles.skipButton}
           activeOpacity={0.7}
         >
-          <Text style={styles.skipButtonText}>Skip to Scan</Text>
+          <Text style={styles.skipButtonText}>Skip to Pair</Text>
           <Ionicons name="arrow-forward" size={14} color="#6B7280" />
         </TouchableOpacity>
       </View>
@@ -372,15 +402,98 @@ export default function UserManualScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>
-            {isLastChapter ? "Proceed to Scan Patient" : "Next Chapter"}
+            {isLastChapter ? "Proceed to Pair Patient" : "Next Chapter"}
           </Text>
           <Ionicons
-            name={isLastChapter ? "qr-code-outline" : "chevron-forward"}
+            name={isLastChapter ? "link-outline" : "chevron-forward"}
             size={18}
             color="#FFFFFF"
           />
         </TouchableOpacity>
       </View>
+
+      {/* Pairing Method Selection Modal */}
+      <Modal
+        visible={showPairOptionsModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowPairOptionsModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={styles.modalOverlayTouch}
+            onPress={() => setShowPairOptionsModal(false)}
+          />
+
+          <View style={styles.modalSheetContainer}>
+            {/* Drag indicator */}
+            <View style={styles.modalDragHandle} />
+
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalIconCircle}>
+                <Ionicons name="people-outline" size={24} color="#0AA7A8" />
+              </View>
+              <View style={styles.modalHeaderTextWrap}>
+                <Text style={styles.modalTitle}>Pair With Patient</Text>
+                <Text style={styles.modalSubtitle}>
+                  Choose how you would like to connect:
+                </Text>
+              </View>
+            </View>
+
+            {/* Option 1: Scan QR Code */}
+            <TouchableOpacity
+              style={styles.optionCard}
+              onPress={handleSelectScan}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.optionIconWrap, styles.optionIconWrapTeal]}>
+                <Ionicons name="qr-code-outline" size={26} color="#0AA7A8" />
+              </View>
+              <View style={styles.optionTextWrap}>
+                <View style={styles.optionTitleRow}>
+                  <Text style={styles.optionTitle}>Scan Patient QR Code</Text>
+                  <View style={styles.recommendedBadge}>
+                    <Text style={styles.recommendedBadgeText}>RECOMMENDED</Text>
+                  </View>
+                </View>
+                <Text style={styles.optionDescription}>
+                  Point your camera at the QR code displayed on the patient's device or app.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            </TouchableOpacity>
+
+            {/* Option 2: Enter Code Manually */}
+            <TouchableOpacity
+              style={styles.optionCard}
+              onPress={handleSelectEnterCode}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.optionIconWrap, styles.optionIconWrapCoral]}>
+                <Ionicons name="keypad-outline" size={26} color="#F16A66" />
+              </View>
+              <View style={styles.optionTextWrap}>
+                <Text style={styles.optionTitle}>Enter Code Manually</Text>
+                <Text style={styles.optionDescription}>
+                  Type the 6-character connection code shown on the patient's screen.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={styles.modalCancelBtn}
+              onPress={() => setShowPairOptionsModal(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.modalCancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -461,12 +574,18 @@ const styles = StyleSheet.create({
   slider: {
     flex: 1,
   },
-  slideContainer: {
+  slideWrapper: {
     width: SCREEN_WIDTH,
+    flex: 1,
+  },
+  slideScroll: {
+    flex: 1,
+  },
+  slideContainer: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 16,
-    justifyContent: "space-between",
+    paddingBottom: 24,
   },
   cardHeader: {
     marginBottom: 12,
@@ -610,5 +729,142 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "flex-end",
+  },
+  modalOverlayTouch: {
+    flex: 1,
+  },
+  modalSheetContainer: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === "ios" ? 36 : 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  modalDragHandle: {
+    width: 44,
+    height: 4,
+    backgroundColor: "#CBD5E1",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  modalIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EDFBFB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+    borderWidth: 1.5,
+    borderColor: "#B2EBF2",
+  },
+  modalHeaderTextWrap: {
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+    marginTop: 2,
+  },
+  optionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  optionIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  optionIconWrapTeal: {
+    backgroundColor: "#EDFBFB",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+  },
+  optionIconWrapCoral: {
+    backgroundColor: "#FFF1F2",
+    borderWidth: 1,
+    borderColor: "#FFE4E6",
+  },
+  optionTextWrap: {
+    flex: 1,
+    marginRight: 8,
+  },
+  optionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 3,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  recommendedBadge: {
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  recommendedBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#15803D",
+    letterSpacing: 0.5,
+  },
+  optionDescription: {
+    fontSize: 12,
+    color: "#64748B",
+    lineHeight: 16,
+  },
+  modalCancelBtn: {
+    marginTop: 6,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCancelBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#64748B",
   },
 });

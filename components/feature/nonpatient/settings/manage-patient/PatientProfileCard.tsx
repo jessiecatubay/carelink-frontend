@@ -38,7 +38,7 @@ export default function PatientProfileCard({
         <View style={styles.info}>
           <Text style={styles.name}>{name}</Text>
           <View style={styles.chipRow}>
-            {age ? (
+            {age && Number(age) > 0 ? (
               <View style={styles.chip}>
                 <Text style={styles.chipText}>{age} yrs old</Text>
               </View>

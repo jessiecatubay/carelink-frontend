@@ -1,5 +1,6 @@
 import Logo from "@/components/common/Logo";
 import LoginForm from "@/components/feature/auth/login/LoginForm";
+import { Ionicons } from "@expo/vector-icons";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
@@ -8,7 +9,10 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -32,8 +36,8 @@ export default function Login() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <ActivityIndicator size="large" />
+        <View style={styles.loadingWrapper}>
+          <ActivityIndicator size="large" color="#F16A66" />
         </View>
       </SafeAreaView>
     );
@@ -43,15 +47,46 @@ export default function Login() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
-        <View style={styles.content}>
+        <View style={styles.headerBar}>
+          <TouchableOpacity
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/");
+              }
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={true}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo Section */}
           <View style={styles.logoContainer}>
-            <Logo />
+            <Logo style={styles.logo} />
           </View>
 
+          {/* Welcome Text Section */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Login to your CareLink account</Text>
+          </View>
+
+          {/* Form */}
           <LoginForm />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -63,14 +98,59 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
 
-  content: {
+  loadingWrapper: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  headerBar: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 60,
   },
 
   logoContainer: {
     alignItems: "center",
-    marginTop: 50,
-    marginBottom: 5,
+    marginTop: 10,
+    marginBottom: 20,
+  },
+
+  logo: {
+    width: 500,
+    height: 85,
+    marginBottom: 0,
+  },
+
+  titleContainer: {
+    marginBottom: 24,
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 6,
+  },
+
+  subtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    fontWeight: "400",
   },
 });

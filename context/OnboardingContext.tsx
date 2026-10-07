@@ -17,7 +17,7 @@ export function OnboardingProvider({
     userId: "",
     email: "",
     role: undefined,
-    age: 0,
+    age: undefined,
     gender: "",
     medicalConditions: "",
     notes: "",

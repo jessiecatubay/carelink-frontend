@@ -23,24 +23,24 @@ export const CAREGIVER_FEATURE_STEPS: FeatureHighlightStep[] = [
   {
     id: "patient_card",
     stepNumber: 1,
-    title: "Connected Patient Card",
-    subtitle: "Active Patient & Device Status",
+    title: "Patient Status & Connection",
+    subtitle: "Active Patient Profile & Status",
     description:
-      "Shows your paired patient's name and real-time connection status (ONLINE / OFFLINE). Tap here to switch patients or pair new devices.",
+      "This is your Patient Status card. It shows your connected patient's name and live cloud connectivity (ONLINE / OFFLINE). Tap anytime to manage or switch patients.",
     icon: "person-circle-outline",
     themeColor: "#0284C7",
     tips: [
-      "View live connectivity status",
+      "View live device connectivity",
       "Tap to switch or add more patients",
     ],
   },
   {
     id: "current_vitals",
     stepNumber: 2,
-    title: "Current Vitals Monitoring",
+    title: "Real-Time Patient Vitals",
     subtitle: "Heart Rate & Body Temperature",
     description:
-      "Displays live telemetry for Heart Rate (BPM) and Temperature (°C). Interactive trend graphs help you spot irregular spikes or drops early.",
+      "This shows the heart rate (BPM) and body temperature (°C) of the patient in real time. Live charts help you spot irregular vitals or fever spikes immediately.",
     icon: "heart-outline",
     themeColor: "#F16A66",
     tips: [
@@ -54,35 +54,35 @@ export const CAREGIVER_FEATURE_STEPS: FeatureHighlightStep[] = [
     title: "Patient Posture & Safety",
     subtitle: "Fall Detection & Body Orientation",
     description:
-      "Monitors whether the patient is sitting, standing, or lying down. If an unexpected fall is detected, CareLink triggers an urgent safety alert.",
+      "Monitors whether the patient is sitting, standing, or lying down. If an accidental fall occurs, CareLink instantly triggers a high-priority safety alert.",
     icon: "shield-checkmark-outline",
     themeColor: "#10B981",
     tips: [
-      "Automatic fall detection sensor",
+      "Real-time fall detection monitoring",
       "Live sitting/standing orientation",
     ],
   },
   {
     id: "quick_actions",
     stepNumber: 4,
-    title: "Quick Actions & AI Health",
-    subtitle: "CareLink AI & Alert History",
+    title: "Patient Notifications & AI Help",
+    subtitle: "Button Alerts & Emergency Assistance",
     description:
-      "Instantly consult the CareLink AI Care Assistant for health guidance and quickly check your unread notifications and alarms.",
+      "View urgent patient notifications (Emergency, Food, Water, Assistance) and get instant step-by-step care guidance from the CareLink AI Assistant.",
     icon: "sparkles-outline",
     themeColor: "#D97706",
     tips: [
-      "Ask AI health & medication questions",
-      "View recent notification history",
+      "Instant notification of patient alerts",
+      "Consult AI Care Assistant for advice",
     ],
   },
   {
     id: "recent_activity",
     stepNumber: 5,
     title: "Recent Activity Log",
-    subtitle: "Historical Event Timeline",
+    subtitle: "Complete Care Timeline",
     description:
-      "A complete chronological log of all patient events, vital syncs, posture changes, and emergency requests.",
+      "A complete timestamped log of all alert requests, posture changes, vital syncs, and daily caregiver check-ins.",
     icon: "time-outline",
     themeColor: "#8B5CF6",
     tips: [

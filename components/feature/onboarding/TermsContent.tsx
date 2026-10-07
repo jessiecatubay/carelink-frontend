@@ -1,17 +1,18 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
-
+import CustomAlertModal from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function TermsCard() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
 
   const handleContinue = () => {
     if (!checked) {
-      Alert.alert("Terms and Conditions", "Please agree before continuing.");
+      setAlertVisible(true);
       return;
     }
 
@@ -71,6 +72,16 @@ export default function TermsCard() {
       </View>
 
       <Button title="Continue" onPress={handleContinue} />
+
+      <CustomAlertModal
+        visible={alertVisible}
+        type="warning"
+        title="Terms & Conditions"
+        message="Please agree to the CareLink Terms and Conditions before continuing."
+        confirmText="I Understand"
+        onConfirm={() => setAlertVisible(false)}
+        onClose={() => setAlertVisible(false)}
+      />
     </>
   );
 }

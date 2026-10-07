@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/context/AuthContext";
@@ -6,7 +7,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -25,6 +25,21 @@ export default function EditNameScreen() {
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ firstName?: string; lastName?: string }>({});
+
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -67,21 +82,30 @@ export default function EditNameScreen() {
         });
       }
 
-      Alert.alert("Success", "Your name has been updated.", [
-        {
-          text: "OK",
-          onPress: () => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/nonpatient/dashboard/profile");
-            }
-          },
+      setAlertModal({
+        visible: true,
+        type: "success",
+        title: "Name Updated",
+        message: "Your name has been updated successfully.",
+        confirmText: "OK",
+        onConfirm: () => {
+          setAlertModal((prev) => ({ ...prev, visible: false }));
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/nonpatient/dashboard/profile");
+          }
         },
-      ]);
+      });
     } catch (error) {
       console.error("Failed to update name:", error);
-      Alert.alert("Error", "Failed to update name. Please try again.");
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Update Failed",
+        message: "Failed to update name. Please try again.",
+        confirmText: "OK",
+      });
     } finally {
       setLoading(false);
     }
@@ -180,6 +204,19 @@ export default function EditNameScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        onConfirm={
+          alertModal.onConfirm ||
+          (() => setAlertModal((prev) => ({ ...prev, visible: false })))
+        }
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

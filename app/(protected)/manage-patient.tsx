@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import EditPatientButton from "@/components/feature/nonpatient/settings/manage-patient/EditPatientButton";
 import EmergencyContactCard from "@/components/feature/nonpatient/settings/manage-patient/EmergencyContactCard";
 import ManagePatientHeader from "@/components/feature/nonpatient/settings/manage-patient/ManagePatientHeader";
@@ -11,7 +12,6 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -51,6 +51,18 @@ export default function ManagePatientScreen() {
   const [currentConnection, setCurrentConnection] = useState<Connection | null>(
     null,
   );
+
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const loadPatientData = async () => {
     if (!user?.id) {
@@ -99,21 +111,7 @@ export default function ManagePatientScreen() {
   };
 
   const handleEditPatient = () => {
-    Alert.alert(
-      "Manage Patients",
-      "Would you like to switch patients or pair a new device?",
-      [
-        {
-          text: "Switch Patient",
-          onPress: () => router.push("/nonpatient/dashboard/manage-patients"),
-        },
-        {
-          text: "Pair New Patient",
-          onPress: () => router.push("/nonpatient/dashboard/scan-patient"),
-        },
-        { text: "Cancel", style: "cancel" },
-      ],
-    );
+    router.push("/nonpatient/dashboard/manage-patients");
   };
 
   const patient = currentConnection?.patient;
@@ -208,16 +206,22 @@ export default function ManagePatientScreen() {
                 medicalConditions={medicalConditions}
                 notes={notes}
                 onEditConditions={() =>
-                  Alert.alert(
-                    "Medical Conditions",
-                    "To modify diagnosed medical conditions, please consult the healthcare supervisor.",
-                  )
+                  setAlertModal({
+                    visible: true,
+                    type: "info",
+                    title: "Medical Conditions",
+                    message:
+                      "To modify diagnosed medical conditions, please consult the healthcare supervisor.",
+                  })
                 }
                 onEditNotes={() =>
-                  Alert.alert(
-                    "Care Notes",
-                    "Care notes are synchronized in real-time with family members.",
-                  )
+                  setAlertModal({
+                    visible: true,
+                    type: "info",
+                    title: "Care Notes",
+                    message:
+                      "Care notes are synchronized in real-time with family members.",
+                  })
                 }
               />
 
@@ -238,6 +242,16 @@ export default function ManagePatientScreen() {
           )}
         </ScrollView>
       )}
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText="OK"
+        onConfirm={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

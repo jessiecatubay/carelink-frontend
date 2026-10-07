@@ -1,16 +1,18 @@
+import ForgotPasswordForm from "@/components/feature/auth/forgot-password/ForgotPasswordForm";
+import ForgotPasswordHeader from "@/components/feature/auth/forgot-password/ForgotPasswordHeader";
+import { forgotPassword } from "@/services/auth";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-
-import ForgotPasswordHeader from "@/components/feature/auth/forgot-password/ForgotPasswordHeader";
-import ForgotPasswordForm from "@/components/feature/auth/forgot-password/ForgotPasswordForm";
-import { forgotPassword } from "@/services/auth";
 
 export default function ForgotPasswordIndexScreen() {
   const router = useRouter();
@@ -27,7 +29,6 @@ export default function ForgotPasswordIndexScreen() {
       });
     } catch (err) {
       console.error("Forgot password API error:", err);
-      // Fallback transition so flow is testable
       return;
     } finally {
       setLoading(false);
@@ -37,13 +38,32 @@ export default function ForgotPasswordIndexScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
         style={styles.container}
       >
+        <View style={styles.headerBar}>
+          <TouchableOpacity
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/login");
+              }
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={true}
         >
           <ForgotPasswordHeader
             title="Forgot Password"
@@ -67,10 +87,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerBar: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 32,
+    paddingTop: 16,
+    paddingBottom: 48,
   },
 });

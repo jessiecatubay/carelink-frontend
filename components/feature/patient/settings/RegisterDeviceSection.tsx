@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
@@ -5,7 +6,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -13,16 +13,36 @@ import {
 } from "react-native";
 
 export default function RegisterDeviceSection() {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const [deviceId, setDeviceId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const handleRegisterDevice = async () => {
     const trimmedDeviceId = deviceId.trim();
 
     if (!trimmedDeviceId) {
-      Alert.alert("Device ID Required", "Please enter your device ID.");
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Device ID Required",
+        message: "Please enter your device ID.",
+        confirmText: "OK",
+      });
       return;
     }
 
@@ -34,10 +54,13 @@ export default function RegisterDeviceSection() {
         deviceId: trimmedDeviceId,
       });
 
-      Alert.alert(
-        "Device Registered",
-        "Your CareLink device has been successfully registered.",
-      );
+      setAlertModal({
+        visible: true,
+        type: "success",
+        title: "Device Registered",
+        message: "Your CareLink device has been successfully registered.",
+        confirmText: "OK",
+      });
 
       setDeviceId("");
     } catch (error: any) {
@@ -45,7 +68,13 @@ export default function RegisterDeviceSection() {
         error?.response?.data?.message ||
         "Unable to register the device. Please try again.";
 
-      Alert.alert("Registration Failed", message);
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Registration Failed",
+        message,
+        confirmText: "OK",
+      });
     } finally {
       setLoading(false);
     }
@@ -104,6 +133,16 @@ export default function RegisterDeviceSection() {
           />
         )}
       </View>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        onConfirm={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 }

@@ -1,8 +1,8 @@
+import CustomAlertModal from "@/components/ui/CustomAlertModal";
 import { triggerAppHaptic } from "@/context/HapticsContext";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
   Linking,
@@ -25,6 +25,7 @@ export default function SlideToCall911({
 }: SlideToCall911Props) {
   const windowWidth = Dimensions.get("window").width;
   const [containerWidth, setContainerWidth] = useState(windowWidth - 48);
+  const [alertVisible, setAlertVisible] = useState(false);
   const THUMB_SIZE = 52;
   const maxDrag = Math.max(10, containerWidth - THUMB_SIZE - 8);
 
@@ -80,10 +81,7 @@ export default function SlideToCall911({
 
     const cleanNumber = phoneNumber.replace(/[^0-9+]/g, "");
     Linking.openURL(`tel:${cleanNumber}`).catch(() => {
-      Alert.alert(
-        "Emergency Call",
-        `Unable to place call to ${phoneNumber}. Please dial manually.`,
-      );
+      setAlertVisible(true);
     });
 
     onCallSuccess?.();
@@ -243,6 +241,16 @@ export default function SlideToCall911({
           </View>
         </Animated.View>
       </View>
+
+      <CustomAlertModal
+        visible={alertVisible}
+        type="error"
+        title="Emergency Call"
+        message={`Unable to place call to ${phoneNumber}. Please dial manually on your device.`}
+        confirmText="OK"
+        onConfirm={() => setAlertVisible(false)}
+        onClose={() => setAlertVisible(false)}
+      />
     </Animated.View>
   );
 }

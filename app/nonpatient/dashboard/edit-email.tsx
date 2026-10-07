@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/context/AuthContext";
@@ -5,7 +6,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,6 +23,21 @@ export default function EditEmailScreen() {
   const [email, setEmail] = useState(user?.email || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -57,21 +72,30 @@ export default function EditEmailScreen() {
         });
       }
 
-      Alert.alert("Success", "Your email address has been updated.", [
-        {
-          text: "OK",
-          onPress: () => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/nonpatient/dashboard/profile");
-            }
-          },
+      setAlertModal({
+        visible: true,
+        type: "success",
+        title: "Email Updated",
+        message: "Your email address has been updated successfully.",
+        confirmText: "OK",
+        onConfirm: () => {
+          setAlertModal((prev) => ({ ...prev, visible: false }));
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/nonpatient/dashboard/profile");
+          }
         },
-      ]);
+      });
     } catch (err) {
       console.error("Failed to update email:", err);
-      Alert.alert("Error", "Failed to update email address. Please try again.");
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Update Failed",
+        message: "Failed to update email address. Please try again.",
+        confirmText: "OK",
+      });
     } finally {
       setLoading(false);
     }
@@ -154,6 +178,19 @@ export default function EditEmailScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        onConfirm={
+          alertModal.onConfirm ||
+          (() => setAlertModal((prev) => ({ ...prev, visible: false })))
+        }
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

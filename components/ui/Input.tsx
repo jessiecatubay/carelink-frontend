@@ -3,6 +3,7 @@ import { Image, ImageSourcePropType, StyleSheet, Text, TextInput, View } from "r
 
 type InputProps = {
   placeholder?: string;
+  placeholderTextColor?: string;
   value?: string;
   onChangeText?: (text: string) => void;
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
@@ -17,6 +18,7 @@ type InputProps = {
 
 export default function Input({
   placeholder = "Email",
+  placeholderTextColor = "#94A3B8",
   value = "",
   onChangeText,
   keyboardType = "default",
@@ -49,7 +51,7 @@ export default function Input({
         <TextInput
           style={styles.input}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={placeholderTextColor}
           value={value}
           onChangeText={onChangeText}
           keyboardType={keyboardType}
@@ -79,8 +81,8 @@ const styles = StyleSheet.create({
     borderColor: "#CBD5E1",
     borderRadius: 14,
     paddingHorizontal: 15,
-    backgroundColor: "#FFF",
-    height: 55,
+    backgroundColor: "#FFFFFF",
+    height: 54,
   },
   focusedContainer: {
     borderColor: "#12A5B5",
@@ -93,16 +95,16 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
-    tintColor: "#999",
+    tintColor: "#94A3B8",
   },
   iconFocused: {
     tintColor: "#12A5B5",
   },
   input: {
     flex: 1,
-    height: 55,
-    fontSize: 16,
-    color: "#111",
+    height: 54,
+    fontSize: 15.5,
+    color: "#1E293B",
   },
   errorText: {
     marginTop: 6,

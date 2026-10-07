@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import PhoneInput from "@/components/ui/PhoneInput";
 import SlideToCall911 from "@/components/ui/SlideToCall911";
 import { useAuth } from "@/context/AuthContext";
@@ -12,7 +13,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Linking,
   Modal,
@@ -56,6 +56,24 @@ export default function EmergencyContactsScreen() {
 
   const [activePatientProfileId, setActivePatientProfileId] = useState<string>("");
   const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
+
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    isDestructive?: boolean;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const fetchContacts = async () => {
     if (!user?.id) {
@@ -236,7 +254,13 @@ export default function EmergencyContactsScreen() {
   const handleCall = (phone: string) => {
     const cleaned = phone.replace(/[^0-9+]/g, "");
     Linking.openURL(`tel:${cleaned}`).catch(() => {
-      Alert.alert("Error", `Cannot place call to ${phone}`);
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Call Failed",
+        message: `Cannot place call to ${phone}. Please verify your device dialer.`,
+        confirmText: "OK",
+      });
     });
   };
 
@@ -274,18 +298,24 @@ export default function EmergencyContactsScreen() {
     const trimmedPhone = phoneNumber.trim();
 
     if (!formattedName || !trimmedPhone) {
-      Alert.alert(
-        "Required Fields",
-        "Please enter both Full Name and Phone Number.",
-      );
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Required Fields",
+        message: "Please enter both Full Name and Phone Number.",
+        confirmText: "OK",
+      });
       return;
     }
 
     if (!isValidPhilippinePhoneNumber(trimmedPhone)) {
-      Alert.alert(
-        "Invalid Phone Number",
-        "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
-      );
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Invalid Phone Number",
+        message: "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
+        confirmText: "OK",
+      });
       return;
     }
 
@@ -355,43 +385,52 @@ export default function EmergencyContactsScreen() {
       }
     } catch (error) {
       console.error("Failed to save emergency contact:", error);
-      Alert.alert(
-        "Error",
-        editingContact
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Error",
+        message: editingContact
           ? "Unable to update emergency contact."
           : "Unable to save emergency contact.",
-      );
+        confirmText: "OK",
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteContact = (contact: EmergencyContact) => {
-    Alert.alert(
-      "Delete Contact",
-      `Are you sure you want to remove ${contact.name} from emergency contacts?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (contact.id !== "profile-self-contact") {
-                await axiosInstance.delete(
-                  "/api/emergency-contact/v1/delete-emergency-contact",
-                  { data: { id: contact.id } },
-                );
-              }
-              setContacts((prev) => prev.filter((c) => c.id !== contact.id));
-            } catch (error) {
-              console.error("Failed to delete emergency contact:", error);
-              Alert.alert("Error", "Unable to delete contact.");
-            }
-          },
-        },
-      ],
-    );
+    setAlertModal({
+      visible: true,
+      type: "delete",
+      title: "Delete Contact",
+      message: `Are you sure you want to remove ${contact.name} from emergency contacts?`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      isDestructive: true,
+      onConfirm: async () => {
+        setAlertModal((prev) => ({ ...prev, visible: false }));
+        try {
+          if (contact.id !== "profile-self-contact") {
+            await axiosInstance.delete(
+              "/api/emergency-contact/v1/delete-emergency-contact",
+              { data: { id: contact.id } },
+            );
+          }
+          setContacts((prev) => prev.filter((c) => c.id !== contact.id));
+        } catch (error) {
+          console.error("Failed to delete emergency contact:", error);
+          setAlertModal({
+            visible: true,
+            type: "error",
+            title: "Delete Failed",
+            message: "Unable to delete contact. Please try again.",
+            confirmText: "OK",
+          });
+        }
+      },
+      onCancel: () => setAlertModal((prev) => ({ ...prev, visible: false })),
+    });
   };
 
   return (
@@ -674,6 +713,25 @@ export default function EmergencyContactsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        cancelText={alertModal.cancelText}
+        isDestructive={alertModal.isDestructive}
+        onConfirm={
+          alertModal.onConfirm ||
+          (() => setAlertModal((prev) => ({ ...prev, visible: false })))
+        }
+        onCancel={
+          alertModal.onCancel ||
+          (() => setAlertModal((prev) => ({ ...prev, visible: false })))
+        }
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }
