@@ -2,7 +2,7 @@ import NDRRMCEmergencyModal, {
   EmergencyModalData,
 } from "@/components/ui/NDRRMCEmergencyModal";
 import { useAuth } from "@/context/AuthContext";
-import { onPatientAlert } from "@/hooks/lib/socket";
+import { onPatientAlert, onPillReminder } from "@/hooks/lib/socket";
 import { playEmergencySiren, stopEmergencySiren } from "@/services/emergencyAudio";
 import * as Notifications from "expo-notifications";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -66,7 +66,7 @@ export function EmergencyAlertProvider({
         return;
       }
 
-      const command = (payload?.command || payload?.alertType || "").toUpperCase();
+      const command = (payload?.command || payload?.alertType || payload?.type || "").toUpperCase();
       if (!command) return;
 
       let title = "CareLink Alert";
@@ -88,6 +88,12 @@ export function EmergencyAlertProvider({
         case "SATISFIED":
           title = "✅ Request Satisfied";
           body = "The patient's request has been marked as satisfied.";
+          break;
+        case "PILL_REMINDER":
+          title = payload?.title?.trim() || "Pill Reminder";
+          body =
+            payload?.description?.trim() ||
+            "It is time for the patient to take their scheduled medication.";
           break;
         default:
           title = `CareLink Alert: ${command}`;
@@ -217,6 +223,41 @@ export function EmergencyAlertProvider({
       responseListener.remove();
     };
   }, []);
+
+  // 3. Real-time Pill Reminder notifications (for non-patients/caregivers and patients)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const unsubscribe = onPillReminder(async (payload) => {
+      console.log("💊 EmergencyAlertContext received pill reminder:", payload);
+      try {
+        const pillHeader = payload.title?.trim() || "Pill Reminder";
+        const pillBody =
+          payload.description?.trim() ||
+          (user.role === "NON_PATIENT"
+            ? "It is time for the patient to take their scheduled medication."
+            : "It is time to take your scheduled medication.");
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Pill Reminder - " + pillHeader,
+            body: pillBody,
+            sound: "default",
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            vibrate: [0, 250, 250, 250],
+            data: payload,
+          },
+          trigger: null,
+        });
+      } catch (err) {
+        console.warn("Failed to schedule local pill reminder notification:", err);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [user?.role, user?.id]);
 
   return (
     <EmergencyAlertContext.Provider

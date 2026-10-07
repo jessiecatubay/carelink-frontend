@@ -203,6 +203,39 @@ export function onConnectionUpdated(
   };
 }
 
+export type PillReminderSocketEvent = {
+  type: "PILL_REMINDER";
+  reminderId: string;
+  patientId: string;
+  title: string;
+  description: string | null;
+  scheduledAt: string;
+  timestamp: string;
+};
+
+/**
+ * Listen for pill reminder notifications
+ */
+export function onPillReminder(callback: (payload: PillReminderSocketEvent) => void) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return () => {};
+  }
+
+  const handlePillReminder = (payload: any) => {
+    if (payload?.type === "PILL_REMINDER" || payload?.title) {
+      callback(payload as PillReminderSocketEvent);
+    }
+  };
+
+  currentSocket.on("pillReminder", handlePillReminder);
+
+  return () => {
+    currentSocket.off("pillReminder", handlePillReminder);
+  };
+}
+
 /**
  * Patient -> backend
  *
