@@ -148,8 +148,13 @@ export default function PatientMedicalInformation({
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.label}>Age</Text>
-            <Text style={[styles.value, !age && styles.emptyValue]}>
-              {age ? `${age} years old` : "Not specified"}
+            <Text
+              style={[
+                styles.value,
+                (!age || Number(age) <= 0) && styles.emptyValue,
+              ]}
+            >
+              {age && Number(age) > 0 ? `${age} years old` : "Not specified"}
             </Text>
           </View>
         </View>

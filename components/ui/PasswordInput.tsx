@@ -84,11 +84,7 @@ export default function PasswordInput({
         </Pressable>
       </View>
 
-      {error ? (
-        <Text style={styles.errorText}>
-          {error}
-        </Text>
-      ) : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
@@ -98,16 +94,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    backgroundColor: "#F8FAFC",
-    height: 50,
+    borderColor: "#CBD5E1",
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    backgroundColor: "#FFFFFF",
+    height: 54,
   },
 
   containerDisabled: {
     backgroundColor: "#F1F5F9",
-    borderColor: "#E2E8F0",
+    borderColor: "#CBD5E1",
   },
 
   focusedContainer: {
@@ -120,8 +116,8 @@ const styles = StyleSheet.create({
   },
 
   icon: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
     marginRight: 10,
     tintColor: "#94A3B8",
   },
@@ -132,9 +128,9 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 15.5,
     color: "#1E293B",
-    height: "100%",
+    height: 54,
   },
 
   eyeIcon: {
@@ -145,9 +141,8 @@ const styles = StyleSheet.create({
   },
 
   errorText: {
-    marginTop: 4,
+    marginTop: 6,
     color: "#F16A66",
     fontSize: 12,
-    marginLeft: 2,
   },
 });

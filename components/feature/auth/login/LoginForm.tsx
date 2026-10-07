@@ -13,6 +13,12 @@ import GoogleSignInButton from "./GoogleSignInButton";
 import LoginFooter from "./LoginFooter";
 import RememberMe from "./RememberMe";
 import { resendEmailVerification } from "@/services/auth";
+import {
+  clearRememberedEmail,
+  getRememberedEmail,
+  saveRememberedEmail,
+} from "@/services/token";
+import { useEffect } from "react";
 
 export default function LoginForm() {
   const { signIn, loginWithGoogle } = useAuth();
@@ -30,6 +36,23 @@ export default function LoginForm() {
     Partial<Record<keyof LoginFormValues, string>>
   >({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  // Load remembered email on mount
+  useEffect(() => {
+    const loadSavedEmail = async () => {
+      try {
+        const savedEmail = await getRememberedEmail();
+        if (savedEmail) {
+          setEmail(savedEmail);
+          setRememberMe(true);
+        }
+      } catch (error) {
+        console.log("Error loading remembered email:", error);
+      }
+    };
+
+    loadSavedEmail();
+  }, []);
 
   const handleLogin = async () => {
     setGeneralError(null);
@@ -61,6 +84,12 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
+      if (rememberMe) {
+        await saveRememberedEmail(email);
+      } else {
+        await clearRememberedEmail();
+      }
+
       await signIn({ email, password, rememberMe });
 
       setData((prev) => ({

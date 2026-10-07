@@ -74,7 +74,7 @@ export default function PatientInformation({
         <InfoRow
           icon="calendar-outline"
           label="Age"
-          value={age ? `${age} years old` : "Not specified"}
+          value={age && Number(age) > 0 ? `${age} years old` : "Not specified"}
           showDivider
           onPress={onEditField ? () => onEditField("age") : undefined}
         />

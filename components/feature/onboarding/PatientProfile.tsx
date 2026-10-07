@@ -60,7 +60,9 @@ function getFormErrors(form: PatientOnboardingInput): FormErrors {
 export default function PatientProfile({ initialValues, onContinue }: PatientProfileProps) {
   const [form, setForm] = useState<PatientOnboardingInput>({
     age:
-      initialValues?.age !== undefined && initialValues?.age !== null
+      initialValues?.age !== undefined &&
+      initialValues?.age !== null &&
+      Number(initialValues.age) > 0
         ? String(initialValues.age)
         : "",
     gender: initialValues?.gender || "",

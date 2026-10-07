@@ -1,14 +1,8 @@
-import { useState } from "react";
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
 import Button from "@/components/ui/Button";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { resetPasswordSchema } from "@/schema/auth";
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 type NewPasswordFormProps = {
   onSubmit: (password: string) => Promise<void> | void;
@@ -21,9 +15,6 @@ export default function NewPasswordForm({
 }: NewPasswordFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -44,99 +35,33 @@ export default function NewPasswordForm({
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        {/* New Password Input */}
-        <View
-          style={[
-            styles.inputRow,
-            focusedField === "password" ? styles.inputRowFocused : null,
-            error && !password ? styles.inputRowError : null,
-          ]}
-        >
-          <Image
-            source={require("@/assets/icons/padlock.png")}
-            style={[
-              styles.padlockIcon,
-              focusedField === "password" ? styles.iconFocused : null,
-            ]}
-            resizeMode="contain"
-          />
-          <TextInput
-            style={styles.textInput}
-            placeholder="New Password"
-            placeholderTextColor="#9CA3AF"
-            secureTextEntry={!showPassword}
-            value={password}
-            onFocus={() => setFocusedField("password")}
-            onBlur={() => setFocusedField(null)}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (error) setError(null);
-            }}
-          />
-          <Pressable
-            onPress={() => setShowPassword(!showPassword)}
-            hitSlop={10}
-          >
-            <Image
-              source={
-                showPassword
-                  ? require("@/assets/icons/view.png")
-                  : require("@/assets/icons/hide.png")
-              }
-              style={styles.eyeIcon}
-              resizeMode="contain"
-            />
-          </Pressable>
-        </View>
+        <PasswordInput
+          placeholder="New Password"
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            if (error) setError(null);
+          }}
+          error={error && !password ? error : undefined}
+        />
 
-        {/* Confirm Password Input */}
-        <View
-          style={[
-            styles.inputRow,
-            focusedField === "confirmPassword" ? styles.inputRowFocused : null,
+        <PasswordInput
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            if (error) setError(null);
+          }}
+          error={
             error && (!confirmPassword || password !== confirmPassword)
-              ? styles.inputRowError
-              : null,
-          ]}
-        >
-          <Image
-            source={require("@/assets/icons/padlock.png")}
-            style={[
-              styles.padlockIcon,
-              focusedField === "confirmPassword" ? styles.iconFocused : null,
-            ]}
-            resizeMode="contain"
-          />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Confirm Password"
-            placeholderTextColor="#9CA3AF"
-            secureTextEntry={!showConfirmPassword}
-            value={confirmPassword}
-            onFocus={() => setFocusedField("confirmPassword")}
-            onBlur={() => setFocusedField(null)}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (error) setError(null);
-            }}
-          />
-          <Pressable
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            hitSlop={10}
-          >
-            <Image
-              source={
-                showConfirmPassword
-                  ? require("@/assets/icons/view.png")
-                  : require("@/assets/icons/hide.png")
-              }
-              style={styles.eyeIcon}
-              resizeMode="contain"
-            />
-          </Pressable>
-        </View>
+              ? error
+              : undefined
+          }
+        />
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {error && password && confirmPassword && password === confirmPassword ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : null}
       </View>
 
       <Button
@@ -166,48 +91,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 14,
     elevation: 4,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    borderRadius: 18,
-    height: 54,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  inputRowFocused: {
-    borderColor: "#12A5B5",
-    shadowColor: "#12A5B5",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  inputRowError: {
-    borderColor: "#F16A66",
-  },
-  padlockIcon: {
-    width: 20,
-    height: 20,
-    tintColor: "#9CA3AF",
-    marginRight: 10,
-  },
-  iconFocused: {
-    tintColor: "#12A5B5",
-  },
-  eyeIcon: {
-    width: 20,
-    height: 20,
-    tintColor: "#9CA3AF",
-    marginLeft: 10,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: "#1F2937",
-    height: "100%",
   },
   errorText: {
     color: "#F16A66",

@@ -1,16 +1,17 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, onConnectionUpdated } from "@/hooks/lib/socket";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,12 +29,30 @@ type Connection = {
   currentPatient?: boolean;
 };
 
+type ModalState = {
+  visible: boolean;
+  title: string;
+  message: string;
+  type?: AlertModalType;
+  confirmText?: string;
+  cancelText?: string;
+  isDestructive?: boolean;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+};
+
 const getResidentName = (resident?: Resident | null) => {
   const name = [resident?.firstName, resident?.lastName]
     .filter(Boolean)
     .join(" ");
 
-  return name || "Resident";
+  return name || "Patient";
+};
+
+const getInitials = (resident?: Resident | null) => {
+  const f = (resident?.firstName || "").trim().charAt(0).toUpperCase();
+  const l = (resident?.lastName || "").trim().charAt(0).toUpperCase();
+  return f || l ? `${f}${l}` : "PT";
 };
 
 export default function ManagePatientsScreen() {
@@ -41,6 +60,14 @@ export default function ManagePatientsScreen() {
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [switchingId, setSwitchingId] = useState<string | null>(null);
+
+  const [modalState, setModalState] = useState<ModalState>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const loadConnections = useCallback(async () => {
     if (!user?.id) {
@@ -56,8 +83,15 @@ export default function ManagePatientsScreen() {
       const nextConnections = response.data?.data?.nonPatientConnections;
       setConnections(Array.isArray(nextConnections) ? nextConnections : []);
     } catch (error) {
-      console.error("Failed to load non-patient:", error);
-      Alert.alert("Unable to load non-patient", "Please try again later.");
+      console.error("Failed to load patient connections:", error);
+      setModalState({
+        visible: true,
+        type: "error",
+        title: "Connection Error",
+        message: "Unable to load patient connections. Please try again later.",
+        confirmText: "OK",
+        onConfirm: () => setModalState((prev) => ({ ...prev, visible: false })),
+      });
     } finally {
       setLoading(false);
     }
@@ -90,21 +124,33 @@ export default function ManagePatientsScreen() {
     patientId: string | undefined,
     nonPatientId: string | undefined,
   ) => {
+    if (!patientId || !nonPatientId) return;
+
     const payload = {
-      patientId: patientId,
-      nonPatientId: nonPatientId,
+      patientId,
+      nonPatientId,
       status: "DISCONNECTED",
     };
     try {
       await axiosInstance.post("/api/patient-nonpatient/v1/update", payload);
+      await loadConnections();
     } catch (error) {
-      console.error(error);
+      console.error("Disconnect error:", error);
+      setModalState({
+        visible: true,
+        type: "error",
+        title: "Disconnect Failed",
+        message: "Failed to disconnect patient. Please try again.",
+        confirmText: "OK",
+        onConfirm: () => setModalState((prev) => ({ ...prev, visible: false })),
+      });
     }
   };
 
   const handleSelectPatient = async (patientId: string | undefined) => {
     if (!patientId || !user?.id) return;
 
+    setSwitchingId(patientId);
     try {
       await axiosInstance.post("/api/patient-nonpatient/v1/update", {
         patientId,
@@ -112,210 +158,622 @@ export default function ManagePatientsScreen() {
         currentPatient: true,
       });
 
-      Alert.alert(
-        "Patient selected",
-        "The dashboard will now show this patient's information.",
-        [{ text: "Continue", onPress: () => router.replace("/nonpatient/dashboard") }],
-      );
+      await loadConnections();
+
+      setModalState({
+        visible: true,
+        type: "success",
+        title: "Patient Selected",
+        message: "The dashboard is now showing this patient's live vitals and notifications.",
+        confirmText: "Go to Dashboard",
+        onConfirm: () => {
+          setModalState((prev) => ({ ...prev, visible: false }));
+          router.replace("/nonpatient/dashboard");
+        },
+      });
     } catch (error) {
       console.error("Failed to select current patient:", error);
-      Alert.alert("Unable to select patient", "Please try again later.");
+      setModalState({
+        visible: true,
+        type: "error",
+        title: "Selection Failed",
+        message: "Unable to select patient. Please try again later.",
+        confirmText: "OK",
+        onConfirm: () => setModalState((prev) => ({ ...prev, visible: false })),
+      });
+    } finally {
+      setSwitchingId(null);
     }
   };
 
+  // Determine the active patient ID safely (only one can be current)
+  const activePatientId =
+    connections.find((c) => c.currentPatient && c.status === "CONNECTED")?.patient?.id ||
+    connections.find((c) => c.currentPatient)?.patient?.id ||
+    connections[0]?.patient?.id;
+
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
+      {/* Curved Background Accent */}
+      <View style={styles.backgroundAccent} pointerEvents="none" />
+
+      {/* Navigation Header */}
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Go back" hitSlop={12} onPress={goBack}>
-          <Ionicons name="arrow-back" size={29} color="#17191B" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={12}
+          onPress={goBack}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#0AA7A8" />
         </Pressable>
-        <Text style={styles.headerTitle}>Connection</Text>
-        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>Patient Connections</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Pair New Patient"
+          hitSlop={12}
+          onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
+          style={styles.headerRightButton}
+        >
+          <Ionicons name="qr-code-outline" size={22} color="#0AA7A8" />
+        </Pressable>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Non-patient</Text>
-        <Text style={styles.subtitle}>
-          Manage and monitor non-patient easily
-        </Text>
+        {/* Title Header */}
+        <View style={styles.titleSection}>
+          <Text style={styles.title}>Connected Patients</Text>
+          <Text style={styles.subtitle}>
+            Select which patient's real-time vitals and notifications you want to monitor on your dashboard.
+          </Text>
+        </View>
 
-        <Text style={styles.listTitle}>All Non-patients</Text>
+        {/* Section Header */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.listTitle}>
+            All Paired Patients ({connections.length})
+          </Text>
+        </View>
 
         {loading ? (
-          <ActivityIndicator color="#08A8A8" style={styles.loader} />
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#0AA7A8" />
+            <Text style={styles.loadingText}>Loading patient connections...</Text>
+          </View>
         ) : connections.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={34} color="#08A8A8" />
-            <Text style={styles.emptyTitle}>No non-patient connected</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="people-outline" size={38} color="#0AA7A8" />
+            </View>
+            <Text style={styles.emptyTitle}>No Patients Connected</Text>
             <Text style={styles.emptyText}>
-              Add a resident by scanning their connection QR code.
+              Scan a patient's QR code or enter their connection code to start monitoring their status.
             </Text>
+            <TouchableOpacity
+              style={styles.emptyPairButton}
+              onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="qr-code-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.emptyPairButtonText}>Pair Patient Device</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          connections.map((connection, index) => {
-            const resident = connection.patient;
-            const name = getResidentName(resident);
+          <View style={styles.cardsList}>
+            {connections.map((connection, index) => {
+              const resident = connection.patient;
+              const name = getResidentName(resident);
+              const initials = getInitials(resident);
+              const isCurrent =
+                Boolean(resident?.id && resident.id === activePatientId) &&
+                connection.status !== "DISCONNECTED";
+              const isSwitching = switchingId === resident?.id;
 
-            return (
-              <View
-                key={connection.id ?? resident?.id ?? index}
-                style={styles.residentCard}
-              >
-                <View style={styles.residentTop}>
-                  <View style={styles.linkIcon}>
-                    <Ionicons name="link" size={25} color="#08A8A8" />
-                  </View>
-                  <View style={styles.residentCopy}>
-                    <Text style={styles.statusLabel}>Connection Status</Text>
-                    <Text style={styles.statusText}>
-                      Connected to Caregiver/Family
-                    </Text>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.residentName}>{name}</Text>
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={16}
-                        color="#08A8A8"
+              return (
+                <View
+                  key={connection.id ?? resident?.id ?? index}
+                  style={[
+                    styles.residentCard,
+                    isCurrent && styles.residentCardActive,
+                  ]}
+                >
+                  {/* Top Status Strip */}
+                  <View style={styles.cardHeaderRow}>
+                    <View style={styles.avatarWrap}>
+                      <View
+                        style={[
+                          styles.avatarCircle,
+                          isCurrent && styles.avatarCircleActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.avatarText,
+                            isCurrent && styles.avatarTextActive,
+                          ]}
+                        >
+                          {initials}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.residentCopy}>
+                      <Text style={styles.patientName}>{name}</Text>
+                      <Text style={styles.statusDescription}>
+                        {isCurrent
+                          ? "Active Monitored Patient"
+                          : "Paired Patient"}
+                      </Text>
+                    </View>
+
+                    {/* Role / Status Badge */}
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        isCurrent
+                          ? styles.statusBadgeCurrent
+                          : styles.statusBadgePaired,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.statusDot,
+                          isCurrent
+                            ? styles.statusDotCurrent
+                            : styles.statusDotPaired,
+                        ]}
                       />
+                      <Text
+                        style={[
+                          styles.statusBadgeText,
+                          isCurrent
+                            ? styles.statusBadgeTextCurrent
+                            : styles.statusBadgeTextPaired,
+                        ]}
+                      >
+                        {isCurrent ? "Current Patient" : "Paired Patient"}
+                      </Text>
                     </View>
                   </View>
+
+                  {/* Active Indicator Notice */}
+                  {isCurrent && (
+                    <View style={styles.currentPatientNotice}>
+                      <Ionicons name="radio" size={14} color="#0D9488" style={{ marginRight: 6 }} />
+                      <Text style={styles.currentPatientNoticeText}>
+                        Showing live heart rate, temperature, and alerts on dashboard
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Divider */}
+                  <View style={styles.cardDivider} />
+
+                  {/* Action Buttons */}
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={styles.disconnectButton}
+                      onPress={() =>
+                        setModalState({
+                          visible: true,
+                          type: "confirm",
+                          isDestructive: true,
+                          title: "Disconnect Patient?",
+                          message: `Are you sure you want to unlink ${name}? You will no longer receive their emergency alerts or telemetry.`,
+                          confirmText: "Disconnect",
+                          cancelText: "Cancel",
+                          onCancel: () =>
+                            setModalState((prev) => ({ ...prev, visible: false })),
+                          onConfirm: async () => {
+                            setModalState((prev) => ({ ...prev, visible: false }));
+                            await handleDisconnect(connection?.patient?.id, user?.id);
+                          },
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="close-circle-outline" size={16} color="#EF4444" style={{ marginRight: 4 }} />
+                      <Text style={styles.disconnectText}>Disconnect</Text>
+                    </TouchableOpacity>
+
+                    {isCurrent ? (
+                      <View style={styles.activeIndicatorButton}>
+                        <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                        <Text style={styles.activeIndicatorText}>Current Patient</Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        disabled={isSwitching}
+                        style={styles.switchButton}
+                        onPress={() => handleSelectPatient(resident?.id)}
+                        activeOpacity={0.8}
+                      >
+                        {isSwitching ? (
+                          <ActivityIndicator size="small" color="#0AA7A8" />
+                        ) : (
+                          <>
+                            <Ionicons name="swap-horizontal" size={16} color="#0AA7A8" style={{ marginRight: 6 }} />
+                            <Text style={styles.switchButtonText}>Set as Current</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-                <Pressable
-                  style={styles.disconnectButton}
-                  onPress={() =>
-                    Alert.alert(
-                      "Disconnect resident?",
-                      `Remove ${name} from your connected non-patient?`,
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Disconnect",
-                          style: "destructive",
-                          onPress: () =>
-                            handleDisconnect(connection?.patient?.id, user?.id),
-                        },
-                      ],
-                    )
-                  }
-                >
-                  <Text style={styles.disconnectText}>Disconnect</Text>
-                </Pressable>
-                <Pressable
-                  disabled={connection.currentPatient}
-                  style={[
-                    styles.selectButton,
-                    connection.currentPatient && styles.selectedButton,
-                  ]}
-                  onPress={() => handleSelectPatient(resident?.id)}
-                >
-                  <Text
-                    style={[
-                      styles.selectText,
-                      connection.currentPatient && styles.selectedText,
-                    ]}
-                  >
-                    {connection.currentPatient
-                      ? "Current Patient"
-                      : "Select Patient"}
-                  </Text>
-                </Pressable>
-              </View>
-            );
-          })
+              );
+            })}
+
+            {/* Pair Another Patient Button */}
+            <TouchableOpacity
+              style={styles.addPatientButton}
+              onPress={() => router.push("/nonpatient/dashboard/scan-patient")}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#0AA7A8" style={{ marginRight: 8 }} />
+              <Text style={styles.addPatientText}>Pair Another Patient</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
+
+      {/* Universal Alert & Confirmation Modal */}
+      <CustomAlertModal
+        visible={modalState.visible}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        isDestructive={modalState.isDestructive}
+        onConfirm={modalState.onConfirm || (() => setModalState((prev) => ({ ...prev, visible: false })))}
+        onCancel={modalState.onCancel}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#FFFFFF" },
+  screen: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  backgroundAccent: {
+    position: "absolute",
+    top: -80,
+    right: -60,
+    width: 260,
+    height: 220,
+    borderRadius: 130,
+    backgroundColor: "#EDFBFB",
+    opacity: 0.9,
+  },
   header: {
-    alignItems: "center",
-    borderBottomColor: "#F0F2F3",
-    borderBottomWidth: 1,
+    height: 56,
     flexDirection: "row",
-    height: 57,
+    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
+    backgroundColor: "transparent",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
   },
-  headerTitle: { color: "#111111", fontSize: 22, fontWeight: "700" },
-  headerSpacer: { width: 29 },
-  content: { paddingBottom: 32, paddingHorizontal: 16, paddingTop: 37 },
-  title: { color: "#08A8A8", fontSize: 20, fontWeight: "700" },
-  subtitle: { color: "#9CA3AF", fontSize: 15, marginTop: 7 },
-  listTitle: {
-    color: "#17191B",
-    fontSize: 14,
-    fontWeight: "700",
-    marginTop: 23,
-  },
-  loader: { marginTop: 30 },
-  residentCard: {
-    borderColor: "#D8D8D8",
-    borderRadius: 18,
-    borderWidth: 1,
-    marginTop: 13,
-    padding: 16,
-  },
-  residentTop: { flexDirection: "row" },
-  linkIcon: {
-    alignItems: "center",
-    borderColor: "#A7EEEE",
-    borderRadius: 24,
-    borderWidth: 1,
-    height: 40,
-    justifyContent: "center",
+  backButton: {
     width: 40,
-  },
-  residentCopy: { flex: 1, marginLeft: 26 },
-  statusLabel: { color: "#73777A", fontSize: 14 },
-  statusText: { color: "#17191B", fontSize: 14, marginTop: 2 },
-  nameRow: { alignItems: "center", flexDirection: "row", gap: 6, marginTop: 7 },
-  residentName: { color: "#08A8A8", fontSize: 14, fontWeight: "600" },
-  disconnectButton: {
+    height: 40,
     alignItems: "center",
-    borderColor: "#FF6462",
-    borderRadius: 9,
-    borderWidth: 1,
-    height: 42,
     justifyContent: "center",
-    marginTop: 25,
   },
-  disconnectText: { color: "#FF6462", fontSize: 16 },
-  selectButton: {
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  headerRightButton: {
+    width: 40,
+    height: 40,
     alignItems: "center",
-    borderColor: "#08A8A8",
-    borderRadius: 9,
-    borderWidth: 1,
-    height: 42,
     justifyContent: "center",
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
+  titleSection: {
+    marginBottom: 16,
+  },
+  title: {
+    color: "#0F172A",
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  subtitle: {
+    color: "#64748B",
+    fontSize: 13.5,
+    marginTop: 4,
+    lineHeight: 19,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  listTitle: {
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  loaderContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
     marginTop: 10,
+    fontSize: 13,
+    color: "#64748B",
   },
-  selectedButton: { backgroundColor: "#08A8A8" },
-  selectText: { color: "#08A8A8", fontSize: 16 },
-  selectedText: { color: "#FFFFFF" },
-  emptyState: {
+  cardsList: {
+    gap: 14,
+  },
+  residentCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  residentCardActive: {
+    borderColor: "#0AA7A8",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#0AA7A8",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  cardHeaderRow: {
+    flexDirection: "row",
     alignItems: "center",
-    borderColor: "#D8D8D8",
-    borderRadius: 18,
-    borderWidth: 1,
-    marginTop: 13,
-    padding: 28,
   },
-  emptyTitle: {
-    color: "#17191B",
+  avatarWrap: {
+    marginRight: 12,
+  },
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarCircleActive: {
+    backgroundColor: "#EDFBFB",
+    borderColor: "#99F6E4",
+  },
+  avatarText: {
     fontSize: 15,
     fontWeight: "700",
+    color: "#64748B",
+  },
+  avatarTextActive: {
+    color: "#0AA7A8",
+  },
+  residentCopy: {
+    flex: 1,
+    marginRight: 8,
+  },
+  patientName: {
+    color: "#0F172A",
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  statusDescription: {
+    color: "#64748B",
+    fontSize: 12,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusBadgeCurrent: {
+    backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+  },
+  statusBadgePaired: {
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+  },
+  statusDotCurrent: {
+    backgroundColor: "#10B981",
+  },
+  statusDotPaired: {
+    backgroundColor: "#94A3B8",
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  statusBadgeTextCurrent: {
+    color: "#065F46",
+  },
+  statusBadgeTextPaired: {
+    color: "#64748B",
+  },
+  currentPatientNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 12,
+  },
+  currentPatientNoticeText: {
+    flex: 1,
+    fontSize: 11.5,
+    color: "#0F766E",
+    fontWeight: "600",
+    lineHeight: 16,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 12,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  disconnectButton: {
+    flex: 1,
+    height: 42,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FECDD3",
+    backgroundColor: "#FFF1F2",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  disconnectText: {
+    color: "#E11D48",
+    fontSize: 13.5,
+    fontWeight: "600",
+  },
+  activeIndicatorButton: {
+    flex: 1.4,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: "#0AA7A8",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#0AA7A8",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  activeIndicatorText: {
+    color: "#FFFFFF",
+    fontSize: 13.5,
+    fontWeight: "700",
+  },
+  switchButton: {
+    flex: 1.4,
+    height: 42,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#0AA7A8",
+    backgroundColor: "#F0FDFA",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  switchButtonText: {
+    color: "#0AA7A8",
+    fontSize: 13.5,
+    fontWeight: "700",
+  },
+  emptyState: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E2E8F0",
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 32,
     marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#EDFBFB",
+    borderWidth: 1.5,
+    borderColor: "#B2EBF2",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  emptyTitle: {
+    color: "#0F172A",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 6,
   },
   emptyText: {
-    color: "#73777A",
+    color: "#64748B",
     fontSize: 13,
-    marginTop: 6,
+    lineHeight: 19,
     textAlign: "center",
+    marginBottom: 20,
+  },
+  emptyPairButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0AA7A8",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    width: "100%",
+  },
+  emptyPairButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  addPatientButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#0AA7A8",
+    paddingVertical: 14,
+    marginTop: 8,
+    shadowColor: "#0AA7A8",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  addPatientText: {
+    color: "#0AA7A8",
+    fontSize: 14.5,
+    fontWeight: "700",
   },
 });

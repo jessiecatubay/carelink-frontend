@@ -165,3 +165,18 @@ export const hasAuthTokens = () =>
   Boolean(
     authTokens?.accessToken && authTokens?.refreshToken && authTokens?.user,
   );
+
+const REMEMBERED_EMAIL_KEY = "auth_remembered_email";
+
+export const saveRememberedEmail = async (email: string) => {
+  await secureSetItem(REMEMBERED_EMAIL_KEY, email);
+};
+
+export const getRememberedEmail = async (): Promise<string | null> => {
+  return await secureGetItem(REMEMBERED_EMAIL_KEY);
+};
+
+export const clearRememberedEmail = async () => {
+  await secureDeleteItem(REMEMBERED_EMAIL_KEY);
+};
+

@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -29,6 +29,21 @@ export default function EditPhoneScreen() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -62,21 +77,30 @@ export default function EditPhoneScreen() {
         });
       }
 
-      Alert.alert("Success", "Your phone number has been updated.", [
-        {
-          text: "OK",
-          onPress: () => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/nonpatient/dashboard/profile");
-            }
-          },
+      setAlertModal({
+        visible: true,
+        type: "success",
+        title: "Phone Updated",
+        message: "Your phone number has been updated successfully.",
+        confirmText: "OK",
+        onConfirm: () => {
+          setAlertModal((prev) => ({ ...prev, visible: false }));
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/nonpatient/dashboard/profile");
+          }
         },
-      ]);
+      });
     } catch (err) {
       console.error("Failed to update phone number:", err);
-      Alert.alert("Error", "Failed to update phone number. Please try again.");
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Update Failed",
+        message: "Failed to update phone number. Please try again.",
+        confirmText: "OK",
+      });
     } finally {
       setLoading(false);
     }
@@ -158,6 +182,19 @@ export default function EditPhoneScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        onConfirm={
+          alertModal.onConfirm ||
+          (() => setAlertModal((prev) => ({ ...prev, visible: false })))
+        }
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

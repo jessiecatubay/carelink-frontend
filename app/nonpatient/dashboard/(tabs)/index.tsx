@@ -14,7 +14,7 @@ import {
   formatPhilippineTime,
   isSamePhilippineDay,
 } from "@/utils/date";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,6 +35,7 @@ const TOUR_STORAGE_KEY = "@carelink_dashboard_tour_completed_v1";
 
 export default function Home() {
   const router = useRouter();
+  const { startTour } = useLocalSearchParams<{ startTour?: string }>();
   const { user } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -87,9 +88,9 @@ export default function Home() {
         setShowConnectPrompt(true);
       } else {
         setShowConnectPrompt(false);
-        // 2. Once patient is connected, start feature tour if not completed
+        // 2. Once patient is connected, start feature tour if not completed or explicitly requested
         const tourDone = await AsyncStorage.getItem(TOUR_STORAGE_KEY);
-        if (!tourDone) {
+        if (!tourDone || startTour === "true") {
           setTimeout(() => {
             setIsTourActive(true);
             setTourStepIndex(0);
@@ -101,7 +102,7 @@ export default function Home() {
     } finally {
       setPatientLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, startTour]);
 
   useEffect(() => {
     const off = onPatientConnectionStatus((payload) => {

@@ -1,3 +1,4 @@
+import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import AccountInformation from "@/components/feature/nonpatient/settings/profile/AccountInformation";
 import EditProfileButton from "@/components/feature/nonpatient/settings/profile/EditProfileButton";
 import ProfileHeader from "@/components/feature/nonpatient/settings/profile/ProfileHeader";
@@ -14,7 +15,6 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -34,6 +34,20 @@ export default function ProfileScreen() {
     user?.emergencyContact || "",
   );
   const [saving, setSaving] = useState(false);
+
+  // Custom alert modal
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type?: AlertModalType;
+    confirmText?: string;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     if (!isEditing) {
@@ -72,7 +86,13 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     if (!user?.id) {
-      Alert.alert("Error", "User information is unavailable.");
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Error",
+        message: "User information is unavailable.",
+        confirmText: "OK",
+      });
       return;
     }
 
@@ -80,25 +100,46 @@ export default function ProfileScreen() {
     const formattedLast = capitalizeWords(lastName);
 
     if (!formattedFirst) {
-      Alert.alert("Invalid Information", "First name is required.");
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Invalid Information",
+        message: "First name is required.",
+        confirmText: "OK",
+      });
       return;
     }
 
     if (!formattedLast) {
-      Alert.alert("Invalid Information", "Last name is required.");
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Invalid Information",
+        message: "Last name is required.",
+        confirmText: "OK",
+      });
       return;
     }
 
     if (!phoneNumber.trim()) {
-      Alert.alert("Invalid Information", "Phone number is required.");
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Invalid Information",
+        message: "Phone number is required.",
+        confirmText: "OK",
+      });
       return;
     }
 
     if (!isValidPhilippinePhoneNumber(phoneNumber.trim())) {
-      Alert.alert(
-        "Invalid Phone Number",
-        "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
-      );
+      setAlertModal({
+        visible: true,
+        type: "warning",
+        title: "Invalid Phone Number",
+        message: "Please enter a valid Philippine mobile number (e.g. +63 9XX XXX XXXX).",
+        confirmText: "OK",
+      });
       return;
     }
 
@@ -139,10 +180,13 @@ export default function ProfileScreen() {
       setLastName(formattedLast);
       setIsEditing(false);
 
-      Alert.alert(
-        "Profile Updated",
-        "Your profile information has been updated successfully.",
-      );
+      setAlertModal({
+        visible: true,
+        type: "success",
+        title: "Profile Updated",
+        message: "Your profile information has been updated successfully.",
+        confirmText: "OK",
+      });
     } catch (error: any) {
       console.error("Failed to update profile:", error);
 
@@ -150,7 +194,13 @@ export default function ProfileScreen() {
         error?.response?.data?.message ||
         "Failed to update your profile. Please try again.";
 
-      Alert.alert("Update Failed", message);
+      setAlertModal({
+        visible: true,
+        type: "error",
+        title: "Update Failed",
+        message,
+        confirmText: "OK",
+      });
     } finally {
       setSaving(false);
     }
@@ -206,6 +256,16 @@ export default function ProfileScreen() {
           disabled={saving}
         />
       </ScrollView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText={alertModal.confirmText || "OK"}
+        onConfirm={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

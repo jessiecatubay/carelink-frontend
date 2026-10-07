@@ -1,16 +1,15 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import { forgotPasswordSchema } from "@/schema/auth";
 
 type ForgotPasswordFormProps = {
@@ -25,12 +24,13 @@ export default function ForgotPasswordForm({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = async () => {
     const result = forgotPasswordSchema.safeParse({ email: email.trim() });
     if (!result.success) {
-      setError(result.error.issues[0]?.message || "Please enter a valid email address.");
+      setError(
+        result.error.issues[0]?.message || "Please enter a valid email address.",
+      );
       return;
     }
 
@@ -48,30 +48,19 @@ export default function ForgotPasswordForm({
 
         <Text style={styles.fieldLabel}>Email Address</Text>
 
-        <View style={[styles.inputRow, isFocused ? styles.inputRowFocused : null, error ? styles.inputRowError : null]}>
-          <Image
-            source={require("@/assets/icons/email.png")}
-            style={[styles.emailIcon, isFocused ? styles.emailIconFocused : null]}
-            resizeMode="contain"
-          />
-          <View style={styles.inputDivider} />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Enter your email"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (error) setError(null);
-            }}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-        </View>
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <Input
+          placeholder="Enter your email"
+          placeholderTextColor="#9CA3AF"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (error) setError(null);
+          }}
+          error={error || undefined}
+          icon={require("@/assets/icons/email.png")}
+        />
 
         {loading && (
           <View style={styles.waitingRow}>
@@ -132,53 +121,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginBottom: 8,
-    marginLeft: 4,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    borderRadius: 18,
-    height: 54,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  inputRowFocused: {
-    borderColor: "#12A5B5",
-    shadowColor: "#12A5B5",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  inputRowError: {
-    borderColor: "#F16A66",
-  },
-  emailIcon: {
-    width: 20,
-    height: 20,
-    tintColor: "#9CA3AF",
-  },
-  emailIconFocused: {
-    tintColor: "#12A5B5",
-  },
-  inputDivider: {
-    width: 1,
-    height: 26,
-    backgroundColor: "#E5E7EB",
-    marginHorizontal: 12,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: "#1F2937",
-    height: "100%",
-  },
-  errorText: {
-    color: "#F16A66",
-    fontSize: 13,
-    marginTop: 8,
     marginLeft: 4,
   },
   waitingRow: {
