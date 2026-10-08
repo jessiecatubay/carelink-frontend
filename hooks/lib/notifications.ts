@@ -35,15 +35,24 @@ export async function registerForPushNotificationsAsync() {
   }
 
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("carelink-emergency", {
+    await Notifications.setNotificationChannelAsync("carelink-emergency-v2", {
       name: "CareLink Critical Emergency",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 500, 200, 500, 200, 1000],
-      sound: "default",
+      sound: "alert_sound.wav",
       enableLights: true,
       lightColor: "#EF4444",
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       bypassDnd: true,
+      showBadge: true,
+      audioAttributes: {
+        usage: Notifications.AndroidAudioUsage.ALARM,
+        contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+        flags: {
+          enforceAudibility: true,
+          requestHardwareAudioVideoSynchronization: false,
+        },
+      },
     });
 
     await Notifications.setNotificationChannelAsync("carelink-alerts", {
@@ -51,7 +60,12 @@ export async function registerForPushNotificationsAsync() {
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       sound: "default",
+      enableLights: true,
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      audioAttributes: {
+        usage: Notifications.AndroidAudioUsage.NOTIFICATION,
+        contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+      },
     });
   }
 

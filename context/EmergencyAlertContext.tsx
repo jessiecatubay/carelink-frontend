@@ -39,8 +39,9 @@ export function EmergencyAlertProvider({
     }
 
     const alertInfo: EmergencyModalData = {
+      patientId: data?.patientId,
       patientName: data?.patientName || "Connected Patient",
-      alertType: data?.alertType || "CRITICAL EMERGENCY SOS",
+      alertType: data?.alertType || "🚨 EMERGENCY ALERT",
       timestamp: data?.timestamp || new Date().toLocaleTimeString(),
       phoneNumber: data?.phoneNumber,
     };
@@ -75,19 +76,19 @@ export function EmergencyAlertProvider({
       switch (command) {
         case "FOOD":
           title = "🍱 Food Assistance";
-          body = "The patient is requesting food.";
+          body = `${payload?.patientName || "The patient"} is requesting food.`;
           break;
         case "WATER":
           title = "💧 Water Assistance";
-          body = "The patient is requesting water.";
+          body = `${payload?.patientName || "The patient"} is requesting water.`;
           break;
         case "ASSISTANCE":
           title = "🙋 Assistance Requested";
-          body = "The patient is requesting assistance.";
+          body = `${payload?.patientName || "The patient"} is requesting assistance.`;
           break;
         case "SATISFIED":
           title = "✅ Request Satisfied";
-          body = "The patient's request has been marked as satisfied.";
+          body = `${payload?.patientName || "The patient"}'s request has been marked as satisfied.`;
           break;
         case "PILL_REMINDER":
           title = payload?.title?.trim() || "Pill Reminder";
@@ -97,7 +98,7 @@ export function EmergencyAlertProvider({
           break;
         default:
           title = `CareLink Alert: ${command}`;
-          body = "The patient sent a new request.";
+          body = `${payload?.patientName || "The patient"} sent a new request.`;
           break;
       }
 
@@ -150,12 +151,16 @@ export function EmergencyAlertProvider({
 
       if (isEmergency) {
         triggerEmergencyAlert({
+          patientId: (payload as any)?.patientId,
           patientName:
             (payload as any)?.patientName ||
             (payload as any)?.patient?.name ||
             "Connected Patient",
-          alertType: "🚨 EMERGENCY SOS BROADCAST",
-          timestamp: new Date().toLocaleTimeString(),
+          alertType: "🚨 EMERGENCY ALERT",
+          timestamp: (payload as any)?.recordedAt
+            ? new Date((payload as any).recordedAt).toLocaleTimeString()
+            : new Date().toLocaleTimeString(),
+          phoneNumber: (payload as any)?.phoneNumber,
         });
       } else {
         showLocalAlertNotification(payload);
@@ -174,12 +179,14 @@ export function EmergencyAlertProvider({
         return;
       }
 
-      const data = notification.request.content.data as {
+      const data = (notification.request.content.data || {}) as {
         type?: string;
         command?: string;
         alertType?: string;
+        patientId?: string;
         patientName?: string;
         phoneNumber?: string;
+        timestamp?: string;
       };
 
       const isEmergency =
@@ -191,9 +198,10 @@ export function EmergencyAlertProvider({
 
       if (isEmergency) {
         triggerEmergencyAlert({
+          patientId: data?.patientId,
           patientName: data?.patientName || "Connected Patient",
-          alertType: "🚨 EMERGENCY SOS BROADCAST",
-          timestamp: new Date().toLocaleTimeString(),
+          alertType: "🚨 EMERGENCY ALERT",
+          timestamp: data?.timestamp || new Date().toLocaleTimeString(),
           phoneNumber: data?.phoneNumber,
         });
       }
@@ -222,7 +230,7 @@ export function EmergencyAlertProvider({
       notificationListener.remove();
       responseListener.remove();
     };
-  }, []);
+  }, [user?.role]);
 
   // 3. Real-time Pill Reminder notifications (for non-patients/caregivers and patients)
   useEffect(() => {

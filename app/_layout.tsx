@@ -24,16 +24,22 @@ Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
     const settings = await getNotificationSettings();
 
-    const data = notification.request.content.data as {
+    const data = (notification.request.content.data || {}) as {
       type?: string;
       command?: string;
       alertType?: string;
     };
 
+    const command = (data?.command || "").toUpperCase();
+    const alertType = (data?.alertType || "").toUpperCase();
+    const type = (data?.type || "").toUpperCase();
+    const title = (notification.request.content.title || "").toLowerCase();
+
     const isEmergency =
-      data?.type === "EMERGENCY" ||
-      data?.command === "EMERGENCY" ||
-      data?.alertType === "Emergency";
+      type === "EMERGENCY" ||
+      command === "EMERGENCY" ||
+      alertType === "EMERGENCY" ||
+      title.includes("emergency");
 
     if (isEmergency) {
       return {
@@ -79,15 +85,24 @@ export default function RootLayout() {
     initSocket();
 
     if (Platform.OS === "android") {
-      Notifications.setNotificationChannelAsync("carelink-emergency", {
+      Notifications.setNotificationChannelAsync("carelink-emergency-v2", {
         name: "CareLink Critical Emergency",
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 500, 200, 500, 200, 1000],
-        sound: "default",
+        sound: "alert_sound.wav",
         enableLights: true,
         lightColor: "#EF4444",
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         bypassDnd: true,
+        showBadge: true,
+        audioAttributes: {
+          usage: Notifications.AndroidAudioUsage.ALARM,
+          contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+          flags: {
+            enforceAudibility: true,
+            requestHardwareAudioVideoSynchronization: false,
+          },
+        },
       });
 
       Notifications.setNotificationChannelAsync("carelink-alerts", {
@@ -97,6 +112,10 @@ export default function RootLayout() {
         sound: "default",
         enableLights: true,
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        audioAttributes: {
+          usage: Notifications.AndroidAudioUsage.NOTIFICATION,
+          contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+        },
       });
 
       Notifications.setNotificationChannelAsync("default", {
@@ -106,6 +125,14 @@ export default function RootLayout() {
         sound: "default",
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       });
+
+      // Diagnostic: Check and log all registered Android Notification Channels
+      Notifications.getNotificationChannelsAsync().then((channels) => {
+        console.log("🔔 [DIAGNOSTIC] Registered Android Notification Channels:");
+        channels.forEach((ch) => {
+          console.log(`  - Channel ID: "${ch.id}", Name: "${ch.name}", Importance: ${ch.importance}, Sound: "${ch.sound}", BypassDnd: ${ch.bypassDnd}`);
+        });
+      }).catch((e) => console.warn("Could not retrieve channels:", e));
     }
   }, []);
 

@@ -41,7 +41,14 @@
       "expo-asset",
       "expo-font",
       "expo-secure-store",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/alert_sound.wav"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
