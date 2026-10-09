@@ -24,14 +24,20 @@ export default function Login() {
   useEffect(() => {
     if (!loading && isAuthenticated) {
       // already authenticated — redirect based on role
+      if (user?.role === "USER" && user?.onBoarded === false) {
+        router.replace("/user-onboarding");
+        return;
+      }
       if (user?.role === "NON_PATIENT") {
         router.replace("/nonpatient/dashboard");
         return;
       }
-
-      router.replace("/patient/dashboard");
+      if (user?.role === "PATIENT") {
+        router.replace("/patient/dashboard");
+        return;
+      }
     }
-  }, [isAuthenticated, loading, router, user?.role]);
+  }, [isAuthenticated, loading, router, user?.role, user?.onBoarded]);
 
   if (loading) {
     return (

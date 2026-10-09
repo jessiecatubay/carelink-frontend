@@ -57,16 +57,11 @@ export default function PatientRemote() {
     }
 
     try {
-      const result = await axiosInstance.post(
-        "/api/patient-nonpatient/v1/connected-nonpatients",
-        { userId: user.id },
-      );
-      const connectedNonpatients = result.data.data;
       await patientCommand(
         "ESP32-001",
         commandLabel.toUpperCase(),
         user.id,
-        connectedNonpatients,
+        [],
       );
     } catch (error) {
       console.error("Failed to send patient command:", error);
@@ -109,6 +104,7 @@ export default function PatientRemote() {
   };
 
   const handleConfirmEmergency = async () => {
+    triggerAppHaptic("heavy");
     setShowEmergencyModal(false);
     setActiveAlert("Emergency");
     setPendingRequest("Emergency");
@@ -117,6 +113,7 @@ export default function PatientRemote() {
   };
 
   const handleCancelEmergency = () => {
+    triggerAppHaptic("light");
     setShowEmergencyModal(false);
   };
 

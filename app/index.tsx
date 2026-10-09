@@ -6,7 +6,7 @@ import {
   WelcomeHero,
 } from "@/components/feature/welcome";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useEffect } from "react";
 import {
   ActivityIndicator,
@@ -19,10 +19,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function WelcomeLandingScreen() {
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Auto-redirect authenticated users directly to their appropriate dashboard / manual
   useEffect(() => {
     const handleAuthRedirect = async () => {
+      // Only perform auto-redirect if we are currently on the landing page (index)
+      if (pathname !== "/") return;
+
       if (!loading && isAuthenticated) {
         if (user?.role === "NON_PATIENT") {
           try {
@@ -46,9 +50,9 @@ export default function WelcomeLandingScreen() {
     };
 
     handleAuthRedirect();
-  }, [isAuthenticated, loading, router, user]);
+  }, [isAuthenticated, loading, pathname, router, user?.role, user?.onBoarded]);
 
-  if (loading || isAuthenticated) {
+  if (loading || (isAuthenticated && pathname === "/")) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#F16A66" />

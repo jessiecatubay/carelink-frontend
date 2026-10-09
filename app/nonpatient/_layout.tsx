@@ -15,7 +15,7 @@ export default function NonPatientLayout() {
       }
 
       if (user?.role === "USER" && user?.onBoarded === false) {
-        router.replace("/(auth)/user-onboarding");
+        router.replace("/user-onboarding");
         return;
       }
 
@@ -23,7 +23,7 @@ export default function NonPatientLayout() {
         router.replace("/patient/dashboard");
       }
     }
-  }, [isAuthenticated, loading, router, user?.role]);
+  }, [isAuthenticated, loading, router, user?.role, user?.onBoarded]);
 
   if (loading) {
     return (

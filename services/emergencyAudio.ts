@@ -1,16 +1,38 @@
 import { getNotificationSettings } from "@/hooks/lib/notification-settings";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { Platform, Vibration } from "react-native";
 
+let activeAudioHandle: any = null;
 let isSirenPlaying = false;
-let webAudioContext: any = null;
-let webOscillator: any = null;
-let webGain: any = null;
-let sirenInterval: any = null;
+let sirenInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Starts playing the emergency alarm siren sound / notification chime if alertSoundEnabled is TRUE.
- * 100% Expo Go and Web safe without unbundled native module crashes.
+ * Triggers the emergency siren notification chime and SOS vibration.
+ */
+async function triggerEmergencyChime(): Promise<void> {
+  if (Platform.OS === "web") return;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "🚨 CARELINK EMERGENCY ALERT",
+        body: "Emergency siren active — Connected patient needs immediate assistance!",
+        sound: "alert_sound.wav",
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        vibrate: [0, 600, 200, 600, 200, 600, 400, 800],
+        data: { type: "EMERGENCY", command: "EMERGENCY" },
+        ...(Platform.OS === "android" ? { channelId: "carelink-emergency-v2" } : {}),
+      },
+      trigger: null,
+    });
+  } catch (err) {
+    console.warn("triggerEmergencyChime error:", err);
+  }
+}
+
+/**
+ * Plays the emergency siren sound using alert_sound.wav safely.
+ * Loops loudly through speakers and vibrates until stopEmergencySiren() is called.
+ * 100% crash-free in Expo Go, development builds, and production APKs.
  */
 export async function playEmergencySiren(): Promise<void> {
   try {
@@ -26,58 +48,49 @@ export async function playEmergencySiren(): Promise<void> {
 
     isSirenPlaying = true;
 
-    // 1. Web Platform: Dual-tone oscillating emergency siren using Web Audio API
+    // 1. Continuous SOS vibration pattern
+    try {
+      if (Platform.OS !== "web") {
+        Vibration.vibrate([0, 500, 200, 500, 200, 500, 400, 800, 300, 800], true);
+      }
+    } catch (vibErr) {
+      console.warn("Vibration warning:", vibErr);
+    }
+
+    // 2. Web Audio if running on Web browser
     if (Platform.OS === "web" && typeof window !== "undefined") {
       try {
-        const AudioContextClass =
-          window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioContextClass) {
-          webAudioContext = new AudioContextClass();
-          webOscillator = webAudioContext.createOscillator();
-          webGain = webAudioContext.createGain();
-
-          webOscillator.type = "sawtooth";
-          webOscillator.frequency.setValueAtTime(800, webAudioContext.currentTime);
-
-          let toggle = false;
-          sirenInterval = setInterval(() => {
-            if (!webOscillator || !webAudioContext) return;
-            toggle = !toggle;
-            const targetFreq = toggle ? 1000 : 700;
-            webOscillator.frequency.setTargetAtTime(
-              targetFreq,
-              webAudioContext.currentTime,
-              0.1,
-            );
-          }, 350);
-
-          webGain.gain.setValueAtTime(0.4, webAudioContext.currentTime);
-          webOscillator.connect(webGain);
-          webGain.connect(webAudioContext.destination);
-          webOscillator.start();
-          return;
-        }
-      } catch (e) {
-        console.warn("Web audio siren error:", e);
+        const audio = new (window as any).Audio(require("@/assets/sounds/alert_sound.wav"));
+        audio.loop = true;
+        audio.volume = 1.0;
+        await audio.play();
+        activeAudioHandle = {
+          stop: () => {
+            audio.pause();
+            audio.currentTime = 0;
+          },
+        };
+        console.log("🔊 alert_sound.wav playing via Web Audio API.");
+      } catch (webAudioErr) {
+        console.warn("Web audio playback error:", webAudioErr);
       }
     }
 
-    // 2. Mobile (Expo Go / Android / iOS): Play emergency chime via local notification channel
+    // 3. Android / iOS native notification channel audio with alert_sound.wav
     if (Platform.OS !== "web") {
-      try {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "🚨 EMERGENCY ALERT BROADCAST",
-            body: "Critical emergency SOS alert triggered!",
-            sound: "default",
-            priority: Notifications.AndroidNotificationPriority.MAX,
-            vibrate: [0, 500, 200, 500, 200, 1000],
-          },
-          trigger: null, // deliver immediately
-        });
-      } catch (notifErr) {
-        console.warn("Notification sound trigger note:", notifErr);
+      await triggerEmergencyChime();
+
+      // Repeat chime pulse every 4 seconds while modal is active
+      if (sirenInterval) {
+        clearInterval(sirenInterval);
       }
+      sirenInterval = setInterval(() => {
+        if (!isSirenPlaying) {
+          if (sirenInterval) clearInterval(sirenInterval);
+          return;
+        }
+        triggerEmergencyChime();
+      }, 4000);
     }
   } catch (error) {
     console.error("Failed to play emergency siren:", error);
@@ -85,28 +98,35 @@ export async function playEmergencySiren(): Promise<void> {
 }
 
 /**
- * Stops the emergency siren sound.
+ * Stops the emergency siren sound, cancels vibration, and releases audio handles.
  */
 export async function stopEmergencySiren(): Promise<void> {
   isSirenPlaying = false;
 
+  // 1. Cancel vibration
+  try {
+    if (Platform.OS !== "web") {
+      Vibration.cancel();
+    }
+  } catch {}
+
+  // 2. Clear siren interval
   if (sirenInterval) {
     clearInterval(sirenInterval);
     sirenInterval = null;
   }
 
-  if (webOscillator) {
+  // 3. Stop audio handle
+  if (activeAudioHandle) {
     try {
-      webOscillator.stop();
-      webOscillator.disconnect();
-    } catch {}
-    webOscillator = null;
-  }
-
-  if (webAudioContext) {
-    try {
-      webAudioContext.close();
-    } catch {}
-    webAudioContext = null;
+      await activeAudioHandle.stop();
+    } catch (e) {
+      console.warn("Error stopping activeAudioHandle:", e);
+    }
+    activeAudioHandle = null;
   }
 }
+
+
+
+
