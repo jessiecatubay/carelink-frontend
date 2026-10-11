@@ -21,18 +21,18 @@ import { View } from "react-native";
 import AIIcon from "@/components/feature/nonpatient/dashboard/ai/AIIcon";
 
 const DEFAULT_PROMPTS = [
-  "What should I do?",
+  "What medication to take today?",
+  "Check medication schedule",
   "Is this an emergency?",
+  "What should I do?",
   "Check patient condition",
-  "What does this mean?",
-  "What to do for stroke?",
 ];
 
 const INITIAL_MESSAGES: Message[] = [
   {
     id: "1",
     sender: "ai",
-    text: "Hello! I'm Carelink. I can help you with basic first-aid guidance, emergency-response information, and general elderly-care questions. How can I help?",
+    text: "Hello! I'm Carelink. I can assist you with your patient's scheduled medications & pill reminders, first-aid guidance, and emergency response. Ask me what medication to take today or how I can help!",
   },
 ];
 
@@ -43,9 +43,10 @@ export default function AiHelpScreen() {
   const [patientName, setPatientName] = useState<string>(
     "Connect to a patient first",
   );
+  const [patientId, setPatientId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [activePrompt, setActivePrompt] = useState<string | null>(
-    "What should I do?",
+    "What medication to take today?",
   );
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -72,6 +73,8 @@ export default function AiHelpScreen() {
                 setPatientName(name);
               }
 
+              setPatientId(conn.patientId || conn.patient?.id || null);
+
               break;
             }
           }
@@ -83,6 +86,7 @@ export default function AiHelpScreen() {
 
     fetchPatient();
   }, [user?.id]);
+
 
   useEffect(() => {
     const loadChatHistory = async () => {
@@ -150,6 +154,7 @@ export default function AiHelpScreen() {
           role: message.sender === "user" ? "user" : "model",
           text: message.text,
         })),
+        ...(patientId ? { patientId } : {}),
       });
 
       const aiText = response.data?.data?.response;
