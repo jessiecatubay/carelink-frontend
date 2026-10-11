@@ -143,13 +143,6 @@ const CHAPTERS: ManualChapter[] = [
           "Schedule customized medication reminders that notify both you and the patient at specified times.",
         color: "#0EA5E9",
       },
-      {
-        iconName: "call-outline",
-        heading: "Emergency Speed-Dial",
-        description:
-          "Access designated emergency contacts and NDRRMC hotline (911) with one-tap slide emergency calling.",
-        color: "#DC2626",
-      },
     ],
     tipText: "Check the AI Help tab in the navigation bar whenever you need care guidance.",
   },
