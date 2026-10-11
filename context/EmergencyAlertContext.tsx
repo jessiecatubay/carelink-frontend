@@ -44,6 +44,7 @@ export function EmergencyAlertProvider({
       alertType: data?.alertType || "🚨 EMERGENCY ALERT",
       timestamp: data?.timestamp || new Date().toLocaleTimeString(),
       phoneNumber: data?.phoneNumber,
+      deviceId: data?.deviceId,
     };
 
     setEmergencyData(alertInfo);
@@ -161,6 +162,7 @@ export function EmergencyAlertProvider({
             ? new Date((payload as any).recordedAt).toLocaleTimeString()
             : new Date().toLocaleTimeString(),
           phoneNumber: (payload as any)?.phoneNumber,
+          deviceId: (payload as any)?.deviceId,
         });
       } else {
         showLocalAlertNotification(payload);
@@ -187,6 +189,7 @@ export function EmergencyAlertProvider({
         patientName?: string;
         phoneNumber?: string;
         timestamp?: string;
+        deviceId?: string;
       };
 
       const isEmergency =
@@ -203,6 +206,7 @@ export function EmergencyAlertProvider({
           alertType: "🚨 EMERGENCY ALERT",
           timestamp: data?.timestamp || new Date().toLocaleTimeString(),
           phoneNumber: data?.phoneNumber,
+          deviceId: data?.deviceId,
         });
       }
     };

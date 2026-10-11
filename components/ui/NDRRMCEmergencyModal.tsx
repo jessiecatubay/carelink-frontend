@@ -1,4 +1,5 @@
 import SlideToCall911 from "@/components/ui/SlideToCall911";
+import AIIncidentAdvisoryCard from "@/components/ui/AIIncidentAdvisoryCard";
 import { triggerAppHaptic, triggerAppVibration } from "@/context/HapticsContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -21,7 +22,9 @@ export interface EmergencyModalData {
   alertType?: string;
   timestamp?: string;
   phoneNumber?: string;
+  deviceId?: string;
 }
+
 
 interface NDRRMCEmergencyModalProps {
   visible: boolean;
@@ -220,7 +223,15 @@ export default function NDRRMCEmergencyModal({
               <Text style={styles.timeBadgeText}>{timestamp}</Text>
             </View>
 
+            {/* AI Incident Advisory: Analyzes 10 recent vitals for instant first aid */}
+            <AIIncidentAdvisoryCard
+              patientId={data?.patientId}
+              patientName={patientName}
+              visible={visible}
+            />
+
             {/* Primary Action Buttons: VIEW PATIENT & ACKNOWLEDGE */}
+
             <View style={styles.actionButtonsContainer}>
               <Pressable
                 accessibilityRole="button"
