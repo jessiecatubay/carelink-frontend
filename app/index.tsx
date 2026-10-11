@@ -29,15 +29,6 @@ export default function WelcomeLandingScreen() {
 
       if (!loading && isAuthenticated) {
         if (user?.role === "NON_PATIENT") {
-          try {
-            const manualSeen = await AsyncStorage.getItem("@carelink_user_manual_seen");
-            if (!manualSeen) {
-              router.replace("/nonpatient/dashboard/user-manual");
-              return;
-            }
-          } catch (e) {
-            console.log("Error checking manual seen:", e);
-          }
           router.replace("/nonpatient/dashboard");
         } else if (user?.role === "PATIENT") {
           router.replace("/patient/dashboard");

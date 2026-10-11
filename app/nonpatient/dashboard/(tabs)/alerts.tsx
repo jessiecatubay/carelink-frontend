@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -265,30 +266,72 @@ export default function AlertsScreen() {
         ) : visibleAlerts.length === 0 ? (
           <Text style={styles.empty}>No patient alerts</Text>
         ) : (
-          visibleAlerts.map((alert) => (
-            <View key={alert.id} style={styles.card}>
+          visibleAlerts.map((alert) => {
+            const isEmergency = alert.type === "Emergency";
+            const isSatisfied = alert.status === "Satisfied";
+
+            return (
               <View
-                style={[styles.icon, { backgroundColor: alert.iconBackground }]}
+                key={alert.id}
+                style={[styles.card, isEmergency && styles.emergencyCard]}
               >
-                <Image source={alert.icon} style={styles.iconImage} />
-              </View>
-              <View style={styles.copy}>
-                <Text style={styles.alertTitle}>{alert.title}</Text>
-                <Text style={styles.description}>{alert.description}</Text>
-                <Text
+                <View
                   style={[
-                    styles.status,
-                    alert.status === "Pending"
-                      ? styles.pending
-                      : styles.resolved,
+                    styles.icon,
+                    isEmergency
+                      ? styles.emergencyIconContainer
+                      : { backgroundColor: alert.iconBackground },
                   ]}
                 >
-                  {alert.status || "Pending"}
+                  <Image
+                    source={alert.icon}
+                    style={[
+                      styles.iconImage,
+                      isEmergency && styles.emergencyCardIcon,
+                    ]}
+                    resizeMode="contain"
+                  />
+                </View>
+                <View style={styles.copy}>
+                  <Text
+                    style={[
+                      styles.alertTitle,
+                      isEmergency && styles.emergencyAlertTitle,
+                    ]}
+                  >
+                    {alert.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.description,
+                      isEmergency && styles.emergencyDescription,
+                    ]}
+                  >
+                    {alert.description}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.status,
+                      isEmergency
+                        ? isSatisfied
+                          ? styles.emergencyResolved
+                          : styles.emergencyPending
+                        : isSatisfied
+                          ? styles.resolved
+                          : styles.pending,
+                    ]}
+                  >
+                    {alert.status || (isSatisfied ? "Satisfied" : "Pending")}
+                  </Text>
+                </View>
+                <Text
+                  style={[styles.time, isEmergency && styles.emergencyTime]}
+                >
+                  {alert.time}
                 </Text>
               </View>
-              <Text style={styles.time}>{alert.time}</Text>
-            </View>
-          ))
+            );
+          })
         )}
         <View style={styles.pagination}>
           <Pressable
@@ -354,15 +397,83 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderColor: "#E5E7E9",
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
     flexDirection: "row",
     minHeight: 70,
-    padding: 10,
+    padding: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  emergencyCard: {
+    backgroundColor: "#EF4444",
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emergencyIconContainer: {
+    backgroundColor: "#FFFFFF",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  emergencyCardIcon: {
+    tintColor: "#EF4444",
+  },
+  emergencyAlertTitle: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+  },
+  emergencyDescription: {
+    color: "rgba(255, 255, 255, 0.92)",
+    fontWeight: "600",
+  },
+  emergencyTime: {
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: "600",
+  },
+  emergencyResolved: {
+    backgroundColor: "#DCFCE7",
+    color: "#16A34A",
+    borderRadius: 6,
+    fontWeight: "800",
+  },
+  emergencyPending: {
+    backgroundColor: "#FFFFFF",
+    color: "#DC2626",
+    borderRadius: 6,
+    fontWeight: "800",
   },
   icon: {
     alignItems: "center",
-    borderRadius: 22,
+    borderRadius: 14,
     height: 42,
     justifyContent: "center",
     width: 42,
@@ -375,8 +486,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     fontSize: 10,
     marginTop: 4,
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
     paddingVertical: 2,
+    borderRadius: 6,
+    fontWeight: "800",
   },
   pending: { backgroundColor: "#FFE5E4", color: "#FF5B58" },
   resolved: { backgroundColor: "#DDF7F3", color: "#159F96" },

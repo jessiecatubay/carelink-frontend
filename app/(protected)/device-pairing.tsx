@@ -215,10 +215,7 @@ export default function DevicePairingScreen() {
           {isSuccess ? (
             <PairingSuccess
               onContinue={() =>
-                router.replace({
-                  pathname: "/nonpatient/dashboard",
-                  params: { startTour: "true" },
-                } as any)
+                router.replace("/nonpatient/dashboard" as any)
               }
             />
           ) : (

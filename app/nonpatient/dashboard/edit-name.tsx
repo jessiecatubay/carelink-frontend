@@ -1,6 +1,7 @@
 import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import NoteBox from "@/components/ui/NoteBox";
 import { useAuth } from "@/context/AuthContext";
 import { capitalizeWords, formatNameInput } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
@@ -182,17 +183,10 @@ export default function EditNameScreen() {
           </View>
 
           {/* Info note */}
-          <View style={styles.noteBox}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color="#0AA7A8"
-              style={styles.noteIcon}
-            />
-            <Text style={styles.noteText}>
-              Your full name will be updated across your profile and visible to your connected patients.
-            </Text>
-          </View>
+          <NoteBox
+            text="Your full name will be updated across your profile and visible to your connected patients."
+            style={{ marginBottom: 28 }}
+          />
 
           <View style={styles.buttonWrapper}>
             <Button
@@ -301,27 +295,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1E242B",
     marginBottom: 8,
-  },
-  noteBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#F0FAFA",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#C5ECEE",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 28,
-    gap: 10,
-  },
-  noteIcon: {
-    marginTop: 1,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#4B5563",
-    lineHeight: 18,
   },
   buttonWrapper: {
     marginTop: 8,

@@ -1,3 +1,4 @@
+import NoteBox from "@/components/ui/NoteBox";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -177,7 +178,7 @@ export default function PatientPairingFlowModal({
                   </View>
                 </View>
 
-                {/* Additional Patient Info if available */}
+                {/* Medical Conditions */}
                 {patient?.medicalConditions ? (
                   <View style={styles.infoRow}>
                     <Ionicons
@@ -188,35 +189,53 @@ export default function PatientPairingFlowModal({
                     />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.infoLabel}>Medical Conditions:</Text>
-                      <Text style={styles.infoValue} numberOfLines={2}>
+                      <Text style={styles.infoValue} numberOfLines={3}>
                         {patient.medicalConditions}
                       </Text>
                     </View>
                   </View>
                 ) : null}
 
-                {/* Connection Code Badge */}
-                <View style={styles.codeRow}>
-                  <Ionicons name="key-outline" size={14} color="#64748B" />
-                  <Text style={styles.codeLabel}>Device Code:</Text>
-                  <Text style={styles.codeValue}>
-                    {patient?.connectionCode || "N/A"}
-                  </Text>
-                </View>
+                {/* Patient Notes */}
+                {patient?.notes ? (
+                  <View style={styles.infoRow}>
+                    <Ionicons
+                      name="document-text-outline"
+                      size={16}
+                      color="#0AA7A8"
+                      style={{ marginTop: 2, marginRight: 8 }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.infoLabel}>Note:</Text>
+                      <Text style={styles.infoValue} numberOfLines={3}>
+                        {patient.notes}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {/* QR Code / Connection Code */}
+                {patient?.connectionCode ? (
+                  <View style={styles.codeRow}>
+                    <Ionicons
+                      name="qr-code-outline"
+                      size={16}
+                      color="#0AA7A8"
+                      style={{ marginRight: 2 }}
+                    />
+                    <Text style={styles.codeLabel}>QR Code:</Text>
+                    <Text style={styles.codeValue}>
+                      {patient.connectionCode}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
 
-              {/* Verification Notice */}
-              <View style={styles.noticeBox}>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={18}
-                  color="#0891B2"
-                  style={{ marginRight: 8, marginTop: 1 }}
-                />
-                <Text style={styles.noticeText}>
-                  Please verify this is the patient you want to monitor and receive urgent alert notifications from.
-                </Text>
-              </View>
+              {/* Verification Notice using NoteBox */}
+              <NoteBox
+                text="Please verify this is the patient you want to monitor and receive urgent alert notifications from."
+                style={{ marginBottom: 18 }}
+              />
 
               {/* Step 1 Actions */}
               <View style={styles.actionsRow}>
@@ -261,9 +280,10 @@ export default function PatientPairingFlowModal({
                 </View>
               </View>
 
-              <Text style={styles.infoText}>
-                {patientFullName} will see your name and this relationship in their connected accounts list so they know who receives their alerts.
-              </Text>
+              <NoteBox
+                text={`${patientFullName} will see your name and this relationship in their connected accounts list so they know who receives their alerts.`}
+                style={{ marginBottom: 16 }}
+              />
 
               {/* Quick Selection Pills */}
               <Text style={styles.sectionLabel}>
@@ -519,21 +539,22 @@ const styles = StyleSheet.create({
   codeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingTop: 8,
+    gap: 6,
+    paddingTop: 10,
+    marginTop: 4,
     borderTopWidth: 1,
     borderTopColor: "#F1F5F9",
   },
   codeLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: "#64748B",
-    fontWeight: "500",
+    fontWeight: "600",
   },
   codeValue: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "800",
     color: "#0AA7A8",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   noticeBox: {
     flexDirection: "row",

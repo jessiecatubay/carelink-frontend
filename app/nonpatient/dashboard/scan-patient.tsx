@@ -222,10 +222,7 @@ export default function ScanPatientScreen() {
       <SafeAreaView style={styles.successScreen}>
         <PairingSuccess
           onContinue={() => {
-            router.replace({
-              pathname: "/nonpatient/dashboard",
-              params: { startTour: "true" },
-            } as any);
+            router.replace("/nonpatient/dashboard" as any);
           }}
         />
       </SafeAreaView>

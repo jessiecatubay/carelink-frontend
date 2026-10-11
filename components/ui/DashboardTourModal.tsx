@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -54,7 +55,7 @@ export const CAREGIVER_TOUR_STEPS: TourStep[] = [
     title: "Safety & Posture",
     subtitle: "Fall & Movement Detection",
     description:
-      "Know if your patient is sitting, standing, lying down, or if a sudden fall has been detected so you can respond quickly.",
+      "Know what your patient needs (eg. food, water, emergency) and their wrist status (low battery).",
     icon: "shield-checkmark-outline",
     badgeColor: "#ECFDF5",
     iconColor: "#10B981",
@@ -81,6 +82,17 @@ export const CAREGIVER_TOUR_STEPS: TourStep[] = [
     badgeColor: "#F3E8FF",
     iconColor: "#9333EA",
     tips: ["Complete historical timeline", "Easy review for doctor visits"],
+  },
+  {
+    id: "pill_reminders",
+    title: "Pill Reminders",
+    subtitle: "Medication Schedules",
+    description:
+      "Create scheduled medication reminders for your patient with daily intake or custom days of the week, plus easy edit and delete controls.",
+    icon: "medical-outline",
+    badgeColor: "#CCFBF1",
+    iconColor: "#0AA7A8",
+    tips: ["Daily or custom weekday schedules", "Edit and delete reminders anytime"],
   },
 ];
 
@@ -115,13 +127,17 @@ type DashboardTourModalProps = {
   onClose?: () => void;
 };
 
-const STORAGE_KEY = "@carelink_dashboard_tour_completed_v1";
+const getTourStorageKey = (userId?: string, role: string = "CAREGIVER") =>
+  userId
+    ? `@carelink_${role.toLowerCase()}_tour_seen_${userId}`
+    : `@carelink_${role.toLowerCase()}_tour_seen_default`;
 
 export default function DashboardTourModal({
   role = "CAREGIVER",
   forceShow = false,
   onClose,
 }: DashboardTourModalProps) {
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -141,7 +157,8 @@ export default function DashboardTourModal({
       }
 
       try {
-        const completed = await AsyncStorage.getItem(STORAGE_KEY);
+        const storageKey = getTourStorageKey(user?.id, role);
+        const completed = await AsyncStorage.getItem(storageKey);
         if (!completed) {
           // Delay briefly to allow dashboard to render first
           const timer = setTimeout(() => {
@@ -155,7 +172,7 @@ export default function DashboardTourModal({
     };
 
     checkTourStatus();
-  }, [forceShow]);
+  }, [forceShow, user?.id, role]);
 
   // Trigger animation whenever step changes
   useEffect(() => {
@@ -188,7 +205,8 @@ export default function DashboardTourModal({
 
   const handleFinish = async () => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, "true");
+      const storageKey = getTourStorageKey(user?.id, role);
+      await AsyncStorage.setItem(storageKey, "true");
     } catch (e) {
       console.log("Failed to save tour completion:", e);
     }
@@ -222,7 +240,7 @@ export default function DashboardTourModal({
       statusBarTranslucent
     >
       <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={() => {}} />
+        <Pressable style={styles.backdrop} onPress={() => { }} />
 
         <Animated.View
           style={[

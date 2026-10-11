@@ -51,15 +51,14 @@ export const CAREGIVER_FEATURE_STEPS: FeatureHighlightStep[] = [
   {
     id: "patient_status",
     stepNumber: 3,
-    title: "Patient Posture & Safety",
-    subtitle: "Fall Detection & Body Orientation",
+    title: "Patient Current Needs",
+    subtitle: "current needs and alerts",
     description:
-      "Monitors whether the patient is sitting, standing, or lying down. If an accidental fall occurs, CareLink instantly triggers a high-priority safety alert.",
+      "Monitors whether the patient is in need of immediate care and attention.",
     icon: "shield-checkmark-outline",
     themeColor: "#10B981",
     tips: [
-      "Real-time fall detection monitoring",
-      "Live sitting/standing orientation",
+      "Real-time patient needs monitoring",
     ],
   },
   {
@@ -73,7 +72,7 @@ export const CAREGIVER_FEATURE_STEPS: FeatureHighlightStep[] = [
     themeColor: "#D97706",
     tips: [
       "Instant notification of patient alerts",
-      "Consult AI Care Assistant for advice",
+      "Ask AI for daily health questions",
     ],
   },
   {
@@ -82,12 +81,27 @@ export const CAREGIVER_FEATURE_STEPS: FeatureHighlightStep[] = [
     title: "Recent Activity Log",
     subtitle: "Complete Care Timeline",
     description:
-      "A complete timestamped log of all alert requests, posture changes, vital syncs, and daily caregiver check-ins.",
+      "Display recent activity logs and emergency events for your patient.",
     icon: "time-outline",
     themeColor: "#8B5CF6",
     tips: [
-      "Timestamped logs for doctor visits",
-      "Track daily routine & care check-ins",
+      "Patient daily requests",
+      "Timestamped emergency history",
+    ],
+  },
+  {
+    id: "pill_reminders",
+    stepNumber: 6,
+    title: "Pill & Medication Reminders",
+    subtitle: "Daily Intake & Custom Schedules",
+    description:
+      "Schedule, edit, and track medication alarms for your patient with flexible daily intake or specific day-of-week timing.",
+    icon: "medical-outline",
+    themeColor: "#0AA7A8",
+    tips: [
+      "Set daily or custom weekday schedules",
+      "Edit or delete anytime with action buttons",
+      "Tap '+' button to add new reminders",
     ],
   },
 ];

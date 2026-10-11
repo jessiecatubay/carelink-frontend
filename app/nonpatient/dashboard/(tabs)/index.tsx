@@ -17,7 +17,7 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
@@ -29,18 +29,69 @@ import QuickActions from "@/components/feature/nonpatient/dashboard/QuickActions
 import RecentActivity from "@/components/feature/nonpatient/dashboard/RecentActivity";
 import VitalCard from "@/components/feature/nonpatient/dashboard/VitalCard";
 import ConnectPatientPromptModal from "@/components/ui/ConnectPatientPromptModal";
-import DashboardFeatureTour from "@/components/ui/DashboardFeatureTour";
+import DashboardFeatureTour, {
+  CAREGIVER_FEATURE_STEPS,
+} from "@/components/ui/DashboardFeatureTour";
 import PillReminderModal from "@/components/feature/nonpatient/dashboard/PillReminderModal";
 
 const MAX_HISTORY = 8;
-const TOUR_STORAGE_KEY = "@carelink_dashboard_tour_completed_v1";
+
+const getTourStorageKey = (userId?: string) =>
+  userId
+    ? `@carelink_dashboard_tour_seen_${userId}`
+    : "@carelink_dashboard_tour_seen_default";
 
 type PillReminder = {
   id: string;
   title: string;
   description: string | null;
   scheduledAt: string;
+  daysOfWeek?: number[];
+  timeString?: string | null;
   status: "PENDING" | "SENT" | "CANCELLED";
+};
+
+const formatReminderSchedule = (reminder: PillReminder) => {
+  const timeFormatted = formatPhilippineTime(reminder.scheduledAt);
+
+  if (reminder.daysOfWeek && reminder.daysOfWeek.length > 0) {
+    const days = reminder.daysOfWeek;
+    if (days.length === 7) {
+      return `Every day, ${timeFormatted}`;
+    }
+    const isWeekdays =
+      days.length === 5 && [1, 2, 3, 4, 5].every((d) => days.includes(d));
+    if (isWeekdays) {
+      return `Weekdays, ${timeFormatted}`;
+    }
+    const isWeekends =
+      days.length === 2 && [6, 0].every((d) => days.includes(d));
+    if (isWeekends) {
+      return `Weekends, ${timeFormatted}`;
+    }
+    const dayNames: Record<number, string> = {
+      1: "Mon",
+      2: "Tue",
+      3: "Wed",
+      4: "Thu",
+      5: "Fri",
+      6: "Sat",
+      0: "Sun",
+    };
+    const sorted = [...days].sort(
+      (a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b),
+    );
+    const dayLabels = sorted
+      .map((d) => dayNames[d] || "")
+      .filter(Boolean)
+      .join(", ");
+    return `${dayLabels} at ${timeFormatted}`;
+  }
+
+  if (isSamePhilippineDay(reminder.scheduledAt, new Date().toISOString())) {
+    return `Today, ${timeFormatted}`;
+  }
+  return `${formatPhilippineDate(reminder.scheduledAt)} ${timeFormatted}`;
 };
 
 export default function Home() {
@@ -48,6 +99,7 @@ export default function Home() {
   const { startTour } = useLocalSearchParams<{ startTour?: string }>();
   const { user } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
+  const tourCheckedRef = useRef(false);
 
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
@@ -63,6 +115,9 @@ export default function Home() {
   const [patientLoading, setPatientLoading] = useState(true);
   const [pillReminders, setPillReminders] = useState<PillReminder[]>([]);
   const [showPillReminderModal, setShowPillReminderModal] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<PillReminder | null>(
+    null,
+  );
 
   // Connection Prompt & Feature Spotlight Tour States
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
@@ -100,13 +155,17 @@ export default function Home() {
         setShowConnectPrompt(true);
       } else {
         setShowConnectPrompt(false);
-        // 2. Once patient is connected, start feature tour if not completed or explicitly requested
-        const tourDone = await AsyncStorage.getItem(TOUR_STORAGE_KEY);
-        if (!tourDone || startTour === "true") {
-          setTimeout(() => {
-            setIsTourActive(true);
-            setTourStepIndex(0);
-          }, 600);
+        // 2. Start one-time feature tour for brand-new users only (never runs again once completed)
+        if (!tourCheckedRef.current) {
+          tourCheckedRef.current = true;
+          const tourKey = getTourStorageKey(user.id);
+          const tourDone = await AsyncStorage.getItem(tourKey);
+          if (!tourDone) {
+            setTimeout(() => {
+              setIsTourActive(true);
+              setTourStepIndex(0);
+            }, 600);
+          }
         }
       }
     } catch (error) {
@@ -219,28 +278,107 @@ export default function Home() {
     title: string,
     description: string,
     scheduledAt: Date,
+    daysOfWeek?: number[],
+    timeString?: string,
+    id?: string,
   ) => {
     if (!patient?.id) {
       throw new Error("Connect a patient before creating a pill reminder.");
     }
 
-    const result = await axiosInstance.post("/api/pill-reminders/v1/create", {
-      patientId: patient.id,
-      title,
-      description,
-      scheduledAt: scheduledAt.toISOString(),
-    });
+    if (id) {
+      const result = await axiosInstance.put(
+        `/api/pill-reminders/v1/update/${id}`,
+        {
+          title,
+          description,
+          scheduledAt: scheduledAt.toISOString(),
+          daysOfWeek,
+          timeString,
+        },
+      );
 
-    if (result.data?.status !== "success" || !result.data.data) {
-      throw new Error(result.data?.message || "Unable to save this reminder.");
+      if (result.data?.status !== "success" || !result.data.data) {
+        throw new Error(
+          result.data?.message || "Unable to update this reminder.",
+        );
+      }
+
+      setPillReminders((current) =>
+        current
+          .map((item) => (item.id === id ? result.data.data : item))
+          .sort(
+            (first, second) =>
+              new Date(first.scheduledAt).getTime() -
+              new Date(second.scheduledAt).getTime(),
+          ),
+      );
+    } else {
+      const result = await axiosInstance.post("/api/pill-reminders/v1/create", {
+        patientId: patient.id,
+        title,
+        description,
+        scheduledAt: scheduledAt.toISOString(),
+        daysOfWeek,
+        timeString,
+      });
+
+      if (result.data?.status !== "success" || !result.data.data) {
+        throw new Error(result.data?.message || "Unable to save this reminder.");
+      }
+
+      setPillReminders((current) =>
+        [...current, result.data.data].sort(
+          (first, second) =>
+            new Date(first.scheduledAt).getTime() -
+            new Date(second.scheduledAt).getTime(),
+        ),
+      );
     }
+  };
 
-    setPillReminders((current) =>
-      [...current, result.data.data].sort(
-        (first, second) =>
-          new Date(first.scheduledAt).getTime() -
-          new Date(second.scheduledAt).getTime(),
-      ),
+  const deletePillReminder = async (id: string) => {
+    try {
+      const result = await axiosInstance.delete(
+        `/api/pill-reminders/v1/delete/${id}`,
+      );
+
+      if (result.data?.status !== "success") {
+        throw new Error(
+          result.data?.message || "Unable to delete this reminder.",
+        );
+      }
+
+      setPillReminders((current) => current.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Failed to delete pill reminder:", error);
+      throw error;
+    }
+  };
+
+  const confirmDeleteReminder = (id: string, title: string) => {
+    Alert.alert(
+      "Delete Reminder",
+      `Are you sure you want to delete "${title}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deletePillReminder(id);
+            } catch (err) {
+              Alert.alert(
+                "Error",
+                err instanceof Error
+                  ? err.message
+                  : "Unable to delete reminder.",
+              );
+            }
+          },
+        },
+      ],
     );
   };
 
@@ -330,7 +468,7 @@ export default function Home() {
   const handleTourStep = (newIndex: number) => {
     setTourStepIndex(newIndex);
 
-    const scrollTargets = [0, 90, 290, 470, 680];
+    const scrollTargets = [0, 90, 290, 470, 680, 850];
     const targetY = scrollTargets[newIndex] ?? 0;
 
     scrollViewRef.current?.scrollTo({
@@ -341,7 +479,8 @@ export default function Home() {
 
   const handleFinishTour = async () => {
     try {
-      await AsyncStorage.setItem(TOUR_STORAGE_KEY, "true");
+      const tourKey = getTourStorageKey(user?.id);
+      await AsyncStorage.setItem(tourKey, "true");
     } catch (e) {
       console.log("Tour save error:", e);
     }
@@ -371,7 +510,7 @@ export default function Home() {
           {isTourActive && tourStepIndex === 0 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#0284C7" }]}>
               <Text style={styles.spotlightTagText}>
-                ✦ CURRENT FEATURE: PATIENT STATUS ✦
+                ✦ PATIENT STATUS ✦
               </Text>
             </View>
           ) : null}
@@ -398,7 +537,7 @@ export default function Home() {
           {isTourActive && tourStepIndex === 1 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#F16A66" }]}>
               <Text style={styles.spotlightTagText}>
-                ✦ CURRENT FEATURE: REAL-TIME VITALS ✦
+                ✦ REAL-TIME VITALS ✦
               </Text>
             </View>
           ) : null}
@@ -410,8 +549,8 @@ export default function Home() {
               value={heartRate}
               unit=" BPM"
               icon={require("@/assets/icons/cardiogram.png")}
-              color="#12A5B5"
-              backgroundColor="#F0FCFD"
+              color="#FFFFFF"
+              backgroundColor="#12A5B5"
               rangeDetail="60 - 100 BPM"
               history={heartHistory}
               chartGradientId="hrGradient"
@@ -422,8 +561,8 @@ export default function Home() {
               value={temperature}
               unit=" °C"
               icon={require("@/assets/icons/temperature.png")}
-              color="#F16A66"
-              backgroundColor="#FFF5F5"
+              color="#FFFFFF"
+              backgroundColor="#F16A66"
               rangeDetail="36.0 - 37.5 °C"
               history={tempHistory}
               chartGradientId="tempGradient"
@@ -432,7 +571,7 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Step 3 Highlight: Patient Posture & Safety Status */}
+        {/* Step 3 Highlight: Patient Safety Status */}
         <View
           style={[
             styles.featureWrapper,
@@ -442,7 +581,7 @@ export default function Home() {
           {isTourActive && tourStepIndex === 2 ? (
             <View style={[styles.spotlightTag, { backgroundColor: "#10B981" }]}>
               <Text style={styles.spotlightTagText}>
-                ✦ CURRENT FEATURE: POSTURE & SAFETY ✦
+                ✦ CURRENT PATIENT NEEDS & WRIST STATUS  ✦
               </Text>
             </View>
           ) : null}
@@ -492,46 +631,105 @@ export default function Home() {
           <RecentActivity patientId={patient?.id} />
         </View>
 
-        <View style={styles.remindersSection}>
-          <View style={styles.remindersHeadingRow}>
-            <View>
-              <Text style={styles.remindersEyebrow}>CARE PLAN</Text>
-              <Text style={styles.remindersHeading}>Pill reminders</Text>
+        {/* Step 6 Highlight: Pill Reminders */}
+        <View
+          style={[
+            styles.featureWrapper,
+            isTourActive && tourStepIndex === 5 && styles.spotlightActive,
+          ]}
+        >
+          {isTourActive && tourStepIndex === 5 ? (
+            <View style={[styles.spotlightTag, { backgroundColor: "#0AA7A8" }]}>
+              <Text style={styles.spotlightTagText}>
+                ✦ CURRENT FEATURE: PILL REMINDERS ✦
+              </Text>
             </View>
-            <Text style={styles.remindersCount}>{pillReminders.length}</Text>
-          </View>
-          {pillReminders.length ? (
-            pillReminders.map((reminder) => (
-              <View key={reminder.id} style={styles.reminderRow}>
-                <View style={styles.reminderIcon}>
-                  <Ionicons name="medical-outline" size={18} color="#0B8F91" />
-                </View>
-                <View style={styles.reminderCopy}>
-                  <Text style={styles.reminderTitle}>{reminder.title}</Text>
-                  {reminder.description ? (
-                    <Text style={styles.reminderDescription} numberOfLines={2}>
-                      {reminder.description}
-                    </Text>
-                  ) : null}
-                  <Text style={styles.reminderTime}>
-                    {isSamePhilippineDay(
-                      reminder.scheduledAt,
-                      new Date().toISOString(),
-                    )
-                      ? `Today, ${formatPhilippineTime(reminder.scheduledAt)}`
-                      : `${formatPhilippineDate(reminder.scheduledAt)} ${formatPhilippineTime(reminder.scheduledAt)}`}
-                  </Text>
-                </View>
-                <View style={styles.pendingBadge}>
-                  <Text style={styles.pendingBadgeText}>{reminder.status}</Text>
-                </View>
+          ) : null}
+          <View style={styles.remindersSection}>
+            <View style={styles.remindersHeadingRow}>
+              <View>
+                <Text style={styles.remindersEyebrow}>CARE PLAN</Text>
+                <Text style={styles.remindersHeading}>Pill reminders</Text>
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyReminders}>
-              No pill reminders scheduled.
-            </Text>
-          )}
+              <Text style={styles.remindersCount}>{pillReminders.length}</Text>
+            </View>
+            {pillReminders.length ? (
+              pillReminders.map((reminder) => (
+                <Pressable
+                  key={reminder.id}
+                  onPress={() => {
+                    setEditingReminder(reminder);
+                    setShowPillReminderModal(true);
+                  }}
+                  style={({ pressed }) => [
+                    styles.reminderRow,
+                    pressed && styles.reminderRowPressed,
+                  ]}
+                >
+                  <View style={styles.reminderIcon}>
+                    <Ionicons name="medical" size={18} color="#0AA7A8" />
+                  </View>
+                  <View style={styles.reminderCopy}>
+                    <Text style={styles.reminderTitle}>{reminder.title}</Text>
+                    {reminder.description ? (
+                      <Text style={styles.reminderDescription} numberOfLines={2}>
+                        {reminder.description}
+                      </Text>
+                    ) : null}
+                    <Text style={styles.reminderTime}>
+                      {formatReminderSchedule(reminder)}
+                    </Text>
+                  </View>
+                  <View style={styles.reminderRightActions}>
+                    <View style={styles.pendingBadge}>
+                      <Text style={styles.pendingBadgeText}>
+                        {reminder.status}
+                      </Text>
+                    </View>
+                    <View style={styles.actionButtonsRow}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Edit reminder"
+                        hitSlop={8}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          setEditingReminder(reminder);
+                          setShowPillReminderModal(true);
+                        }}
+                        style={styles.iconActionButton}
+                      >
+                        <Ionicons
+                          name="pencil-outline"
+                          size={15}
+                          color="#0B8F91"
+                        />
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete reminder"
+                        hitSlop={8}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          confirmDeleteReminder(reminder.id, reminder.title);
+                        }}
+                        style={[styles.iconActionButton, styles.deleteActionButton]}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={15}
+                          color="#EF4444"
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+                </Pressable>
+              ))
+            ) : (
+              <Text style={styles.emptyReminders}>
+                No pill reminders scheduled.
+              </Text>
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -539,7 +737,10 @@ export default function Home() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add pill reminder"
-          onPress={() => setShowPillReminderModal(true)}
+          onPress={() => {
+            setEditingReminder(null);
+            setShowPillReminderModal(true);
+          }}
           disabled={!patient?.id}
           style={({ pressed }) => [
             styles.addReminderButton,
@@ -553,8 +754,13 @@ export default function Home() {
 
       <PillReminderModal
         visible={showPillReminderModal}
-        onClose={() => setShowPillReminderModal(false)}
+        initialData={editingReminder}
+        onClose={() => {
+          setShowPillReminderModal(false);
+          setEditingReminder(null);
+        }}
         onSave={savePillReminder}
+        onDelete={deletePillReminder}
       />
 
       {/* Mandatory Modal: Connect Patient First */}
@@ -577,7 +783,7 @@ export default function Home() {
         <DashboardFeatureTour
           currentStepIndex={tourStepIndex}
           onNext={() => {
-            if (tourStepIndex < 4) {
+            if (tourStepIndex < CAREGIVER_FEATURE_STEPS.length - 1) {
               handleTourStep(tourStepIndex + 1);
             } else {
               handleFinishTour();
@@ -598,7 +804,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FAFBFD",
+    backgroundColor: "#F4F7FA",
   },
   scrollContainer: {
     padding: 20,
@@ -643,29 +849,34 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   remindersSection: {
-    marginBottom: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: "#E3ECEE",
-    borderRadius: 14,
+    marginBottom: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   remindersHeadingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   remindersEyebrow: {
-    color: "#0B8F91",
-    fontSize: 10,
+    color: "#0AA7A8",
+    fontSize: 10.5,
     fontWeight: "800",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   remindersHeading: {
-    marginTop: 3,
-    color: "#172B35",
+    marginTop: 2,
+    color: "#0F172A",
     fontSize: 18,
     fontWeight: "800",
   },
@@ -676,64 +887,91 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
     borderRadius: 14,
-    backgroundColor: "#E8F7F6",
-    color: "#0B8F91",
+    backgroundColor: "#CCFBF1",
+    color: "#0F766E",
     fontSize: 13,
     fontWeight: "800",
   },
   reminderRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
+    gap: 12,
     paddingVertical: 12,
+    paddingHorizontal: 6,
+    borderRadius: 12,
     borderTopWidth: 1,
-    borderTopColor: "#EDF2F3",
+    borderTopColor: "#F1F5F9",
+  },
+  reminderRowPressed: {
+    backgroundColor: "#F8FAFC",
   },
   reminderIcon: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 11,
-    backgroundColor: "#E8F7F6",
+    borderRadius: 12,
+    backgroundColor: "#EDFBFB",
   },
   reminderCopy: {
     flex: 1,
   },
   reminderTitle: {
-    color: "#243B45",
-    fontSize: 14,
+    color: "#0F172A",
+    fontSize: 14.5,
     fontWeight: "700",
   },
   reminderDescription: {
     marginTop: 3,
-    color: "#647780",
+    color: "#64748B",
     fontSize: 12,
     lineHeight: 17,
   },
   reminderTime: {
     marginTop: 4,
-    color: "#0B8F91",
+    color: "#0AA7A8",
     fontSize: 12,
     fontWeight: "700",
   },
+  reminderRightActions: {
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  actionButtonsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  iconActionButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#EDF8F8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteActionButton: {
+    backgroundColor: "#FEF2F2",
+  },
   pendingBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: "#FFF4DF",
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: "#FEF3C7",
   },
   pendingBadgeText: {
-    color: "#986515",
-    fontSize: 9,
+    color: "#D97706",
+    fontSize: 10,
     fontWeight: "800",
   },
   emptyReminders: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: "#EDF2F3",
-    color: "#70828A",
-    fontSize: 13,
+    borderTopColor: "#F1F5F9",
+    color: "#64748B",
+    fontSize: 13.5,
+    fontWeight: "500",
   },
   addReminderButton: {
     position: "absolute",
@@ -744,12 +982,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 29,
-    backgroundColor: "#0B8F91",
-    shadowColor: "#12383B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.24,
-    shadowRadius: 8,
-    elevation: 7,
+    backgroundColor: "#0AA7A8",
+    shadowColor: "#0AA7A8",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
   },
   addReminderButtonDisabled: {
     opacity: 0.5,

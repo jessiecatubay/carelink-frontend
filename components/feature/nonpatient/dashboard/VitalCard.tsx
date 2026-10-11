@@ -3,7 +3,7 @@ import { Image, Platform, StyleSheet, Text, View } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
 const CHART_WIDTH = 140;
-const CHART_HEIGHT = 40;
+const CHART_HEIGHT = 44;
 
 const buildChartPoints = (
   values: number[],
@@ -20,7 +20,7 @@ const buildChartPoints = (
   return values
     .map((value, index) => {
       const x = index * step;
-      const y = height - ((value - min) / range) * height;
+      const y = height - ((value - min) / range) * (height - 8) - 4;
       return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
     })
     .join(" ");
@@ -58,7 +58,8 @@ interface VitalCardProps {
   value: number;
   unit: string;
   icon: any;
-  color: string;
+  iconColor?: string;
+  color?: string;
   backgroundColor: string;
   rangeText?: string;
   rangeDetail: string;
@@ -73,34 +74,33 @@ export default function VitalCard({
   value,
   unit,
   icon,
-  color,
+  iconColor,
+  color = "#FFFFFF",
   backgroundColor,
   rangeText = "Normal Range",
   rangeDetail,
-  rangeDotColor = "#48BB78",
+  rangeDotColor = "#FFFFFF",
   history,
   chartGradientId,
   tickType,
 }: VitalCardProps) {
+  const resolvedIconColor = iconColor || backgroundColor;
+
   return (
     <View style={[styles.vitalCard, { backgroundColor }]}>
       <View style={styles.vitalTop}>
         <View style={styles.vitalIconContainer}>
           <Image
             source={icon}
-            style={styles.vitalIcon}
+            style={[styles.vitalIcon, { tintColor: resolvedIconColor }]}
             resizeMode="contain"
           />
         </View>
         <View style={styles.vitalLabelContainer}>
           <Text style={styles.vitalLabel}>{label}</Text>
           <View style={styles.vitalValueRow}>
-            <Text style={[styles.vitalValue, { color }]}>
-              {value}
-            </Text>
-            <Text style={[styles.vitalUnit, { color }]}>
-              {unit}
-            </Text>
+            <Text style={styles.vitalValue}>{value}</Text>
+            <Text style={styles.vitalUnit}>{unit}</Text>
           </View>
           <View style={styles.rangeRow}>
             <View
@@ -117,12 +117,8 @@ export default function VitalCard({
           <Svg height={CHART_HEIGHT} width="100%">
             <Defs>
               <LinearGradient id={chartGradientId} x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor={color} stopOpacity="0.2" />
-                <Stop
-                  offset="100%"
-                  stopColor={color}
-                  stopOpacity="0.0"
-                />
+                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.35" />
+                <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.02" />
               </LinearGradient>
             </Defs>
             <Path
@@ -132,8 +128,8 @@ export default function VitalCard({
             <Path
               d={buildChartPoints(history)}
               fill="none"
-              stroke={color}
-              strokeWidth="2"
+              stroke="#FFFFFF"
+              strokeWidth="2.5"
             />
           </Svg>
         </View>
@@ -152,18 +148,20 @@ export default function VitalCard({
 const styles = StyleSheet.create({
   vitalCard: {
     width: "48%",
-    borderRadius: 16,
+    borderRadius: 18,
     paddingTop: 16,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
     ...Platform.select({
       ios: {
-        shadowColor: "#A0AEC0",
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.12,
         shadowRadius: 10,
       },
       android: {
-        elevation: 2,
+        elevation: 4,
       },
     }),
   },
@@ -171,48 +169,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   vitalIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#A0AEC0",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   vitalIcon: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
   },
   vitalLabelContainer: {
     marginTop: 10,
   },
   vitalLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#4A5568",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.92)",
+    letterSpacing: 0.2,
   },
   vitalValueRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    marginTop: 4,
+    marginTop: 3,
   },
   vitalValue: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: -0.5,
   },
   vitalUnit: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.95)",
+    marginLeft: 2,
   },
   rangeRow: {
     flexDirection: "row",
@@ -220,40 +212,42 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   rangeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 5,
   },
   rangeText: {
     fontSize: 11,
-    fontWeight: "500",
-    color: "#718096",
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   rangeDetail: {
     fontSize: 11,
-    color: "#A0AEC0",
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.88)",
     marginTop: 2,
   },
   graphWrapper: {
     flexDirection: "row",
     alignItems: "flex-end",
-    marginTop: 10,
+    marginTop: 8,
   },
   graphTicks: {
-    width: 25,
+    width: 28,
     justifyContent: "space-between",
     alignItems: "flex-end",
     paddingVertical: 4,
-    marginLeft: 8,
-    right: 5,
+    marginLeft: 4,
+    right: 6,
   },
   tickLabel: {
-    fontSize: 10,
-    color: "#718096",
+    fontSize: 9.5,
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.88)",
   },
   graphContainer: {
     flex: 1,
-    height: 50,
+    height: CHART_HEIGHT,
   },
 });

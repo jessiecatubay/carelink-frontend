@@ -1,5 +1,6 @@
 import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
 import Button from "@/components/ui/Button";
+import NoteBox from "@/components/ui/NoteBox";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -160,17 +161,10 @@ export default function EditPhoneScreen() {
           </View>
 
           {/* Info note */}
-          <View style={styles.noteBox}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color="#0AA7A8"
-              style={styles.noteIcon}
-            />
-            <Text style={styles.noteText}>
-              Keeping your mobile number up to date ensures you receive real-time critical patient health alerts and verification codes.
-            </Text>
-          </View>
+          <NoteBox
+            text="Keeping your mobile number up to date ensures you receive real-time critical patient health alerts and verification codes."
+            style={{ marginBottom: 28 }}
+          />
 
           <View style={styles.buttonWrapper}>
             <Button
@@ -279,27 +273,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1E242B",
     marginBottom: 8,
-  },
-  noteBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#F0FAFA",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#C5ECEE",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 28,
-    gap: 10,
-  },
-  noteIcon: {
-    marginTop: 1,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#4B5563",
-    lineHeight: 18,
   },
   buttonWrapper: {
     marginTop: 8,

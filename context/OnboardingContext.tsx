@@ -1,9 +1,24 @@
 import { UserOnBoardingData } from "@/types/user";
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
+
+export const initialOnboardingData: UserOnBoardingData = {
+  userId: "",
+  email: "",
+  role: undefined,
+  age: undefined,
+  gender: "",
+  medicalConditions: "",
+  notes: "",
+  emergencyContactName: "",
+  relationship: "",
+  emergencyContact: "",
+  onBoarded: false,
+};
 
 type OnboardingContextType = {
   data: UserOnBoardingData;
   setData: React.Dispatch<React.SetStateAction<UserOnBoardingData>>;
+  resetOnboarding: () => void;
 };
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
@@ -13,19 +28,14 @@ export function OnboardingProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [data, setData] = useState<UserOnBoardingData>({
-    userId: "",
-    email: "",
-    role: undefined,
-    age: undefined,
-    gender: "",
-    medicalConditions: "",
-    notes: "",
-    onBoarded: false,
-  });
+  const [data, setData] = useState<UserOnBoardingData>(initialOnboardingData);
+
+  const resetOnboarding = useCallback(() => {
+    setData({ ...initialOnboardingData });
+  }, []);
 
   return (
-    <OnboardingContext.Provider value={{ data, setData }}>
+    <OnboardingContext.Provider value={{ data, setData, resetOnboarding }}>
       {children}
     </OnboardingContext.Provider>
   );

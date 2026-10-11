@@ -81,6 +81,9 @@ export default function PatientRemote() {
     }
 
     if (label === "Satisfied") {
+      if (!pendingRequest) {
+        return;
+      }
       if (satisfiedCooldown > 0) {
         triggerAppHaptic("warning");
         return;
@@ -223,6 +226,7 @@ export default function PatientRemote() {
             icon={require("@/assets/icons/satisfied.png")}
             onPress={() => handlePress("Satisfied")}
             cardStyle={styles.satisfiedCard}
+            disabled={!pendingRequest}
             cooldown={satisfiedCooldown}
           />
         </View>
