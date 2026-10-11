@@ -5,6 +5,7 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "@/components/ui/Button";
+import NoteBox from "@/components/ui/NoteBox";
 import PaginationDots from "@/components/ui/PaginationDots";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { useOnboarding } from "@/context/OnboardingContext";
@@ -102,7 +103,7 @@ export default function EmergencyContactScreen() {
         <View>
           {/* Progress */}
           <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={4} total={6} />
+            <PaginationDots currentIndex={6} total={8} />
           </View>
 
           {/* Title */}
@@ -163,18 +164,10 @@ export default function EmergencyContactScreen() {
           </View>
 
           {/* Note */}
-          <View style={styles.noteBox}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color="#12A5B5"
-              style={styles.noteIcon}
-            />
-            <Text style={styles.noteText}>
-              <Text style={styles.noteBold}>Note: </Text>
-              In case of an emergency, caregivers and people connected to the patient can access who will be contacted for immediate assistance.
-            </Text>
-          </View>
+          <NoteBox
+            text="In case of an emergency, caregivers and people connected to the patient can access who will be contacted for immediate assistance."
+            style={{ marginTop: 18 }}
+          />
         </View>
 
         {/* Continue Button */}
@@ -258,31 +251,6 @@ const styles = StyleSheet.create({
     marginTop: -10,
     marginBottom: -4,
     paddingHorizontal: 4,
-  },
-  noteBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#F0FAFA",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#C5ECEE",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginTop: 18,
-    gap: 10,
-  },
-  noteIcon: {
-    marginTop: 1,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#4B5563",
-    lineHeight: 18,
-  },
-  noteBold: {
-    fontWeight: "700",
-    color: "#12A5B5",
   },
   buttonWrap: {
     marginBottom: 40,

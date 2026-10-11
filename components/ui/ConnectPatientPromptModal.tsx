@@ -49,7 +49,7 @@ export default function ConnectPatientPromptModal({
     description ||
     (isPatient
       ? "Welcome to CareLink! To share your status and send emergency alerts or requests to your caregivers and loved ones, please connect to a family member first."
-      : "Welcome to CareLink! To start monitoring real-time vitals, posture, and receiving emergency alerts, please connect to a patient device.");
+      : "Welcome to CareLink! To start monitoring real-time vitals and receiving emergency alerts, please connect to a patient device.");
 
   const resolvedPrimaryText =
     primaryButtonText ||
@@ -59,9 +59,9 @@ export default function ConnectPatientPromptModal({
     secondaryButtonText ||
     (isPatient ? "Go to Settings" : "Enter Patient Code");
 
-  const handleScanOrPrimary = onScanQR || onPrimaryAction || (() => {});
-  const handleEnterCodeOrSecondary = onEnterCode || onManualPair || onSecondaryAction || (() => {});
-  const handleSettings = onOpenSettings || (isPatient ? handleEnterCodeOrSecondary : () => {});
+  const handleScanOrPrimary = onScanQR || onPrimaryAction || (() => { });
+  const handleEnterCodeOrSecondary = onEnterCode || onManualPair || onSecondaryAction || (() => { });
+  const handleSettings = onOpenSettings || (isPatient ? handleEnterCodeOrSecondary : () => { });
 
   return (
     <Modal

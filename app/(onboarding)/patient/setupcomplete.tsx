@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SetupCompleteScreen() {
   const router = useRouter();
-  const { data } = useOnboarding();
+  const { data, resetOnboarding } = useOnboarding();
   const { user, updateUser } = useAuth();
   const isCompletedRef = useRef(false);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -48,6 +48,7 @@ export default function SetupCompleteScreen() {
         }
         await updateUser(updatedUser);
         onboardingSaved = true;
+        resetOnboarding();
 
         closeSocket();
         initSocket();

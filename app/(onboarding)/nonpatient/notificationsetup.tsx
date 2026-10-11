@@ -1,5 +1,6 @@
 import AnimatedBell from "@/components/ui/AnimatedBell";
 import Button from "@/components/ui/Button";
+import NoteBox from "@/components/ui/NoteBox";
 import PaginationDots from "@/components/ui/PaginationDots";
 import { registerForPushNotificationsAsync } from "@/hooks/lib/notifications";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,7 +27,7 @@ export default function NotificationSetupScreen() {
         <View>
           {/* Progress */}
           <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={5} total={6} />
+            <PaginationDots currentIndex={7} total={8} />
           </View>
 
           {/* Title */}
@@ -49,18 +50,10 @@ export default function NotificationSetupScreen() {
           </View>
 
           {/* Note */}
-          <View style={styles.noteBox}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color="#12A5B5"
-              style={styles.noteIcon}
-            />
-            <Text style={styles.noteText}>
-              <Text style={styles.noteBold}>Note: </Text>
-              Enabling notifications ensures you receive real-time alerts and urgent patient requests immediately, even when the app is in the background.
-            </Text>
-          </View>
+          <NoteBox
+            text="Enabling notifications ensures you receive real-time alerts and urgent patient requests immediately, even when the app is in the background."
+            style={{ marginTop: 18 }}
+          />
         </View>
 
         {/* Action Button */}
@@ -134,31 +127,6 @@ const styles = StyleSheet.create({
     color: "#7A7A7A",
     textAlign: "center",
     lineHeight: 22,
-  },
-  noteBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#F0FAFA",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#C5ECEE",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginTop: 18,
-    gap: 10,
-  },
-  noteIcon: {
-    marginTop: 1,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#4B5563",
-    lineHeight: 18,
-  },
-  noteBold: {
-    fontWeight: "700",
-    color: "#12A5B5",
   },
   buttonWrap: {
     marginBottom: 40,

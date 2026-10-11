@@ -1,3 +1,8 @@
+import Button from "@/components/ui/Button";
+import NoteBox from "@/components/ui/NoteBox";
+import PaginationDots from "@/components/ui/PaginationDots";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -6,12 +11,37 @@ import {
   Text,
   View,
 } from "react-native";
-import Button from "@/components/ui/Button";
-import PaginationDots from "@/components/ui/PaginationDots";
 
 type DevicePairingProps = {
   onContinue: () => void;
 };
+
+const PAIRING_STEPS = [
+  {
+    iconName: "qr-code-outline" as const,
+    heading: "1. Ask Patient for QR Code",
+    description:
+      "Ask the patient to open the CareLink app on their phone and show their connection QR code from their dashboard.",
+    iconBg: "#CCFBF1",
+    iconColor: "#0D9488",
+  },
+  {
+    iconName: "camera-outline" as const,
+    heading: "2. Open Caregiver Scanner",
+    description:
+      "Point your camera at the patient's QR code. The app will detect the code automatically.",
+    iconBg: "#FEE2E2",
+    iconColor: "#EF4444",
+  },
+  {
+    iconName: "checkmark-circle-outline" as const,
+    heading: "3. Connect Instantly",
+    description:
+      "Confirm the patient details to link accounts and begin receiving live notifications.",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
+  },
+];
 
 export default function DevicePairing({
   onContinue,
@@ -21,82 +51,55 @@ export default function DevicePairing({
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.keyboardContainer}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View>
-          <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={3} total={6} />
-          </View>
-
-          <Text style={styles.title}>Connect to a Patient</Text>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
-              Scan the Patient's QR Code
-            </Text>
-
-            <Text style={styles.description}>
-              To connect your account to a patient, ask the patient to open
-              their CareLink QR code.
-            </Text>
-
-            <View style={styles.instructions}>
-              <View style={styles.instructionRow}>
-                <View style={styles.numberCircle}>
-                  <Text style={styles.number}>1</Text>
-                </View>
-
-                <View style={styles.instructionContent}>
-                  <Text style={styles.instructionTitle}>
-                    Ask the patient to open their QR code
-                  </Text>
-
-                  <Text style={styles.instructionText}>
-                    The patient can display their QR code from their CareLink
-                    account.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.instructionRow}>
-                <View style={styles.numberCircle}>
-                  <Text style={styles.number}>2</Text>
-                </View>
-
-                <View style={styles.instructionContent}>
-                  <Text style={styles.instructionTitle}>
-                    Keep the QR code ready
-                  </Text>
-
-                  <Text style={styles.instructionText}>
-                    Make sure the patient's QR code is visible when you are
-                    ready to connect.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.instructionRow}>
-                <View style={styles.numberCircle}>
-                  <Text style={styles.number}>3</Text>
-                </View>
-
-                <View style={styles.instructionContent}>
-                  <Text style={styles.instructionTitle}>
-                    Scan from your dashboard
-                  </Text>
-
-                  <Text style={styles.instructionText}>
-                    After completing setup, you can scan the patient's QR code
-                    from the scanner in your dashboard.
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
+      <View style={styles.container}>
+        {/* Progress Dots - Step 6 of 8 */}
+        <View style={styles.paginationWrap}>
+          <PaginationDots currentIndex={5} total={8} />
         </View>
 
+        {/* Title */}
+        <Text style={styles.title}>Connect to a Patient</Text>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            Scan your patient's QR code to link accounts and start receiving alerts.
+          </Text>
+
+          {/* Cards List */}
+          <View style={styles.cardsContainer}>
+            {PAIRING_STEPS.map((item, idx) => (
+              <View key={idx} style={styles.itemCard}>
+                <View
+                  style={[
+                    styles.iconBox,
+                    { backgroundColor: item.iconBg },
+                  ]}
+                >
+                  <Ionicons
+                    name={item.iconName}
+                    size={22}
+                    color={item.iconColor}
+                  />
+                </View>
+                <View style={styles.cardTextContent}>
+                  <Text style={styles.itemHeading}>{item.heading}</Text>
+                  <Text style={styles.itemDescription}>
+                    {item.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Tip / Note Box */}
+          <NoteBox text="You're all set! Tap 'Continue' below to proceed with the remaining setup." />
+        </ScrollView>
+
+        {/* Bottom Button */}
         <View style={styles.buttonWrap}>
           <Button
             title="Continue"
@@ -104,7 +107,7 @@ export default function DevicePairing({
             style={styles.button}
           />
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -114,10 +117,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  scrollContainer: {
-    flexGrow: 1,
+  container: {
+    flex: 1,
     paddingHorizontal: 24,
     justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
   },
   paginationWrap: {
     marginTop: 100,
@@ -129,69 +133,58 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#12A5B5",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  subtitle: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#7A7A7A",
+    lineHeight: 22,
     marginBottom: 24,
+    paddingHorizontal: 4,
   },
-  card: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: "#FFFFFF",
-    marginBottom: 40,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  scrollContent: {
+    paddingBottom: 16,
   },
-  cardTitle: {
-    fontSize: 19,
-    fontWeight: "600",
-    color: "#1F2937",
-    textAlign: "center",
-    marginBottom: 12,
+  cardsContainer: {
+    gap: 12,
+    marginBottom: 18,
   },
-  description: {
-    fontSize: 15,
-    lineHeight: 23,
-    color: "#6B7280",
-    textAlign: "center",
-    marginBottom: 28,
-  },
-  instructions: {
-    gap: 24,
-  },
-  instructionRow: {
+  itemCard: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
-  },
-  numberCircle: {
-    width: 32,
-    height: 32,
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    backgroundColor: "#12A5B5",
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1.5,
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 14,
   },
-  number: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  instructionContent: {
+  cardTextContent: {
     flex: 1,
   },
-  instructionTitle: {
-    fontSize: 15,
+  itemHeading: {
+    fontSize: 16,
     fontWeight: "600",
     color: "#1F2937",
     marginBottom: 4,
   },
-  instructionText: {
+  itemDescription: {
     fontSize: 14,
-    lineHeight: 21,
     color: "#6B7280",
+    lineHeight: 20,
   },
   buttonWrap: {
     marginBottom: 40,

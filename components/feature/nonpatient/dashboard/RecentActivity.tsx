@@ -5,8 +5,8 @@ import { initSocket, onPatientAlert } from "@/hooks/lib/socket";
 import { Notification, RemoteCommand } from "@/types/command";
 import { formatPhilippineDateTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
 const MAX_RECENT_ACTIVITIES = 5;
 
@@ -98,8 +98,6 @@ export default function RecentActivity({
           "/api/command/v1/get-recent-commands",
           { nonPatientId: user.id, patientId: patientId },
         );
-        console.log("karun rani", user.id, patientId);
-        console.log("Remote Data", result.data?.data);
 
         const commands = (result.data?.data || []) as RemoteCommand[];
         setNotifications(
@@ -129,52 +127,99 @@ export default function RecentActivity({
       <Text style={styles.recentActivityTitle}>Recent Activity</Text>
       {notifications.length === 0 ? (
         <View style={styles.emptyActivityCard}>
-          <Ionicons name="chatbox-ellipses-outline" size={32} color="#A0AEC0" />
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="chatbox-ellipses-outline" size={28} color="#0AA7A8" />
+          </View>
           <Text style={styles.emptyActivityText}>{emptyText}</Text>
         </View>
       ) : (
         <View style={styles.list}>
-          {visibleNotifications.map((notification) => (
-            <View
-              key={notification.id}
-              style={[
-                styles.notificationCard,
-                notification.type === "Emergency" && styles.emergencyCard,
-              ]}
-            >
+          {visibleNotifications.map((notification) => {
+            const isEmergency = notification.type === "Emergency";
+            const isSatisfied =
+              notification.status === "Satisfied" ||
+              notification.type === "Satisfied";
+
+            return (
               <View
+                key={notification.id}
                 style={[
-                  styles.notificationIcon,
-                  { backgroundColor: notification.iconBackground },
+                  styles.notificationCard,
+                  isEmergency && styles.emergencyCard,
                 ]}
               >
-                <Image
-                  source={notification.icon}
-                  style={styles.cardIcon}
-                  resizeMode="contain"
-                />
-              </View>
-              <View style={styles.notificationCopy}>
-                <Text style={styles.notificationTitle}>
-                  {notification.title}
-                </Text>
-                <Text style={styles.notificationDescription}>
-                  {notification.description}
-                </Text>
-                <Text
+                <View
                   style={[
-                    styles.status,
-                    notification.status === "Pending"
-                      ? styles.pending
-                      : styles.resolved,
+                    styles.notificationIcon,
+                    isEmergency
+                      ? styles.emergencyIconContainer
+                      : {
+                          backgroundColor:
+                            notification.iconBackground || "#F1F5F9",
+                        },
                   ]}
                 >
-                  {notification.status}
-                </Text>
+                  <Image
+                    source={notification.icon}
+                    style={[
+                      styles.cardIcon,
+                      isEmergency && styles.emergencyCardIcon,
+                    ]}
+                    resizeMode="contain"
+                  />
+                </View>
+                <View style={styles.notificationCopy}>
+                  <Text
+                    style={[
+                      styles.notificationTitle,
+                      isEmergency && styles.emergencyTitle,
+                    ]}
+                  >
+                    {notification.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.notificationDescription,
+                      isEmergency && styles.emergencyDescription,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {notification.description}
+                  </Text>
+                  <View style={styles.metaBottomRow}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        isSatisfied
+                          ? styles.statusSatisfied
+                          : styles.statusPending,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusText,
+                          isSatisfied
+                            ? styles.statusTextSatisfied
+                            : styles.statusTextPending,
+                        ]}
+                      >
+                        {notification.status ||
+                          (isSatisfied ? "Satisfied" : "Pending")}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.time,
+                        isEmergency && styles.emergencyTime,
+                      ]}
+                    >
+                      {notification.time}
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <Text style={styles.time}>{notification.time}</Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
     </View>
@@ -184,97 +229,172 @@ export default function RecentActivity({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    marginBottom: 24,
   },
   recentActivityTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1A202C",
+    fontWeight: "800",
+    color: "#0F172A",
     marginBottom: 12,
   },
   list: {
-    gap: 9,
+    gap: 10,
   },
   emptyActivityCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#EDF2F7",
-    paddingVertical: 32,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    paddingVertical: 28,
     alignItems: "center",
     justifyContent: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  emptyIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#EDFBFB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
   },
   emptyActivityText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#A0AEC0",
-    fontWeight: "500",
+    fontSize: 13.5,
+    color: "#64748B",
+    fontWeight: "600",
   },
   notificationCard: {
-    alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7E9",
-    borderRadius: 7,
-    borderWidth: 1,
-    elevation: 3,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
     flexDirection: "row",
-    minHeight: 64,
-    paddingHorizontal: 9,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
+    alignItems: "center",
+    padding: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   emergencyCard: {
-    borderLeftColor: "#FF5753",
-    borderLeftWidth: 5,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    backgroundColor: "#EF4444",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emergencyIconContainer: {
+    backgroundColor: "#FFFFFF",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  emergencyCardIcon: {
+    tintColor: "#EF4444",
+  },
+  emergencyTitle: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+  },
+  emergencyDescription: {
+    color: "rgba(255, 255, 255, 0.92)",
+    fontWeight: "600",
+  },
+  emergencyTime: {
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: "600",
   },
   notificationIcon: {
-    alignItems: "center",
-    borderColor: "#D9EEF4",
-    borderRadius: 24,
-    borderWidth: 1,
-    height: 42,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: "center",
-    width: 42,
+    alignItems: "center",
+    marginRight: 12,
   },
   cardIcon: {
-    height: 24,
     width: 24,
+    height: 24,
   },
   notificationCopy: {
     flex: 1,
-    marginLeft: 10,
   },
   notificationTitle: {
-    color: "#111111",
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: "700",
+    color: "#0F172A",
   },
   notificationDescription: {
-    color: "#777B7D",
-    fontSize: 11,
-    marginTop: 1,
+    fontSize: 12,
+    color: "#475569",
+    fontWeight: "500",
+    marginTop: 2,
   },
-  status: {
-    alignSelf: "flex-start",
-    borderRadius: 2,
-    fontSize: 10,
-    marginTop: 3,
-    paddingHorizontal: 5,
+  metaBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
     paddingVertical: 2,
+    borderRadius: 6,
   },
-  pending: {
-    backgroundColor: "#FFE5E4",
-    color: "#FF5B58",
+  statusPending: {
+    backgroundColor: "#FFFFFF",
   },
-  resolved: {
-    backgroundColor: "#DDF7F3",
-    color: "#159F96",
+  statusSatisfied: {
+    backgroundColor: "#DCFCE7",
+  },
+  statusText: {
+    fontSize: 10.5,
+    fontWeight: "800",
+  },
+  statusTextPending: {
+    color: "#DC2626",
+  },
+  statusTextSatisfied: {
+    color: "#16A34A",
   },
   time: {
-    alignSelf: "flex-start",
-    color: "#777B7D",
-    fontSize: 10,
-    marginTop: 9,
+    fontSize: 11,
+    color: "#64748B",
+    fontWeight: "600",
   },
 });

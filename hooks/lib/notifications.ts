@@ -86,10 +86,31 @@ export async function registerForPushNotificationsAsync() {
       platform: Platform.OS,
     });
 
-    console.log("Push token saved to backend.");
+    console.log("Expo push token saved to backend.");
   } catch (error) {
-    console.error("Failed to save push token:", error);
+    console.error("Failed to save Expo push token:", error);
+  }
+
+  if (Platform.OS === "android") {
+    try {
+      const deviceToken = await Notifications.getDevicePushTokenAsync();
+      console.log("=================================");
+      console.log("NATIVE FCM DEVICE PUSH TOKEN:");
+      console.log(deviceToken);
+      console.log("=================================");
+
+      if (deviceToken?.data && typeof deviceToken.data === "string") {
+        await axiosInstance.post("/api/notification/v1/push-token", {
+          token: deviceToken.data,
+          platform: "android-fcm",
+        });
+
+        console.log("Native FCM device push token saved to backend.");
+      }
+    } catch (deviceTokenError) {
+      console.error("Failed to get or save native FCM push token:", deviceTokenError);
+    }
   }
 
   return token;
-}
+}

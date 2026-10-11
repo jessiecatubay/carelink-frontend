@@ -1,115 +1,109 @@
 import Button from "@/components/ui/Button";
+import NoteBox from "@/components/ui/NoteBox";
 import PaginationDots from "@/components/ui/PaginationDots";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import React from "react";
 import {
-  Image,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function Screen3() {
+const FEATURES = [
+  {
+    iconName: "hardware-chip-outline" as const,
+    heading: "Connected Hardware Unit",
+    description:
+      "Your patient has a dedicated CareLink hardware button unit connected directly to the cloud via MQTT.",
+    iconBg: "#E0F2FE",
+    iconColor: "#0284C7",
+  },
+  {
+    iconName: "notifications-outline" as const,
+    heading: "Instant Push Notifications",
+    description:
+      "Whenever a patient presses a button, your mobile device receives instant high-priority alerts with sound and vibration.",
+    iconBg: "#FEF3C7",
+    iconColor: "#D97706",
+  },
+  {
+    iconName: "shield-checkmark-outline" as const,
+    heading: "Continuous Safety Net",
+    description:
+      "Keep tabs on your loved ones from anywhere, anytime, with real-time status and emergency contact integration.",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
+  },
+];
+
+export default function HowCareLinkWorksScreen() {
   const router = useRouter();
 
-  const firstRow = [
-    {
-      icon: require("@/assets/icons/food.png"),
-      label: "Food",
-    },
-    {
-      icon: require("@/assets/icons/water.png"),
-      label: "Water",
-    },
-    {
-      icon: require("@/assets/icons/assistance.png"),
-      label: "Assistance",
-    },
-  ];
-
-  const secondRow = [
-    {
-      icon: require("@/assets/icons/red-emergency.png"),
-      label: "Emergency",
-    },
-    {
-      icon: require("@/assets/icons/satisfied.png"),
-      label: "Satisfied",
-    },
-  ];
+  const handleContinue = () => {
+    router.push("/(onboarding)/nonpatient/devicealerts");
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Progress */}
+        {/* Progress Dots - Step 3 of 8 */}
         <View style={styles.paginationWrap}>
-          <PaginationDots currentIndex={2} total={6} />
+          <PaginationDots currentIndex={2} total={8} />
         </View>
 
         {/* Title */}
         <Text style={styles.title}>How CareLink Works</Text>
 
-        {/* Centered Content */}
-        <View style={styles.content}>
-          {/* Illustration */}
-          <Image
-            source={require("@/assets/images/instructionlogo.png")}
-            style={styles.hero}
-          />
-
-          {/* Instructions */}
-          <View style={styles.card}>
-            <Text style={styles.bullet}>
-              • Receive alerts from patient device
-            </Text>
-            <Text style={styles.bullet}>
-              • Monitor needs in real-time
-            </Text>
-            <Text style={styles.bullet}>
-              • Use AI for guidance
-            </Text>
-          </View>
-
-          {/* First Row */}
-          <View style={styles.row}>
-            {firstRow.map((item) => (
-              <View key={item.label} style={styles.item}>
-                <Image
-                  source={item.icon}
-                  style={styles.icon}
-                />
-                <Text style={styles.label}>
-                  {item.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Second Row */}
-          <View style={styles.rowSecond}>
-            {secondRow.map((item) => (
-              <View key={item.label} style={styles.item}>
-                <Image
-                  source={item.icon}
-                  style={styles.icon}
-                />
-                <Text style={styles.label}>
-                  {item.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <Text style={styles.caption}>
-            Pressing a button sends alerts instantly
+        {/* Scrollable Content */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            Your real-time caregiving and emergency response companion.
           </Text>
-        </View>
 
-        <Button
-          title="Continue"
-          onPress={() => router.push("/(onboarding)/nonpatient/device-pairing")}
-          style={styles.button}
-        />
+          {/* Cards List */}
+          <View style={styles.cardsContainer}>
+            {FEATURES.map((item, idx) => (
+              <View key={idx} style={styles.itemCard}>
+                <View
+                  style={[
+                    styles.iconBox,
+                    { backgroundColor: item.iconBg },
+                  ]}
+                >
+                  <Ionicons
+                    name={item.iconName}
+                    size={22}
+                    color={item.iconColor}
+                  />
+                </View>
+                <View style={styles.cardTextContent}>
+                  <Text style={styles.itemHeading}>{item.heading}</Text>
+                  <Text style={styles.itemDescription}>
+                    {item.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Tip / Note Box */}
+          <NoteBox text="CareLink works over cellular and Wi-Fi to deliver urgent alerts in milliseconds." />
+        </ScrollView>
+
+        <View style={styles.buttonWrap}>
+          <Button
+            title="Continue"
+            onPress={handleContinue}
+            style={styles.button}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -122,12 +116,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
+    paddingHorizontal: 24,
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
   },
   paginationWrap: {
     marginTop: 100,
@@ -139,63 +130,61 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#12A5B5",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+  },
+  subtitle: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#7A7A7A",
+    lineHeight: 22,
     marginBottom: 24,
+    paddingHorizontal: 4,
   },
-  hero: {
-    width: "100%",
-    height: 150,
-    resizeMode: "contain",
-    alignSelf: "center",
-    marginBottom: 5,
+  cardsContainer: {
+    gap: 12,
+    marginBottom: 18,
   },
-  card: {
-    borderWidth: 1,
-    borderColor: "#333333",
-    borderRadius: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginBottom: 24,
-    backgroundColor: "#FFF",
-  },
-  bullet: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B7280",
-    lineHeight: 24,
-    marginVertical: 2,
-  },
-  row: {
+  itemCard: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-  rowSecond: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 40,
-    marginBottom: 20,
-  },
-  item: {
     alignItems: "center",
-    width: 90,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1.5,
   },
-  icon: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain",
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
   },
-  label: {
-    marginTop: 6,
-    fontSize: 13,
-    color: "#8E8E93",
-    textAlign: "center",
+  cardTextContent: {
+    flex: 1,
   },
-  caption: {
-    textAlign: "center",
-    fontSize: 13,
-    color: "#8E8E93",
-    marginTop: 4,
+  itemHeading: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  itemDescription: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+  },
+  buttonWrap: {
+    marginBottom: 40,
   },
   button: {
     width: "100%",

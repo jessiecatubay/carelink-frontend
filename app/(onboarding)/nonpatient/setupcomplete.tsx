@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SetupCompleteScreen() {
   const router = useRouter();
-  const { data } = useOnboarding();
+  const { data, resetOnboarding } = useOnboarding();
   const { user, updateUser } = useAuth();
   const isCompletedRef = useRef(false);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -46,6 +46,7 @@ export default function SetupCompleteScreen() {
         }
         await updateUser(updatedUser);
         onboardingSaved = true;
+        resetOnboarding();
 
         closeSocket();
         initSocket();
@@ -56,7 +57,7 @@ export default function SetupCompleteScreen() {
         if (onboardingSaved) {
           timer = setTimeout(() => {
             router.dismissAll();
-            router.replace("/nonpatient/dashboard/user-manual" as Href);
+            router.replace("/nonpatient/dashboard" as Href);
           }, 3000);
         }
       }
@@ -98,7 +99,7 @@ export default function SetupCompleteScreen() {
         <Text style={styles.redirectText}>
           {saveFailed
             ? "Your account was not marked complete. Go back and try again."
-            : "Opening user manual..."}
+            : "Opening caregiver dashboard..."}
         </Text>
       </View>
     </SafeAreaView>

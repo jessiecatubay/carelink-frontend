@@ -154,8 +154,41 @@ const CHAPTERS: ManualChapter[] = [
     tipText: "Check the AI Help tab in the navigation bar whenever you need care guidance.",
   },
   {
-    id: "pairing",
+    id: "pill-reminders",
     chapterNumber: 4,
+    tag: "MEDICATION MANAGEMENT",
+    title: "Pill Reminders & Schedules",
+    subtitle: "Ensure timely medication intake with customizable daily alarms.",
+    badgeColor: "#CCFBF1",
+    badgeTextColor: "#0F766E",
+    content: [
+      {
+        iconName: "calendar-outline",
+        heading: "Daily or Specific Days Schedule",
+        description:
+          "Schedule intake for specific days of the week (Monday through Sunday) or tap 'Everyday' for daily intake.",
+        color: "#0AA7A8",
+      },
+      {
+        iconName: "time-outline",
+        heading: "Precise Time Scheduling",
+        description:
+          "Set exact dosage times (AM/PM) so both you and your patient stay on track with their treatment plan.",
+        color: "#0284C7",
+      },
+      {
+        iconName: "create-outline",
+        heading: "Edit & Delete Anytime",
+        description:
+          "Easily modify reminder times and days or delete completed medication routines with one tap.",
+        color: "#8B5CF6",
+      },
+    ],
+    tipText: "Tap the floating '+' button on your dashboard to quickly schedule a new medication reminder.",
+  },
+  {
+    id: "pairing",
+    chapterNumber: 5,
     tag: "NEXT STEP",
     title: "Pair With Your Patient",
     subtitle: "Scan your patient's QR code to link accounts and start receiving alerts.",

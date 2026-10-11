@@ -1,3 +1,4 @@
+import NoteBox from "@/components/ui/NoteBox";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -101,9 +102,14 @@ export default function PatientRelationshipModal({
             </View>
           </View>
 
-          <Text style={styles.infoText}>
-            The patient will see this relationship in their connected caregivers list so they know who receives their alerts.
-          </Text>
+          <NoteBox
+            text={
+              patientName
+                ? `${patientName} will see your name and this relationship in their connected accounts list so they know who receives their alerts.`
+                : "The patient will see this relationship in their connected caregivers list so they know who receives their alerts."
+            }
+            style={{ marginBottom: 16 }}
+          />
 
           {/* Quick Selection Pills */}
           <Text style={styles.sectionLabel}>Select or type your relationship:</Text>

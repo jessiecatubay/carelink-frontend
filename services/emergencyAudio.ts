@@ -1,6 +1,8 @@
 import { getNotificationSettings } from "@/hooks/lib/notification-settings";
 import * as Notifications from "expo-notifications";
-import { Platform, Vibration } from "react-native";
+import { NativeModules, Platform, Vibration } from "react-native";
+
+const { EmergencySoundModule } = NativeModules;
 
 let activeAudioHandle: any = null;
 let isSirenPlaying = false;
@@ -32,7 +34,7 @@ async function triggerEmergencyChime(): Promise<void> {
 /**
  * Plays the emergency siren sound using alert_sound.wav safely.
  * Loops loudly through speakers and vibrates until stopEmergencySiren() is called.
- * 100% crash-free in Expo Go, development builds, and production APKs.
+ * Works seamlessly in native Android Development/Release APKs, Expo Go, and Web.
  */
 export async function playEmergencySiren(): Promise<void> {
   try {
@@ -57,8 +59,21 @@ export async function playEmergencySiren(): Promise<void> {
       console.warn("Vibration warning:", vibErr);
     }
 
-    // 2. Web Audio if running on Web browser
-    if (Platform.OS === "web" && typeof window !== "undefined") {
+    let nativeSoundPlayed = false;
+
+    // 2. Native Android MediaPlayer playback (Direct hardware audio through USAGE_ALARM)
+    if (Platform.OS === "android" && EmergencySoundModule?.playEmergencySound) {
+      try {
+        await EmergencySoundModule.playEmergencySound();
+        nativeSoundPlayed = true;
+        console.log("🔊 alert_sound.wav playing via Native Android MediaPlayer (EmergencySoundModule).");
+      } catch (nativeErr) {
+        console.warn("EmergencySoundModule.playEmergencySound error:", nativeErr);
+      }
+    }
+
+    // 3. Web Audio if running on Web browser
+    if (!nativeSoundPlayed && Platform.OS === "web" && typeof window !== "undefined") {
       try {
         const audio = new (window as any).Audio(require("@/assets/sounds/alert_sound.wav"));
         audio.loop = true;
@@ -76,11 +91,10 @@ export async function playEmergencySiren(): Promise<void> {
       }
     }
 
-    // 3. Android / iOS native notification channel audio with alert_sound.wav
+    // 4. Android notification chime fallback / companion
     if (Platform.OS !== "web") {
       await triggerEmergencyChime();
 
-      // Repeat chime pulse every 4 seconds while modal is active
       if (sirenInterval) {
         clearInterval(sirenInterval);
       }
@@ -103,20 +117,29 @@ export async function playEmergencySiren(): Promise<void> {
 export async function stopEmergencySiren(): Promise<void> {
   isSirenPlaying = false;
 
-  // 1. Cancel vibration
+  // 1. Stop Native Android MediaPlayer
+  if (Platform.OS === "android" && EmergencySoundModule?.stopEmergencySound) {
+    try {
+      await EmergencySoundModule.stopEmergencySound();
+    } catch (nativeStopErr) {
+      console.warn("EmergencySoundModule.stopEmergencySound error:", nativeStopErr);
+    }
+  }
+
+  // 2. Cancel vibration
   try {
     if (Platform.OS !== "web") {
       Vibration.cancel();
     }
   } catch {}
 
-  // 2. Clear siren interval
+  // 3. Clear siren interval
   if (sirenInterval) {
     clearInterval(sirenInterval);
     sirenInterval = null;
   }
 
-  // 3. Stop audio handle
+  // 4. Stop web audio handle
   if (activeAudioHandle) {
     try {
       await activeAudioHandle.stop();

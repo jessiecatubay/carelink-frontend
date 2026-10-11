@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import Button from "@/components/ui/Button";
+import NoteBox from "@/components/ui/NoteBox";
 import PaginationDots from "@/components/ui/PaginationDots";
 import {
   patientOnboardingSchema,
@@ -290,18 +291,10 @@ export default function PatientProfile({ initialValues, onContinue }: PatientPro
           </View>
 
           {/* Note */}
-          <View style={styles.noteBox}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color="#12A5B5"
-              style={styles.noteIcon}
-            />
-            <Text style={styles.noteText}>
-              <Text style={styles.noteBold}>Note: </Text>
-              This profile is used by CareLink's AI to provide personalized care recommendations, monitor health context, and assist in daily care.
-            </Text>
-          </View>
+          <NoteBox
+            text="This profile will be accessible to connected caretakers. When scanning your QR code, caretakers will confirm the patient's name, gender, medical condition, and notes."
+            style={{ marginBottom: 24 }}
+          />
         </View>
 
         <View style={styles.buttonWrap}>
@@ -487,31 +480,6 @@ const styles = StyleSheet.create({
     marginTop: -10,
     marginBottom: 12,
     paddingHorizontal: 4,
-  },
-  noteBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#F0FAFA",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#C5ECEE",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 24,
-    gap: 10,
-  },
-  noteIcon: {
-    marginTop: 1,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#4B5563",
-    lineHeight: 18,
-  },
-  noteBold: {
-    fontWeight: "700",
-    color: "#12A5B5",
   },
   buttonWrap: {
     marginBottom: 40,
