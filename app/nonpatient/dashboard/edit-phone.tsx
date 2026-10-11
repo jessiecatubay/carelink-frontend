@@ -3,10 +3,7 @@ import Button from "@/components/ui/Button";
 import NoteBox from "@/components/ui/NoteBox";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { useAuth } from "@/context/AuthContext";
-import {
-  formatPhilippinePhoneNumber,
-  isValidPhilippinePhoneNumber,
-} from "@/utils/phone";
+import { isValidPhilippinePhoneNumber } from "@/utils/phone";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";

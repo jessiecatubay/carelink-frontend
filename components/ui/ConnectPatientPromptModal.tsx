@@ -135,7 +135,7 @@ export default function ConnectPatientPromptModal({
                 activeOpacity={0.8}
               >
                 <Ionicons name="keypad-outline" size={18} color="#0AA7A8" />
-                <Text style={styles.secondaryButtonText}>Enter Patient Code</Text>
+                <Text style={styles.secondaryButtonText}>{resolvedSecondaryText}</Text>
               </TouchableOpacity>
 
               {/* 3. GO TO SETTINGS */}

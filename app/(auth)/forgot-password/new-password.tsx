@@ -5,6 +5,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -66,6 +67,10 @@ export default function NewPasswordScreen() {
             icon={require("@/assets/icons/password-lock.png")}
           />
 
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
+
           <NewPasswordForm
             onSubmit={handleResetPassword}
             loading={loading}
@@ -89,5 +94,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 40,
     paddingBottom: 32,
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 12,
   },
 });

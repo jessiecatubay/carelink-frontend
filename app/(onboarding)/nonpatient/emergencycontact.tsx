@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
@@ -24,22 +23,6 @@ const initialForm: NonPatientOnboardingInput = {
   relationship: "",
   phoneNumber: "",
 };
-
-function getFormErrors(form: NonPatientOnboardingInput): FormErrors {
-  const result = nonPatientOnboardingSchema.safeParse(form);
-
-  if (result.success) {
-    return {};
-  }
-
-  return result.error.issues.reduce<FormErrors>((errors, issue) => {
-    const field = issue.path[0] as FieldName;
-    if (!errors[field]) {
-      errors[field] = issue.message;
-    }
-    return errors;
-  }, {});
-}
 
 export default function EmergencyContactScreen() {
   const router = useRouter();

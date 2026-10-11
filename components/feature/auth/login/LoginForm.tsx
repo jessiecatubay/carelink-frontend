@@ -6,8 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { loginSchema, type LoginFormValues } from "@/schema/auth";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import ForgotPasswordLink from "./ForgotPasswordLink";
 import GoogleSignInButton from "./GoogleSignInButton";
 import LoginFooter from "./LoginFooter";
@@ -18,7 +18,6 @@ import {
   getRememberedEmail,
   saveRememberedEmail,
 } from "@/services/token";
-import { useEffect } from "react";
 
 export default function LoginForm() {
   const { signIn, loginWithGoogle } = useAuth();

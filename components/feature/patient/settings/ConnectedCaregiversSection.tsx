@@ -23,7 +23,7 @@ export default function ConnectedCaregiversSection() {
       if (Array.isArray(data)) {
         setConnectedCount(data.length);
       }
-    } catch (e) {
+    } catch {
       // Silently fallback if fetch fails
     }
   }, [user?.id]);

@@ -1,4 +1,3 @@
-import { extractPhilippineMobileDigits, formatPhilippinePhoneNumber } from "@/utils/phone";
 import { capitalizeWords } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";

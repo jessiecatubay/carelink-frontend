@@ -173,7 +173,7 @@ export default function ManagePatientScreen() {
               </View>
               <Text style={styles.emptyTitle}>No Patient Connected</Text>
               <Text style={styles.emptySubtitle}>
-                You haven't connected with any patient yet. Scan a patient's QR code to start monitoring.
+                You haven&apos;t connected with any patient yet. Scan a patient&apos;s QR code to start monitoring.
               </Text>
               <EditPatientButton
                 title="Pair New Patient"

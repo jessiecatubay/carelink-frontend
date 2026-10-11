@@ -636,7 +636,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           />
 
           <View style={styles.resendContainer}>
-            <Text style={styles.resendLabel}>Didn't receive the code?</Text>
+            <Text style={styles.resendLabel}>Didn&apos;t receive the code?</Text>
             <TouchableOpacity
               onPress={handleResendCode}
               disabled={resendCountdown > 0 || resending}

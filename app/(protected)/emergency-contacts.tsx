@@ -3,10 +3,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import SlideToCall911 from "@/components/ui/SlideToCall911";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
-import {
-  formatPhilippinePhoneNumber,
-  isValidPhilippinePhoneNumber,
-} from "@/utils/phone";
+import { isValidPhilippinePhoneNumber } from "@/utils/phone";
 import { capitalizeWords, formatNameInput } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";

@@ -89,7 +89,7 @@ export default function DeviceAlertsScreen() {
         >
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            Understand the 5 primary alert buttons on the patient's device.
+            Understand the 5 primary alert buttons on the patient&apos;s device.
           </Text>
 
           {/* Cards List */}

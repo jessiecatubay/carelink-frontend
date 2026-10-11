@@ -72,7 +72,7 @@ export default function PatientDashboardHome() {
           setIsCheckingConnection(false);
           return;
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
       setShowConnectPrompt(true);

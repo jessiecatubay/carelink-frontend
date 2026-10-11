@@ -1,7 +1,6 @@
 import EmergencyCountdownModal from "@/components/ui/EmergencyCountdownModal";
 import { useAuth } from "@/context/AuthContext";
 import { triggerAppHaptic } from "@/context/HapticsContext";
-import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, startPatientPresence } from "@/hooks/lib/socket";
 import { patientCommand } from "@/services/monitor";
 import React, { useEffect, useRef, useState } from "react";
@@ -10,7 +9,6 @@ import RemoteButton from "./RemoteButton";
 
 export default function PatientRemote() {
   const { user } = useAuth();
-  const [activeAlert, setActiveAlert] = useState<string | null>(null);
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -91,13 +89,11 @@ export default function PatientRemote() {
       clearCooldownTimer();
       setSatisfiedCooldown(0);
       setPendingRequest(null);
-      setActiveAlert(null);
       await sendPatientCommand("Satisfied");
       return;
     }
 
     // Food, Water, Assistance
-    setActiveAlert(label);
     setPendingRequest(label);
 
     // Start 5-second cooldown for Satisfied button
@@ -109,7 +105,6 @@ export default function PatientRemote() {
   const handleConfirmEmergency = async () => {
     triggerAppHaptic("heavy");
     setShowEmergencyModal(false);
-    setActiveAlert("Emergency");
     setPendingRequest("Emergency");
     startSatisfiedCooldown();
     await sendPatientCommand("Emergency");

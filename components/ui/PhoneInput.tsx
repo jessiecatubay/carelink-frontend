@@ -8,7 +8,6 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { extractPhilippineMobileDigits, formatPhilippinePhoneNumber } from "@/utils/phone";
 
 export type PhoneInputProps = {
