@@ -102,7 +102,7 @@ export const PATIENT_TOUR_STEPS: TourStep[] = [
     title: "One-Touch Help",
     subtitle: "Emergency & Assistance",
     description:
-      "Tap Food, Water, Assistance, or Emergency to notify your connected caregiver immediately.",
+      "Tap Food, Water, Assistance, or Emergency to notify your connected caregiver & family members immediately.",
     icon: "hand-left-outline",
     badgeColor: "#FEE2E2",
     iconColor: "#EF4444",
@@ -113,7 +113,7 @@ export const PATIENT_TOUR_STEPS: TourStep[] = [
     title: "Clear Requests",
     subtitle: "Request Resolution",
     description:
-      "When your caregiver has assisted you, tap 'Satisfied' to let them know everything is okay.",
+      "When someone has assisted you, tap 'Satisfied' to let them know everything is okay.",
     icon: "checkmark-done-circle-outline",
     badgeColor: "#ECFDF5",
     iconColor: "#10B981",

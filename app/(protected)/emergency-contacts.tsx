@@ -627,86 +627,92 @@ export default function EmergencyContactsScreen() {
               </Pressable>
             </View>
 
-            {/* FULL NAME INPUT */}
-            <Text style={styles.inputLabel}>Full Name</Text>
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === "name" && styles.inputFocused,
-              ]}
-              placeholder="e.g. Jane Doe or Dr. Emily Davis"
-              placeholderTextColor="#94A3B8"
-              value={name}
-              onChangeText={(text) => setName(formatNameInput(text))}
-              onFocus={() => setFocusedField("name")}
-              onBlur={() => setFocusedField(null)}
-              editable={!submitting}
-              autoCapitalize="words"
-            />
-
-            {/* RELATIONSHIP INPUT */}
-            <Text style={styles.inputLabel}>Relationship</Text>
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === "relationship" && styles.inputFocused,
-              ]}
-              placeholder="e.g. Daughter, Spouse, Primary Doctor"
-              placeholderTextColor="#94A3B8"
-              value={relationship}
-              onChangeText={(text) => setRelationship(formatNameInput(text))}
-              onFocus={() => setFocusedField("relationship")}
-              onBlur={() => setFocusedField(null)}
-              editable={!submitting}
-              autoCapitalize="words"
-            />
-
-            {/* PHONE NUMBER INPUT */}
-            <Text style={styles.inputLabel}>Phone Number</Text>
-            <PhoneInput
-              placeholder="900 000 0000"
-              value={phoneNumber}
-              onChangeText={(formatted) => setPhoneNumber(formatted)}
-              editable={!submitting}
-              style={{ marginBottom: 4 }}
-            />
-
-            {/* Priority Switch Toggle */}
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isPriority }}
-              onPress={() => setIsPriority((prev) => !prev)}
-              disabled={submitting}
-              style={styles.priorityRow}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              bounces={false}
             >
-              <View style={[styles.checkbox, isPriority && styles.checkboxSelected]}>
-                {isPriority && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
-              </View>
+              {/* FULL NAME INPUT */}
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  focusedField === "name" && styles.inputFocused,
+                ]}
+                placeholder="e.g. Jane Doe or Dr. Emily Davis"
+                placeholderTextColor="#94A3B8"
+                value={name}
+                onChangeText={(text) => setName(formatNameInput(text))}
+                onFocus={() => setFocusedField("name")}
+                onBlur={() => setFocusedField(null)}
+                editable={!submitting}
+                autoCapitalize="words"
+              />
 
-              <View style={styles.priorityTextContainer}>
-                <Text style={styles.priorityTitle}>Primary Contact</Text>
-                <Text style={styles.priorityDescription}>
-                  Mark this person as the priority emergency contact.
-                </Text>
-              </View>
-            </Pressable>
+              {/* RELATIONSHIP INPUT */}
+              <Text style={styles.inputLabel}>Relationship</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  focusedField === "relationship" && styles.inputFocused,
+                ]}
+                placeholder="e.g. Daughter, Spouse, Primary Doctor"
+                placeholderTextColor="#94A3B8"
+                value={relationship}
+                onChangeText={(text) => setRelationship(formatNameInput(text))}
+                onFocus={() => setFocusedField("relationship")}
+                onBlur={() => setFocusedField(null)}
+                editable={!submitting}
+                autoCapitalize="words"
+              />
 
-            {/* Modal Actions */}
-            <View style={styles.modalActions}>
-              <Pressable onPress={closeModal} style={styles.cancelBtn} disabled={submitting}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </Pressable>
+              {/* PHONE NUMBER INPUT */}
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <PhoneInput
+                placeholder="900 000 0000"
+                value={phoneNumber}
+                onChangeText={(formatted) => setPhoneNumber(formatted)}
+                editable={!submitting}
+                style={{ marginBottom: 4 }}
+              />
 
-              <Pressable onPress={handleSaveContact} style={styles.saveBtn} disabled={submitting}>
-                {submitting ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text style={styles.saveBtnText}>
-                    {editingContact ? "Update Contact" : "Save Contact"}
+              {/* Priority Switch Toggle */}
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isPriority }}
+                onPress={() => setIsPriority((prev) => !prev)}
+                disabled={submitting}
+                style={styles.priorityRow}
+              >
+                <View style={[styles.checkbox, isPriority && styles.checkboxSelected]}>
+                  {isPriority && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                </View>
+
+                <View style={styles.priorityTextContainer}>
+                  <Text style={styles.priorityTitle}>Primary Contact</Text>
+                  <Text style={styles.priorityDescription}>
+                    Mark this person as the priority emergency contact.
                   </Text>
-                )}
+                </View>
               </Pressable>
-            </View>
+
+              {/* Modal Actions */}
+              <View style={styles.modalActions}>
+                <Pressable onPress={closeModal} style={styles.cancelBtn} disabled={submitting}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </Pressable>
+
+                <Pressable onPress={handleSaveContact} style={styles.saveBtn} disabled={submitting}>
+                  {submitting ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.saveBtnText}>
+                      {editingContact ? "Update Contact" : "Save Contact"}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -1020,6 +1026,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 36,
+    maxHeight: "90%",
   },
   modalHeader: {
     flexDirection: "row",
