@@ -23,8 +23,9 @@ const styles = StyleSheet.create({
     marginBottom: height > 750 ? 10 : 6,
   },
   logo: {
-    width: 700,
-    height: 100,
+    width: "82%",
+    maxWidth: 320,
+    height: 60,
   },
   tagline: {
     fontSize: 15.5,

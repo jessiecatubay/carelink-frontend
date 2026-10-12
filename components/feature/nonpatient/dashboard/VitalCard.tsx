@@ -99,7 +99,13 @@ export default function VitalCard({
         <View style={styles.vitalLabelContainer}>
           <Text style={styles.vitalLabel}>{label}</Text>
           <View style={styles.vitalValueRow}>
-            <Text style={styles.vitalValue}>{value}</Text>
+            <Text
+              style={styles.vitalValue}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {value}
+            </Text>
             <Text style={styles.vitalUnit}>{unit}</Text>
           </View>
           <View style={styles.rangeRow}>
@@ -108,7 +114,13 @@ export default function VitalCard({
             />
             <Text style={styles.rangeText}>{rangeText}</Text>
           </View>
-          <Text style={styles.rangeDetail}>{rangeDetail}</Text>
+          <Text
+            style={styles.rangeDetail}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {rangeDetail}
+          </Text>
         </View>
       </View>
 

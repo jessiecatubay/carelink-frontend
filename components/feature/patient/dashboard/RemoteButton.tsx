@@ -50,7 +50,11 @@ export default function RemoteButton({
         style={[styles.cardIcon, isEmergency && styles.whiteIcon]}
         resizeMode="contain"
       />
-      <Text style={[styles.cardText, isEmergency && styles.whiteText]}>
+      <Text
+        style={[styles.cardText, isEmergency && styles.whiteText]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {cooldown && cooldown > 0 ? `${label} (${cooldown}s)` : label}
       </Text>
       {cooldown && cooldown > 0 ? (

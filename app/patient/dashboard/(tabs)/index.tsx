@@ -111,8 +111,10 @@ export default function PatientDashboardHome() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Header with Centered Large Logo and Settings Icon on Upper Right */}
+        {/* Header with Centered Logo and Settings Icon */}
         <View style={styles.header}>
+          <View style={styles.headerSpacer} />
+
           <Image
             source={require("@/assets/images/logo.png")}
             style={styles.logo}
@@ -175,18 +177,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   header: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
-    minHeight: 85,
-    position: "relative",
+    minHeight: 64,
+  },
+  headerSpacer: {
+    width: 44,
   },
   settingsButton: {
-    position: "absolute",
-    right: 20,
-    top: 16,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -195,7 +197,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "#CCFBF1",
-    zIndex: 10,
   },
   settingsIcon: {
     width: 24,
@@ -203,8 +204,9 @@ const styles = StyleSheet.create({
     tintColor: "#0AA7A8",
   },
   logo: {
-    width: 280,
-    height: 80,
+    flex: 1,
+    maxWidth: 220,
+    height: 48,
   },
   content: {
     flex: 1,

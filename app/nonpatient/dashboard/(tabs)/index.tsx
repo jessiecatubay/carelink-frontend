@@ -668,7 +668,9 @@ export default function Home() {
                     <Ionicons name="medical" size={18} color="#0AA7A8" />
                   </View>
                   <View style={styles.reminderCopy}>
-                    <Text style={styles.reminderTitle}>{reminder.title}</Text>
+                    <Text style={styles.reminderTitle} numberOfLines={1}>
+                      {reminder.title}
+                    </Text>
                     {reminder.description ? (
                       <Text style={styles.reminderDescription} numberOfLines={2}>
                         {reminder.description}
@@ -881,6 +883,7 @@ const styles = StyleSheet.create({
   remindersCount: {
     minWidth: 28,
     height: 28,
+    lineHeight: 28,
     overflow: "hidden",
     textAlign: "center",
     textAlignVertical: "center",
