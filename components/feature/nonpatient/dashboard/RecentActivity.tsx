@@ -164,6 +164,9 @@ export default function RecentActivity({
                     style={[
                       styles.cardIcon,
                       isEmergency && styles.emergencyCardIcon,
+                      !isEmergency && notification.iconColor
+                        ? { tintColor: notification.iconColor }
+                        : null,
                     ]}
                     resizeMode="contain"
                   />

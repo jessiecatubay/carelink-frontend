@@ -33,6 +33,8 @@ interface ManualChapter {
   content: {
     iconName?: keyof typeof Ionicons.glyphMap;
     localIcon?: any;
+    iconBg?: string;
+    iconTintColor?: string;
     heading: string;
     description: string;
     color?: string;
@@ -109,7 +111,9 @@ const CHAPTERS: ManualChapter[] = [
         heading: "General Assistance",
         description:
           "Patient needs physical support, help standing, or routine caregiving tasks.",
-        color: "#6366F1",
+        color: "#7C3AED",
+        iconBg: "#EDE9FE",
+        iconTintColor: "#7C3AED",
       },
       {
         localIcon: require("@/assets/icons/satisfied.png"),
@@ -313,13 +317,21 @@ export default function UserManualScreen() {
                 <View
                   style={[
                     styles.iconWrap,
-                    { backgroundColor: `${point.color || "#12A5B5"}15` },
+                    {
+                      backgroundColor:
+                        point.iconBg || `${point.color || "#12A5B5"}15`,
+                    },
                   ]}
                 >
                   {point.localIcon ? (
                     <Image
                       source={point.localIcon}
-                      style={styles.localIcon}
+                      style={[
+                        styles.localIcon,
+                        point.iconTintColor
+                          ? { tintColor: point.iconTintColor }
+                          : null,
+                      ]}
                       resizeMode="contain"
                     />
                   ) : (

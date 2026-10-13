@@ -204,6 +204,7 @@ export default function PatientRemote() {
             icon={require("@/assets/icons/assistance.png")}
             onPress={() => handlePress("Assistance")}
             cardStyle={styles.assistanceCard}
+            iconTintColor="#7C3AED"
             disabled={isLocked}
           />
           <RemoteButton
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#D4EBFD",
   },
   assistanceCard: {
-    backgroundColor: "#FDE8C7",
+    backgroundColor: "#EDE9FE",
   },
   satisfiedCard: {
     backgroundColor: "#D3F4DF",

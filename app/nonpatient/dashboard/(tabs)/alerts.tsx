@@ -288,6 +288,9 @@ export default function AlertsScreen() {
                     style={[
                       styles.iconImage,
                       isEmergency && styles.emergencyCardIcon,
+                      !isEmergency && alert.iconColor
+                        ? { tintColor: alert.iconColor }
+                        : null,
                     ]}
                     resizeMode="contain"
                   />
