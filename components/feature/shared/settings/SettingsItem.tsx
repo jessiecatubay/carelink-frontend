@@ -52,14 +52,14 @@ export default function SettingsItem({
       {customIcon ? (
         <Image
           source={customIcon}
-          style={[styles.customRowIcon, destructive && { tintColor: "#FF615D" }]}
+          style={[styles.customRowIcon, destructive && { tintColor: "#EF4444" }]}
           resizeMode="contain"
         />
       ) : icon ? (
         <Ionicons
           name={icon}
           size={21}
-          color={destructive ? "#FF615D" : "#0AA7A8"}
+          color={destructive ? "#EF4444" : "#0AA7A8"}
           style={styles.rowIcon}
         />
       ) : null}
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   destructiveText: {
-    color: "#FF615D",
+    color: "#EF4444",
     fontWeight: "600",
   },
   disabledText: {

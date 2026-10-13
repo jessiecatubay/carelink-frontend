@@ -21,7 +21,8 @@ export default function LogoutConfirmModal({
   return (
     <CustomAlertModal
       visible={visible}
-      type="delete"
+      type="logout"
+      customIcon={require("@/assets/icons/logout.png")}
       isDestructive
       title={title}
       message={message}

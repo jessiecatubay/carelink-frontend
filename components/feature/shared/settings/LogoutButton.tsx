@@ -32,7 +32,7 @@ export default function LogoutButton({ onLogout }: LogoutButtonProps) {
     <>
       <SettingsItem
         destructive
-        icon="log-out-outline"
+        customIcon={require("@/assets/icons/logout.png")}
         title="Logout"
         onPress={() => setModalVisible(true)}
       />

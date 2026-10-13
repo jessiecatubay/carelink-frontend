@@ -12,9 +12,8 @@ export default function Logo({ style }: { style?: StyleProp<ImageStyle> }) {
 
 const styles = StyleSheet.create({
   logo: {
-    width: "82%",
-    maxWidth: 320,
-    height: 60,
+    width: 700,
+    height: 110,
     alignSelf: "center",
     marginBottom: 24,
   },

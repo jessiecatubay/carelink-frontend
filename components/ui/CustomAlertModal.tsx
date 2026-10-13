@@ -4,6 +4,8 @@ import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Image,
+  ImageSourcePropType,
   Modal,
   Pressable,
   StyleSheet,
@@ -18,13 +20,16 @@ export type AlertModalType =
   | "warning"
   | "error"
   | "confirm"
-  | "delete";
+  | "delete"
+  | "logout";
 
 export type CustomAlertModalProps = {
   visible: boolean;
   title: string;
   message: string;
   type?: AlertModalType;
+  /** Optional custom image icon override */
+  customIcon?: ImageSourcePropType;
   /** Primary button label (alias: buttonText) */
   confirmText?: string;
   buttonText?: string;
@@ -53,6 +58,7 @@ export default function CustomAlertModal({
   title,
   message,
   type = "info",
+  customIcon,
   confirmText,
   buttonText = "Continue",
   onConfirm,
@@ -90,6 +96,14 @@ export default function CustomAlertModal({
       case "delete":
         return {
           iconName: type === "delete" ? ("trash-outline" as const) : ("close-circle" as const),
+          iconColor: "#EF4444",
+          bgColor: "#FEE2E2",
+          borderColor: "#FECDD3",
+          buttonColor: "#EF4444",
+        };
+      case "logout":
+        return {
+          iconName: "exit" as const,
           iconColor: "#EF4444",
           bgColor: "#FEE2E2",
           borderColor: "#FECDD3",
@@ -172,11 +186,19 @@ export default function CustomAlertModal({
                 },
               ]}
             >
-              <Ionicons
-                name={config.iconName}
-                size={42}
-                color={config.iconColor}
-              />
+              {customIcon ? (
+                <Image
+                  source={customIcon}
+                  style={{ width: 42, height: 42, tintColor: config.iconColor }}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Ionicons
+                  name={config.iconName}
+                  size={42}
+                  color={config.iconColor}
+                />
+              )}
             </Animated.View>
           )}
 
