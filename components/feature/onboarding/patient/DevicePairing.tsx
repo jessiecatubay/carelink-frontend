@@ -66,7 +66,7 @@ export default function DevicePairing({
         >
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            Scan your patient's QR code to link accounts and start receiving alerts.
+            Scan your patient&apos;s QR code to link accounts and start receiving alerts.
           </Text>
 
           {/* Cards List */}

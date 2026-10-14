@@ -13,8 +13,8 @@ export default function Logo({ style }: { style?: StyleProp<ImageStyle> }) {
 const styles = StyleSheet.create({
   logo: {
     width: 700,
-    height: 160,
+    height: 110,
     alignSelf: "center",
-    marginBottom: 32,
+    marginBottom: 24,
   },
 });

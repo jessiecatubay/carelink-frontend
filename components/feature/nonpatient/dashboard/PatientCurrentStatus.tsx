@@ -77,12 +77,12 @@ export default function PatientCurrentStatus(patientId: {
         };
       case "ASSISTANCE":
         return {
-          bg: "#E68A00",
+          bg: "#7C3AED",
           border: "rgba(255, 255, 255, 0.2)",
           titleColor: "#FFFFFF",
           subtitleColor: "rgba(255, 255, 255, 0.92)",
-          iconBg: "#FFFFFF",
-          iconTint: undefined,
+          iconBg: "#EDE9FE",
+          iconTint: "#7C3AED",
         };
       case "EMERGENCY":
         return {

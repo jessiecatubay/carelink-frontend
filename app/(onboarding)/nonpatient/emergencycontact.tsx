@@ -1,7 +1,14 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "@/components/ui/Button";
@@ -24,22 +31,6 @@ const initialForm: NonPatientOnboardingInput = {
   relationship: "",
   phoneNumber: "",
 };
-
-function getFormErrors(form: NonPatientOnboardingInput): FormErrors {
-  const result = nonPatientOnboardingSchema.safeParse(form);
-
-  if (result.success) {
-    return {};
-  }
-
-  return result.error.issues.reduce<FormErrors>((errors, issue) => {
-    const field = issue.path[0] as FieldName;
-    if (!errors[field]) {
-      errors[field] = issue.message;
-    }
-    return errors;
-  }, {});
-}
 
 export default function EmergencyContactScreen() {
   const router = useRouter();
@@ -99,86 +90,97 @@ export default function EmergencyContactScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.container}>
-        <View>
-          {/* Progress */}
-          <View style={styles.paginationWrap}>
-            <PaginationDots currentIndex={6} total={8} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <View>
+              {/* Progress */}
+              <View style={styles.paginationWrap}>
+                <PaginationDots currentIndex={6} total={8} />
+              </View>
+
+              {/* Title */}
+              <Text style={styles.title}>Emergency Contact</Text>
+
+              {/* Description */}
+              <Text style={styles.subtitle}>
+                Who should be contacted in{"\n"}case of emergency?
+              </Text>
+
+              {/* Form Card */}
+              <View style={styles.card}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    focusedField === "fullName" ? styles.inputFocused : null,
+                    fieldErrors.fullName ? styles.inputError : null,
+                  ]}
+                  placeholder="Full Name"
+                  placeholderTextColor="#8E8E93"
+                  value={form.fullName}
+                  onChangeText={(value) => updateField("fullName", value)}
+                  onFocus={() => setFocusedField("fullName")}
+                  onBlur={() => setFocusedField(null)}
+                  autoCapitalize="words"
+                  textContentType="name"
+                  autoComplete="name"
+                />
+                {fieldErrors.fullName ? (
+                  <Text style={styles.error}>{fieldErrors.fullName}</Text>
+                ) : null}
+
+                <TextInput
+                  style={[
+                    styles.input,
+                    focusedField === "relationship" ? styles.inputFocused : null,
+                    fieldErrors.relationship ? styles.inputError : null,
+                  ]}
+                  placeholder="Relationship (e.g. Daughter, Spouse)"
+                  placeholderTextColor="#8E8E93"
+                  value={form.relationship}
+                  onChangeText={(value) => updateField("relationship", value)}
+                  onFocus={() => setFocusedField("relationship")}
+                  onBlur={() => setFocusedField(null)}
+                  autoCapitalize="words"
+                  autoComplete="off"
+                />
+                {fieldErrors.relationship ? (
+                  <Text style={styles.error}>{fieldErrors.relationship}</Text>
+                ) : null}
+
+                <PhoneInput
+                  placeholder="900 000 0000"
+                  value={form.phoneNumber}
+                  onChangeText={(value) => updateField("phoneNumber", value)}
+                  error={fieldErrors.phoneNumber}
+                />
+              </View>
+
+              {/* Note */}
+              <NoteBox
+                text="In case of an emergency, caregivers and people connected to the patient can access who will be contacted for immediate assistance."
+                style={{ marginTop: 18 }}
+              />
+            </View>
+
+            {/* Continue Button */}
+            <View style={styles.buttonWrap}>
+              <Button
+                title="Continue"
+                onPress={handleContinue}
+                style={styles.button}
+              />
+            </View>
           </View>
-
-          {/* Title */}
-          <Text style={styles.title}>Emergency Contact</Text>
-
-          {/* Description */}
-          <Text style={styles.subtitle}>
-            Who should be contacted in{"\n"}case of emergency?
-          </Text>
-
-          {/* Form Card */}
-          <View style={styles.card}>
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === "fullName" ? styles.inputFocused : null,
-                fieldErrors.fullName ? styles.inputError : null,
-              ]}
-              placeholder="Full Name"
-              placeholderTextColor="#8E8E93"
-              value={form.fullName}
-              onChangeText={(value) => updateField("fullName", value)}
-              onFocus={() => setFocusedField("fullName")}
-              onBlur={() => setFocusedField(null)}
-              autoCapitalize="words"
-              textContentType="name"
-              autoComplete="name"
-            />
-            {fieldErrors.fullName ? (
-              <Text style={styles.error}>{fieldErrors.fullName}</Text>
-            ) : null}
-
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === "relationship" ? styles.inputFocused : null,
-                fieldErrors.relationship ? styles.inputError : null,
-              ]}
-              placeholder="Relationship (e.g. Daughter, Spouse)"
-              placeholderTextColor="#8E8E93"
-              value={form.relationship}
-              onChangeText={(value) => updateField("relationship", value)}
-              onFocus={() => setFocusedField("relationship")}
-              onBlur={() => setFocusedField(null)}
-              autoCapitalize="words"
-              autoComplete="off"
-            />
-            {fieldErrors.relationship ? (
-              <Text style={styles.error}>{fieldErrors.relationship}</Text>
-            ) : null}
-
-            <PhoneInput
-              placeholder="900 000 0000"
-              value={form.phoneNumber}
-              onChangeText={(value) => updateField("phoneNumber", value)}
-              error={fieldErrors.phoneNumber}
-            />
-          </View>
-
-          {/* Note */}
-          <NoteBox
-            text="In case of an emergency, caregivers and people connected to the patient can access who will be contacted for immediate assistance."
-            style={{ marginTop: 18 }}
-          />
-        </View>
-
-        {/* Continue Button */}
-        <View style={styles.buttonWrap}>
-          <Button
-            title="Continue"
-            onPress={handleContinue}
-            style={styles.button}
-          />
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -187,6 +189,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,

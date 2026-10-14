@@ -1,19 +1,2 @@
-import SettingsItem from "@/components/feature/shared/settings/SettingsItem";
-import SettingsSection from "@/components/feature/shared/settings/SettingsSection";
-import { useRouter } from "expo-router";
-import React from "react";
-
-export default function EmergencySettingsSection() {
-  const router = useRouter();
-
-  return (
-    <SettingsSection title="EMERGENCY SETTINGS">
-      <SettingsItem
-        icon="call-outline"
-        title="Emergency Contacts"
-        subtitle="Manage and view emergency contact numbers"
-        onPress={() => router.push("/(protected)/emergency-contacts")}
-      />
-    </SettingsSection>
-  );
-}
+export { default } from "@/components/feature/shared/settings/EmergencySettingsSection";
+export type { EmergencySettingsSectionProps } from "@/components/feature/shared/settings/EmergencySettingsSection";

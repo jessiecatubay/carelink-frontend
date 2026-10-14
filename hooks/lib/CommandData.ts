@@ -30,8 +30,8 @@ export const CommandData: Record<
     description: "Patient requested assistance",
     type: "Requests",
     icon: require("@/assets/icons/assistance.png"),
-    iconColor: "#F2C94C",
-    iconBackground: "#FFF9E6",
+    iconColor: "#7C3AED",
+    iconBackground: "#EDE9FE",
   },
 
   EMERGENCY: {

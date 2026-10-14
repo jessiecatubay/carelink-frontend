@@ -228,7 +228,7 @@ export default function ManagePatientsScreen() {
         <View style={styles.titleSection}>
           <Text style={styles.title}>Connected Patients</Text>
           <Text style={styles.subtitle}>
-            Select which patient's real-time vitals and notifications you want to monitor on your dashboard.
+            Select which patient&apos;s real-time vitals and notifications you want to monitor on your dashboard.
           </Text>
         </View>
 
@@ -251,7 +251,7 @@ export default function ManagePatientsScreen() {
             </View>
             <Text style={styles.emptyTitle}>No Patients Connected</Text>
             <Text style={styles.emptyText}>
-              Scan a patient's QR code or enter their connection code to start monitoring their status.
+              Scan a patient&apos;s QR code or enter their connection code to start monitoring their status.
             </Text>
             <TouchableOpacity
               style={styles.emptyPairButton}

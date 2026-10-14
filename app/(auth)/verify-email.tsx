@@ -211,7 +211,7 @@ export default function VerifyEmailScreen() {
             <Text style={styles.title}>Verify your email</Text>
 
             <Text style={styles.description}>
-              We've sent a 6-digit verification code to
+              We&apos;ve sent a 6-digit verification code to
             </Text>
 
             <Text style={styles.email}>{email}</Text>
@@ -308,7 +308,7 @@ export default function VerifyEmailScreen() {
 
             <View style={styles.resendContainer}>
               <Text style={styles.resendLabel}>
-                Didn't receive the code?
+                Didn&apos;t receive the code?
               </Text>
 
               <TouchableOpacity

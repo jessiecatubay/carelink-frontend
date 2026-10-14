@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Href, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
+import NoteBox from "@/components/ui/NoteBox";
 import {
   Dimensions,
   FlatList,
@@ -32,6 +33,8 @@ interface ManualChapter {
   content: {
     iconName?: keyof typeof Ionicons.glyphMap;
     localIcon?: any;
+    iconBg?: string;
+    iconTintColor?: string;
     heading: string;
     description: string;
     color?: string;
@@ -108,7 +111,9 @@ const CHAPTERS: ManualChapter[] = [
         heading: "General Assistance",
         description:
           "Patient needs physical support, help standing, or routine caregiving tasks.",
-        color: "#6366F1",
+        color: "#7C3AED",
+        iconBg: "#EDE9FE",
+        iconTintColor: "#7C3AED",
       },
       {
         localIcon: require("@/assets/icons/satisfied.png"),
@@ -142,13 +147,6 @@ const CHAPTERS: ManualChapter[] = [
         description:
           "Schedule customized medication reminders that notify both you and the patient at specified times.",
         color: "#0EA5E9",
-      },
-      {
-        iconName: "call-outline",
-        heading: "Emergency Speed-Dial",
-        description:
-          "Access designated emergency contacts and NDRRMC hotline (911) with one-tap slide emergency calling.",
-        color: "#DC2626",
       },
     ],
     tipText: "Check the AI Help tab in the navigation bar whenever you need care guidance.",
@@ -319,13 +317,21 @@ export default function UserManualScreen() {
                 <View
                   style={[
                     styles.iconWrap,
-                    { backgroundColor: `${point.color || "#12A5B5"}15` },
+                    {
+                      backgroundColor:
+                        point.iconBg || `${point.color || "#12A5B5"}15`,
+                    },
                   ]}
                 >
                   {point.localIcon ? (
                     <Image
                       source={point.localIcon}
-                      style={styles.localIcon}
+                      style={[
+                        styles.localIcon,
+                        point.iconTintColor
+                          ? { tintColor: point.iconTintColor }
+                          : null,
+                      ]}
                       resizeMode="contain"
                     />
                   ) : (
@@ -347,10 +353,7 @@ export default function UserManualScreen() {
 
           {/* Pro Tip Box */}
           {item.tipText ? (
-            <View style={styles.tipBox}>
-              <Ionicons name="bulb-outline" size={18} color="#D97706" />
-              <Text style={styles.tipText}>{item.tipText}</Text>
-            </View>
+            <NoteBox text={item.tipText} style={{ marginTop: 8 }} />
           ) : null}
         </ScrollView>
       </View>
@@ -492,7 +495,7 @@ export default function UserManualScreen() {
                   </View>
                 </View>
                 <Text style={styles.optionDescription}>
-                  Point your camera at the QR code displayed on the patient's device or app.
+                  Point your camera at the QR code displayed on the patient&apos;s device or app.
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
@@ -510,7 +513,7 @@ export default function UserManualScreen() {
               <View style={styles.optionTextWrap}>
                 <Text style={styles.optionTitle}>Enter Code Manually</Text>
                 <Text style={styles.optionDescription}>
-                  Type the 6-character connection code shown on the patient's screen.
+                  Type the 6-character connection code shown on the patient&apos;s screen.
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
@@ -689,25 +692,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#64748B",
     lineHeight: 18,
-  },
-  tipBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#FEF3C7",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: "#F59E0B",
-    marginTop: 6,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 12,
-    color: "#92400E",
-    fontWeight: "500",
-    lineHeight: 16,
   },
   footer: {
     flexDirection: "row",

@@ -14,7 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -226,36 +227,42 @@ export default function ProfileScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ProfileHeader name={fullName} roleTitle={roleTitle} />
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <ProfileHeader name={fullName} roleTitle={roleTitle} />
 
-        <AccountInformation
-          firstName={firstName}
-          lastName={lastName}
-          email={email}
-          phoneNumber={phoneNumber}
-          editable={isEditing}
-          onFirstNameChange={(val) => setFirstName(formatNameInput(val))}
-          onLastNameChange={(val) => setLastName(formatNameInput(val))}
-          onPhoneNumberChange={(val) =>
-            setPhoneNumber(formatPhilippinePhoneNumber(val.replace(/[\r\n]/g, "")))
-          }
-        />
+          <AccountInformation
+            firstName={firstName}
+            lastName={lastName}
+            email={email}
+            phoneNumber={phoneNumber}
+            editable={isEditing}
+            onFirstNameChange={(val) => setFirstName(formatNameInput(val))}
+            onLastNameChange={(val) => setLastName(formatNameInput(val))}
+            onPhoneNumberChange={(val) =>
+              setPhoneNumber(formatPhilippinePhoneNumber(val.replace(/[\r\n]/g, "")))
+            }
+          />
 
-        <RoleInformation accountType={roleTitle} />
+          <RoleInformation accountType={roleTitle} />
 
-        <EditProfileButton
-          isEditing={isEditing}
-          loading={saving}
-          onPress={isEditing ? handleSaveProfile : () => setIsEditing(true)}
-          onCancel={handleCancelEdit}
-          style={styles.editButton}
-          disabled={saving}
-        />
-      </ScrollView>
+          <EditProfileButton
+            isEditing={isEditing}
+            loading={saving}
+            onPress={isEditing ? handleSaveProfile : () => setIsEditing(true)}
+            onCancel={handleCancelEdit}
+            style={styles.editButton}
+            disabled={saving}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <CustomAlertModal
         visible={alertModal.visible}

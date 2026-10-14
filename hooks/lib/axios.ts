@@ -10,7 +10,9 @@ import {
   getAccessToken
 } from "@/services/token";
 
-const backendURL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const backendURL =
+  process.env.EXPO_PUBLIC_BACKEND_URL ||
+  "https://carelink-backend-gslj.onrender.com";
 
 const axiosInstance = axios.create({
   baseURL: backendURL,

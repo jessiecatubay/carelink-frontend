@@ -9,6 +9,7 @@ type RemoteButtonProps = {
   isEmergency?: boolean;
   disabled?: boolean;
   cooldown?: number;
+  iconTintColor?: string;
 };
 
 export default function RemoteButton({
@@ -19,6 +20,7 @@ export default function RemoteButton({
   isEmergency = false,
   disabled = false,
   cooldown,
+  iconTintColor,
 }: RemoteButtonProps) {
   const isButtonDisabled = disabled || (typeof cooldown === "number" && cooldown > 0);
 
@@ -47,10 +49,18 @@ export default function RemoteButton({
     >
       <Image
         source={icon}
-        style={[styles.cardIcon, isEmergency && styles.whiteIcon]}
+        style={[
+          styles.cardIcon,
+          isEmergency && styles.whiteIcon,
+          iconTintColor ? { tintColor: iconTintColor } : null,
+        ]}
         resizeMode="contain"
       />
-      <Text style={[styles.cardText, isEmergency && styles.whiteText]}>
+      <Text
+        style={[styles.cardText, isEmergency && styles.whiteText]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {cooldown && cooldown > 0 ? `${label} (${cooldown}s)` : label}
       </Text>
       {cooldown && cooldown > 0 ? (

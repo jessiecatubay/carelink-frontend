@@ -17,7 +17,7 @@ const FEATURES = [
     iconName: "hardware-chip-outline" as const,
     heading: "Connected Hardware Unit",
     description:
-      "Your patient has a dedicated CareLink hardware button unit connected directly to the cloud via MQTT.",
+      "Your patient has a dedicated CareLink Wearable Wrist Hardware that will send pulse and temperature to the app",
     iconBg: "#E0F2FE",
     iconColor: "#0284C7",
   },

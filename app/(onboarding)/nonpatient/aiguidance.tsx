@@ -29,14 +29,6 @@ const AI_FEATURES = [
     iconBg: "#E0F2FE",
     iconColor: "#0284C7",
   },
-  {
-    iconName: "call-outline" as const,
-    heading: "Emergency Speed-Dial",
-    description:
-      "Access designated emergency contacts and NDRRMC hotline (911) with one-tap slide emergency calling.",
-    iconBg: "#FEE2E2",
-    iconColor: "#EF4444",
-  },
 ];
 
 export default function AiGuidanceScreen() {

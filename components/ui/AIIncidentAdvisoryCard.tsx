@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -316,7 +315,7 @@ export default function AIIncidentAdvisoryCard({
                     Read directly to emergency dispatchers or paramedics:
                   </Text>
                   <Text style={styles.briefingQuote}>
-                    "{advisory.paramedicBriefing}"
+                    {`"${advisory.paramedicBriefing}"`}
                   </Text>
                 </View>
               ) : null}

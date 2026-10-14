@@ -1,7 +1,7 @@
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 export default function WelcomeHeader() {
   return (
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 700,
-    height: 100,
+    height: 110,
   },
   tagline: {
     fontSize: 15.5,

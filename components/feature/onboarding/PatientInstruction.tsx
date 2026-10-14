@@ -45,7 +45,7 @@ export default function PatientInstruction({ onContinue }: PatientInstructionPro
             <View style={[styles.card, styles.assistanceCard]}>
               <Image
                 source={require("@/assets/icons/assistance.png")}
-                style={styles.cardIcon}
+                style={[styles.cardIcon, styles.assistanceIcon]}
                 resizeMode="contain"
               />
               <Text style={styles.cardText}>Assistance</Text>
@@ -148,7 +148,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#D4EBFD", // light blue
   },
   assistanceCard: {
-    backgroundColor: "#FDE8C7", // light yellow
+    backgroundColor: "#EDE9FE", // light purple
+  },
+  assistanceIcon: {
+    tintColor: "#7C3AED",
   },
   emergencyCard: {
     backgroundColor: "#F16A66", // solid red/coral

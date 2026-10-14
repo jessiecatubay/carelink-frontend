@@ -204,7 +204,13 @@ export default function SlideToCall911({
           pointerEvents="none"
           style={[styles.trackTextContainer, { opacity: textOpacity }]}
         >
-          <Text style={styles.trackLabel}>{label}</Text>
+          <Text
+            style={styles.trackLabel}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {label}
+          </Text>
 
           <Animated.View
             style={[

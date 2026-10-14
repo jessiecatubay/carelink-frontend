@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,7 +18,6 @@ import ChatMessage, {
 import QuickPrompts from "@/components/feature/nonpatient/dashboard/ai/QuickPrompts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ChatBubble from "@/components/feature/nonpatient/dashboard/ai/ChatBubble";
-import { View } from "react-native";
 import AIIcon from "@/components/feature/nonpatient/dashboard/ai/AIIcon";
 
 const DEFAULT_PROMPTS = [

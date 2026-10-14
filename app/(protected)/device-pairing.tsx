@@ -25,7 +25,6 @@ export default function DevicePairingScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -265,15 +264,15 @@ export default function DevicePairingScreen() {
                 />
                 <Pressable
                   accessibilityRole="button"
-                  disabled={loading}
+                  disabled={loadingPreview}
                   onPress={handleInitiateConnect}
                   style={({ pressed }) => [
                     styles.connectButton,
                     pressed && styles.buttonPressed,
-                    loading && styles.buttonDisabled,
+                    loadingPreview && styles.buttonDisabled,
                   ]}
                 >
-                  {loading ? (
+                  {loadingPreview ? (
                     <ActivityIndicator color="#0AA7A8" />
                   ) : (
                     <Text style={styles.connectButtonText}>Pair with Code</Text>

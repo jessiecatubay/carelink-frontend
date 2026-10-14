@@ -3,7 +3,6 @@ import Button from "@/components/ui/Button";
 import NoteBox from "@/components/ui/NoteBox";
 import PaginationDots from "@/components/ui/PaginationDots";
 import { registerForPushNotificationsAsync } from "@/hooks/lib/notifications";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
