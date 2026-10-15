@@ -15,6 +15,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { EmergencyAlertProvider } from "@/context/EmergencyAlertContext";
 import { HapticsProvider } from "@/context/HapticsContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
+import NetworkStatusBanner from "@/components/common/NetworkStatusBanner";
 import { initSocket } from "@/hooks/lib/socket";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import * as Notifications from "expo-notifications";
@@ -155,6 +156,7 @@ export default function RootLayout() {
               <OnboardingProvider>
                 <Stack screenOptions={{ headerShown: false }} />
                 <StatusBar style="auto" />
+                <NetworkStatusBanner />
               </OnboardingProvider>
             </EmergencyAlertProvider>
           </HapticsProvider>

@@ -124,7 +124,14 @@ export default function PatientPairingFlowModal({
           {/* Drag handle */}
           <View style={styles.dragHandle} />
 
-          {loadingPatient ? (
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollBody}
+            bounces={false}
+          >
+            {loadingPatient ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#0AA7A8" />
               <Text style={styles.loadingText}>Fetching patient profile...</Text>
@@ -385,6 +392,7 @@ export default function PatientPairingFlowModal({
               </View>
             </View>
           )}
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -407,11 +415,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 36 : 24,
+    maxHeight: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
+  },
+  scrollBody: {
+    paddingBottom: 20,
   },
   dragHandle: {
     width: 40,

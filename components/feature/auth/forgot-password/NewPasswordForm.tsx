@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
 import PasswordInput from "@/components/ui/PasswordInput";
+import PasswordRequirements from "@/components/feature/auth/PasswordRequirements";
 import { resetPasswordSchema } from "@/schema/auth";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -57,6 +58,11 @@ export default function NewPasswordForm({
               ? error
               : undefined
           }
+        />
+
+        <PasswordRequirements
+          password={password}
+          confirmPassword={confirmPassword}
         />
 
         {error && password && confirmPassword && password === confirmPassword ? (

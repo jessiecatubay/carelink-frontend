@@ -266,6 +266,8 @@ export default function PillReminderModal({
 
           <ScrollView
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.form}
           >
@@ -653,8 +655,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F5F6",
   },
   form: {
+    flexGrow: 1,
     padding: 22,
-    paddingBottom: 24,
+    paddingBottom: 80,
   },
   label: {
     marginBottom: 7,

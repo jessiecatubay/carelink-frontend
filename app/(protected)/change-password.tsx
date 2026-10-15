@@ -127,6 +127,8 @@ export default function ChangePasswordScreen() {
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         >
           {isSuccess ? (
             <ChangePasswordSuccess onContinue={handleGoBack} />
@@ -230,9 +232,10 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   successContent: {
     flexGrow: 1,

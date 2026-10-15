@@ -7,7 +7,7 @@ import axiosInstance from "@/hooks/lib/axios";
 import { initSocket, onConnectionUpdated } from "@/hooks/lib/socket";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PatientDashboardHome() {
@@ -15,6 +15,7 @@ export default function PatientDashboardHome() {
   const { user } = useAuth();
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const checkFamilyConnections = useCallback(async () => {
     if (!user?.id) {
@@ -103,6 +104,15 @@ export default function PatientDashboardHome() {
     };
   }, [checkFamilyConnections]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await checkFamilyConnections();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [checkFamilyConnections]);
+
   const handleOpenSettings = () => {
     triggerAppHaptic("light");
     router.push("/patient/dashboard/settings");
@@ -110,37 +120,53 @@ export default function PatientDashboardHome() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.container}>
-        {/* Header with Centered Logo and Settings Icon */}
-        <View style={styles.header}>
-          <View style={styles.headerSpacer} />
-
-          <Image
-            source={require("@/assets/images/logo.png")}
-            style={styles.logo}
-            resizeMode="contain"
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        bounces={true}
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0AA7A8"]}
+            tintColor="#0AA7A8"
           />
+        }
+      >
+        <View style={styles.container}>
+          {/* Header with Centered Logo and Settings Icon */}
+          <View style={styles.header}>
+            <View style={styles.headerSpacer} />
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Settings"
-            hitSlop={12}
-            onPress={handleOpenSettings}
-            style={styles.settingsButton}
-          >
             <Image
-              source={require("@/assets/icons/settings.png")}
-              style={styles.settingsIcon}
+              source={require("@/assets/images/logo.png")}
+              style={styles.logo}
               resizeMode="contain"
             />
-          </Pressable>
-        </View>
 
-        {/* Interactive Remote Control */}
-        <View style={styles.content}>
-          <PatientRemote />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+              hitSlop={12}
+              onPress={handleOpenSettings}
+              style={styles.settingsButton}
+            >
+              <Image
+                source={require("@/assets/icons/settings.png")}
+                style={styles.settingsIcon}
+                resizeMode="contain"
+              />
+            </Pressable>
+          </View>
+
+          {/* Interactive Remote Control */}
+          <View style={styles.content}>
+            <PatientRemote />
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Connect to Family First Prompt Modal for New/Unconnected Patients */}
       <ConnectPatientPromptModal
@@ -170,6 +196,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,

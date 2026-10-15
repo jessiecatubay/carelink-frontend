@@ -17,6 +17,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -35,6 +36,7 @@ export default function ProfileScreen() {
     user?.emergencyContact || "",
   );
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Custom alert modal
   const [alertModal, setAlertModal] = useState<{
@@ -75,6 +77,23 @@ export default function ProfileScreen() {
       router.back();
     } else {
       router.replace("/nonpatient/dashboard/settings");
+    }
+  };
+
+  const onRefresh = async () => {
+    if (!user?.id) return;
+    setRefreshing(true);
+    try {
+      const res = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+        id: user.id,
+      });
+      if (res.data?.data) {
+        await updateUser(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to refresh user profile:", err);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -235,6 +254,17 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          alwaysBounceVertical={true}
+          bounces={true}
+          overScrollMode="always"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#0AA7A8"]}
+              tintColor="#0AA7A8"
+            />
+          }
         >
           <ProfileHeader name={fullName} roleTitle={roleTitle} />
 
@@ -317,6 +347,7 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 40,

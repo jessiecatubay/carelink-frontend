@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -60,6 +61,7 @@ export default function ManagePatientsScreen() {
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
   const [modalState, setModalState] = useState<ModalState>({
@@ -99,6 +101,15 @@ export default function ManagePatientsScreen() {
 
   useEffect(() => {
     loadConnections();
+  }, [loadConnections]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadConnections();
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadConnections]);
 
   useEffect(() => {
@@ -223,6 +234,17 @@ export default function ManagePatientsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        bounces={true}
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0AA7A8"]}
+            tintColor="#0AA7A8"
+          />
+        }
       >
         {/* Title Header */}
         <View style={styles.titleSection}>
@@ -479,6 +501,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 40,

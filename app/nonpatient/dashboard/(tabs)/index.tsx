@@ -17,7 +17,7 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CurrentVitals from "@/components/feature/nonpatient/dashboard/CurrentVitals";
@@ -112,6 +112,7 @@ export default function Home() {
     "CONNECTED" | "DISCONNECTED"
   >("DISCONNECTED");
   const [patientLoading, setPatientLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [pillReminders, setPillReminders] = useState<PillReminder[]>([]);
   const [showPillReminderModal, setShowPillReminderModal] = useState(false);
   const [editingReminder, setEditingReminder] = useState<PillReminder | null>(
@@ -191,86 +192,92 @@ export default function Home() {
     };
   }, [patient?.id]);
 
-  useEffect(() => {
-    if (!patient) return;
+  const getPatientVitalsHistory = useCallback(async () => {
+    try {
+      const result = await axiosInstance.get(
+        "/api/device/v1/get-recent-vitals",
+      );
 
-    const getPatientVitalsHistory = async () => {
-      try {
-        const result = await axiosInstance.get(
-          "/api/device/v1/get-recent-vitals",
-        );
+      const parsedVitals = vitalResponseSchema
+        .array()
+        .safeParse(result.data.data);
+      if (!parsedVitals.success || parsedVitals.data.length === 0) {
+        console.warn("Received invalid or empty patient vitals response");
+        return;
+      }
 
-        console.log(
-          "GetResultData: ",
-          JSON.stringify(result.data.data, null, 2),
-        );
+      const vitals: Vital[] = parsedVitals.data;
 
-        const parsedVitals = vitalResponseSchema
-          .array()
-          .safeParse(result.data.data);
-        if (!parsedVitals.success || parsedVitals.data.length === 0) {
-          console.warn("Received invalid or empty patient vitals response");
-          return;
+      const temperatures = vitals.map((vital: Vital) => vital.temperature);
+      const heartRates = vitals.map((vital: Vital) => vital.heartRate);
+      const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
+      const batteryLevels = vitals.map((vital: Vital) => vital.batteryLevel);
+
+      const formatLastUpdated = (dateString: string): string => {
+        if (isSamePhilippineDay(dateString, new Date().toISOString())) {
+          return `Today ${formatPhilippineTime(dateString)}`;
         }
 
-        const vitals: Vital[] = parsedVitals.data;
+        return `${formatPhilippineDate(dateString)} ${formatPhilippineTime(dateString)}`;
+      };
 
-        const temperatures = vitals.map((vital: Vital) => vital.temperature);
-        const heartRates = vitals.map((vital: Vital) => vital.heartRate);
-        const lastUpdated = vitals.map((vital: Vital) => vital.recordedAt);
-        const batteryLevels = vitals.map((vital: Vital) => vital.batteryLevel);
+      const formattedTime = formatLastUpdated(lastUpdated[0]);
 
-        const formatLastUpdated = (dateString: string): string => {
-          if (isSamePhilippineDay(dateString, new Date().toISOString())) {
-            return `Today ${formatPhilippineTime(dateString)}`;
-          }
+      const reversedTemps = [...temperatures].reverse();
+      const reversedHeartRates = [...heartRates].reverse();
 
-          return `${formatPhilippineDate(dateString)} ${formatPhilippineTime(dateString)}`;
-        };
+      setTemperature(reversedTemps[4] ?? reversedTemps[0]);
+      setHeartRate(reversedHeartRates[4] ?? reversedHeartRates[0]);
+      setTempHistory(reversedTemps);
+      setHeartHistory(reversedHeartRates);
 
-        const formattedTime = formatLastUpdated(lastUpdated[0]);
+      setLastUpdated(formattedTime);
+      setBatteryLevel(batteryLevels[0] ?? null);
+    } catch (error) {
+      console.error("Failed to get patient vitals:", error);
+    }
+  }, []);
 
-        const reversedTemps = [...temperatures].reverse();
-        const reversedHeartRates = [...heartRates].reverse();
+  const fetchPillReminders = useCallback(async (patientId: string) => {
+    try {
+      const result = await axiosInstance.get("/api/pill-reminders/v1/list", {
+        params: { patientId },
+      });
+      const reminders = result.data?.data;
+      setPillReminders(Array.isArray(reminders) ? reminders : []);
+    } catch (error) {
+      console.error("Failed to get pill reminders:", error);
+      setPillReminders([]);
+    }
+  }, []);
 
-        setTemperature(reversedTemps[4] ?? reversedTemps[0]);
-        setHeartRate(reversedHeartRates[4] ?? reversedHeartRates[0]);
-        setTempHistory(reversedTemps);
-        setHeartHistory(reversedHeartRates);
-
-        setLastUpdated(formattedTime);
-        setBatteryLevel(batteryLevels[0] ?? null);
-      } catch (error) {
-        console.error("Failed to get patient vitals:", error);
-      }
-    };
-
+  useEffect(() => {
+    if (!patient) return;
     getPatientVitalsHistory();
-  }, [patient]);
+  }, [patient, getPatientVitalsHistory]);
 
   useEffect(() => {
     if (!patient?.id) {
       setPillReminders([]);
       return;
     }
+    fetchPillReminders(patient.id);
+  }, [patient?.id, fetchPillReminders]);
 
-    let isCurrent = true;
-    axiosInstance
-      .get("/api/pill-reminders/v1/list", { params: { patientId: patient.id } })
-      .then((result) => {
-        if (!isCurrent) return;
-        const reminders = result.data?.data;
-        setPillReminders(Array.isArray(reminders) ? reminders : []);
-      })
-      .catch((error) => {
-        console.error("Failed to get pill reminders:", error);
-        if (isCurrent) setPillReminders([]);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [patient?.id]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await getUserById();
+      await getPatientVitalsHistory();
+      if (patient?.id) {
+        await fetchPillReminders(patient.id);
+      }
+    } catch (err) {
+      console.error("Failed to refresh dashboard:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [getUserById, getPatientVitalsHistory, fetchPillReminders, patient?.id]);
 
   const savePillReminder = async (
     title: string,
@@ -497,6 +504,17 @@ export default function Home() {
           isTourActive && styles.scrollContainerDuringTour,
         ]}
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        bounces={true}
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0AA7A8"]}
+            tintColor="#0AA7A8"
+          />
+        }
       >
         {/* Step 1 Highlight: Patient Card */}
         <View

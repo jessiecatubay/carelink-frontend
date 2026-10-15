@@ -48,6 +48,8 @@ export default function RegisterDeviceScreen() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           >
             <RegisterDeviceSection />
           </ScrollView>
@@ -99,8 +101,9 @@ const styles = StyleSheet.create({
   },
 
   content: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 36,
+    paddingBottom: 80,
   },
 });
