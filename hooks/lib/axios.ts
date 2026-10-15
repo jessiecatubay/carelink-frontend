@@ -30,16 +30,16 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
 let isRefreshing = false;
 
 let failedQueue: {
-  resolve: (value?: unknown) => void;
+  resolve: (token: string) => void;
   reject: (error: unknown) => void;
 }[] = [];
 
-const processQueue = (error: unknown = null) => {
+const processQueue = (error: unknown = null, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);
-    } else {
-      resolve();
+    } else if (token) {
+      resolve(token);
     }
   });
 
@@ -51,8 +51,12 @@ axiosInstance.interceptors.request.use(
   async (config) => {
     const accessToken = await getAccessToken();
 
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    if (accessToken && config.headers) {
+      if (typeof config.headers.set === "function") {
+        config.headers.set("Authorization", `Bearer ${accessToken}`);
+      } else {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
     }
 
     return config;
@@ -107,13 +111,21 @@ axiosInstance.interceptors.response.use(
     // If another request is already refreshing,
     // wait until that refresh finishes.
     if (isRefreshing) {
-      return new Promise((resolve, reject) => {
+      return new Promise<string>((resolve, reject) => {
         failedQueue.push({
           resolve,
           reject,
         });
       })
-        .then(() => {
+        .then((newToken) => {
+          originalRequest._retry = true;
+          if (originalRequest.headers) {
+            if (typeof originalRequest.headers.set === "function") {
+              originalRequest.headers.set("Authorization", `Bearer ${newToken}`);
+            } else {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            }
+          }
           return axiosInstance(originalRequest);
         })
         .catch((queueError) => {
@@ -161,8 +173,16 @@ axiosInstance.interceptors.response.use(
         true,
       );
 
+      if (originalRequest.headers) {
+        if (typeof originalRequest.headers.set === "function") {
+          originalRequest.headers.set("Authorization", `Bearer ${accessToken}`);
+        } else {
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        }
+      }
+
       // Tell all waiting requests that refresh succeeded
-      processQueue(null);
+      processQueue(null, accessToken);
 
       isRefreshing = false;
 

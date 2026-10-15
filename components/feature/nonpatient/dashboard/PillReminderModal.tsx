@@ -92,10 +92,20 @@ export default function PillReminderModal({
         setSelectedDays(
           hasRecurringDays ? initialData.daysOfWeek! : ALL_DAYS,
         );
-        const parsedDate = new Date(initialData.scheduledAt);
-        setScheduledAt(
-          Number.isNaN(parsedDate.getTime()) ? getNextHour() : parsedDate,
-        );
+        if (initialData.timeString) {
+          const [hStr, mStr] = initialData.timeString.split(":");
+          const h = parseInt(hStr || "0", 10);
+          const m = parseInt(mStr || "0", 10);
+          const d = new Date(initialData.scheduledAt);
+          const baseDate = Number.isNaN(d.getTime()) ? new Date() : d;
+          baseDate.setHours(h, m, 0, 0);
+          setScheduledAt(baseDate);
+        } else {
+          const parsedDate = new Date(initialData.scheduledAt);
+          setScheduledAt(
+            Number.isNaN(parsedDate.getTime()) ? getNextHour() : parsedDate,
+          );
+        }
       } else {
         setTitle("");
         setDescription("");
@@ -209,6 +219,10 @@ export default function PillReminderModal({
         return;
       }
 
+      const hours = scheduledAt.getHours();
+      const minutes = scheduledAt.getMinutes();
+      const timeString = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+
       setSaving(true);
       setError("");
       try {
@@ -217,7 +231,7 @@ export default function PillReminderModal({
           description.trim(),
           scheduledAt,
           undefined,
-          undefined,
+          timeString,
           initialData?.id,
         );
         onClose();
