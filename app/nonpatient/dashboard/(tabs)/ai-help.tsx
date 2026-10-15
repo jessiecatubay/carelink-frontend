@@ -246,16 +246,21 @@ const styles = StyleSheet.create({
   chatScroll: {
     paddingVertical: 18,
     flexGrow: 1,
+    width: "100%",
   },
   avatarWrap: {
+    width: 44,
+    height: 44,
     marginRight: 10,
     marginBottom: 2,
+    flexShrink: 0,
   },
   row: {
     flexDirection: "row",
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: "flex-end",
     paddingHorizontal: 16,
+    width: "100%",
   },
   aiRow: {
     justifyContent: "flex-start",

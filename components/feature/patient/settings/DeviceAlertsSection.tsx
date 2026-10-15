@@ -1,6 +1,7 @@
 import SettingsItem from "@/components/feature/shared/settings/SettingsItem";
 import SettingsSection from "@/components/feature/shared/settings/SettingsSection";
 import SettingsToggle from "@/components/feature/shared/settings/SettingsToggle";
+import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/context/HapticsContext";
 import { useNotificationSettings } from "@/hooks/useNotificationSettings";
 import { useRouter } from "expo-router";
@@ -9,8 +10,11 @@ import { StyleSheet, Text, View } from "react-native";
 
 export default function DeviceAlertsSection() {
   const router = useRouter();
+  const { user } = useAuth();
   const { alertSoundEnabled, updateAlertSoundEnabled } = useNotificationSettings();
   const { hapticFeedbackEnabled, setHapticFeedbackEnabled } = useHaptics();
+
+  const currentDevice = user?.patientProfile?.deviceOwned;
 
   return (
     <SettingsSection title="DEVICE & ALERTS">
@@ -32,8 +36,20 @@ export default function DeviceAlertsSection() {
 
       <SettingsItem
         icon="watch-outline"
-        title="Register Device Owned"
-        subtitle="Register your CareLink wrist device"
+        title={currentDevice ? "CareLink Device" : "Register Device Owned"}
+        subtitle={
+          currentDevice
+            ? `Connected: ${currentDevice}`
+            : "Register your CareLink wrist device"
+        }
+        trailing={
+          currentDevice ? (
+            <View style={styles.connectedBadge}>
+              <View style={styles.connectedDot} />
+              <Text style={styles.connectedText}>Connected</Text>
+            </View>
+          ) : undefined
+        }
         onPress={() => router.push("/patient/dashboard/register-device")}
       />
 
@@ -62,6 +78,29 @@ const styles = StyleSheet.create({
   alwaysOnText: {
     color: "#FFFFFF",
     fontSize: 10,
+    fontWeight: "600",
+  },
+
+  connectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#DCFCE7",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 4,
+  },
+
+  connectedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#16A34A",
+  },
+
+  connectedText: {
+    color: "#15803D",
+    fontSize: 11,
     fontWeight: "600",
   },
 });

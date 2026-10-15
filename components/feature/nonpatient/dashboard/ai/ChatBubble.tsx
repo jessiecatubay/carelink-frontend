@@ -17,7 +17,7 @@ type ChatBubbleProps = {
 export default function ChatBubble({
   text,
   isUser,
-  isCopyable
+  isCopyable,
 }: ChatBubbleProps) {
   const [copied, setCopied] = useState(false);
 
@@ -101,7 +101,7 @@ export default function ChatBubble({
           <View key={index} style={styles.listRow}>
             <Text style={styles.bullet}>•</Text>
 
-            <Text style={styles.text}>
+            <Text style={styles.listText}>
               {renderBoldText(trimmedLine.substring(2))}
             </Text>
           </View>
@@ -118,7 +118,7 @@ export default function ChatBubble({
               {numberedMatch[1]}.
             </Text>
 
-            <Text style={styles.text}>
+            <Text style={styles.listText}>
               {renderBoldText(numberedMatch[2])}
             </Text>
           </View>
@@ -135,7 +135,12 @@ export default function ChatBubble({
   };
 
   return (
-    <View>
+    <View
+      style={[
+        styles.container,
+        isUser ? styles.userContainer : styles.aiContainer,
+      ]}
+    >
       <View
         style={[
           styles.bubble,
@@ -177,21 +182,37 @@ export default function ChatBubble({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    maxWidth: "76%",
+  },
+
+  userContainer: {
+    alignItems: "flex-end",
+    alignSelf: "flex-end",
+  },
+
+  aiContainer: {
+    alignItems: "flex-start",
+    alignSelf: "flex-start",
+    flexShrink: 1,
+  },
+
   bubble: {
-    maxWidth: "80%",
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 18,
   },
 
   userBubble: {
     backgroundColor: "#08A8A8",
     borderBottomRightRadius: 4,
+    alignSelf: "flex-end",
   },
 
   aiBubble: {
     backgroundColor: "#EBECEE",
     borderTopLeftRadius: 4,
+    alignSelf: "flex-start",
   },
 
   text: {
@@ -252,6 +273,13 @@ const styles = StyleSheet.create({
 
   number: {
     width: 24,
+    fontSize: 14.5,
+    lineHeight: 21,
+    color: "#1F2937",
+  },
+
+  listText: {
+    flex: 1,
     fontSize: 14.5,
     lineHeight: 21,
     color: "#1F2937",

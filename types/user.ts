@@ -72,6 +72,7 @@ export interface PatientProfile {
   notes: string | null;
   emergencyContact: string | null;
   medicalConditions: string | null;
+  deviceOwned?: string | null;
 }
 
 export interface PatientNonPatient {

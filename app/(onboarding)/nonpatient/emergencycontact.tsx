@@ -144,7 +144,7 @@ export default function EmergencyContactScreen() {
                     focusedField === "relationship" ? styles.inputFocused : null,
                     fieldErrors.relationship ? styles.inputError : null,
                   ]}
-                  placeholder="Relationship (e.g. Daughter, Spouse)"
+                  placeholder="Relationship"
                   placeholderTextColor="#8E8E93"
                   value={form.relationship}
                   onChangeText={(value) => updateField("relationship", value)}
@@ -168,7 +168,7 @@ export default function EmergencyContactScreen() {
               {/* Note */}
               <NoteBox
                 text="In case of an emergency, caregivers and people connected to the patient can access who will be contacted for immediate assistance."
-                style={{ marginTop: 18 }}
+                style={{ marginTop: 18, marginBottom: 18 }}
               />
             </View>
 

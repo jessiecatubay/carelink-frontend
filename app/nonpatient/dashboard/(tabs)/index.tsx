@@ -6,6 +6,7 @@ import {
   onConnectionUpdated,
   onPatientConnectionStatus,
   onPatientVitals,
+  onPatientWristInactive,
 } from "@/hooks/lib/socket";
 import { vitalResponseSchema } from "@/schema/api";
 import { User, Vital } from "@/types/user";
@@ -101,6 +102,7 @@ export default function Home() {
   const scrollViewRef = useRef<ScrollView>(null);
   const tourCheckedRef = useRef(false);
 
+  const [isWristActive, setIsWristActive] = useState<boolean>(false);
   const [heartRate, setHeartRate] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -118,6 +120,27 @@ export default function Home() {
   const [editingReminder, setEditingReminder] = useState<PillReminder | null>(
     null,
   );
+
+  // Inactivity timer references (30 seconds)
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastReceivedTimeRef = useRef<number | null>(null);
+
+  const resetVitalsToInactive = useCallback(() => {
+    setIsWristActive(false);
+    setHeartRate(0);
+    setTemperature(0);
+    setBatteryLevel(null);
+    console.log("⏱️ No vitals received from wrist for 30s. Vitals reset & battery removed.");
+  }, []);
+
+  const scheduleInactivityTimer = useCallback((timeoutMs = 30000) => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(() => {
+      resetVitalsToInactive();
+    }, timeoutMs);
+  }, [resetVitalsToInactive]);
 
   // Connection Prompt & Feature Spotlight Tour States
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
@@ -226,17 +249,32 @@ export default function Home() {
       const reversedTemps = [...temperatures].reverse();
       const reversedHeartRates = [...heartRates].reverse();
 
-      setTemperature(reversedTemps[4] ?? reversedTemps[0]);
-      setHeartRate(reversedHeartRates[4] ?? reversedHeartRates[0]);
       setTempHistory(reversedTemps);
       setHeartHistory(reversedHeartRates);
-
       setLastUpdated(formattedTime);
-      setBatteryLevel(batteryLevels[0] ?? null);
+
+      // Check whether the most recent record was recorded within 30 seconds
+      const latestTimestamp = new Date(lastUpdated[0]).getTime();
+      const now = Date.now();
+      const elapsedMs = now - latestTimestamp;
+
+      if (elapsedMs < 30000 && elapsedMs >= 0) {
+        lastReceivedTimeRef.current = latestTimestamp;
+        setIsWristActive(true);
+        setTemperature(reversedTemps[4] ?? reversedTemps[0]);
+        setHeartRate(reversedHeartRates[4] ?? reversedHeartRates[0]);
+        setBatteryLevel(batteryLevels[0] ?? null);
+
+        scheduleInactivityTimer(30000 - elapsedMs);
+      } else {
+        // More than 30 seconds have passed since the last vital!
+        // Reset vitals and remove battery level so non-patient knows wrist is inactive
+        resetVitalsToInactive();
+      }
     } catch (error) {
       console.error("Failed to get patient vitals:", error);
     }
-  }, []);
+  }, [scheduleInactivityTimer, resetVitalsToInactive]);
 
   const fetchPillReminders = useCallback(async (patientId: string) => {
     try {
@@ -393,6 +431,9 @@ export default function Home() {
     const off = onPatientVitals((payload: any) => {
       if (!payload) return;
 
+      lastReceivedTimeRef.current = Date.now();
+      setIsWristActive(true);
+
       if (typeof payload.heartRate === "number") {
         setHeartRate(payload.heartRate);
         setHeartHistory((prev) => {
@@ -419,18 +460,34 @@ export default function Home() {
         setBatteryLevel(payload.batteryLevel ?? null);
       }
 
+      // Schedule 30-second inactivity reset
+      scheduleInactivityTimer(30000);
+
       console.log("Received patientVitals via socket", payload);
+    });
+
+    const offInactive = onPatientWristInactive((payload) => {
+      console.log("Received patientWristInactive via socket", payload);
+      resetVitalsToInactive();
     });
 
     return () => {
       off?.();
+      offInactive?.();
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
     };
-  }, []);
+  }, [scheduleInactivityTimer, resetVitalsToInactive]);
 
   useFocusEffect(
     useCallback(() => {
       getUserById();
-    }, [getUserById]),
+      getPatientVitalsHistory();
+      if (lastReceivedTimeRef.current && Date.now() - lastReceivedTimeRef.current >= 30000) {
+        resetVitalsToInactive();
+      }
+    }, [getUserById, getPatientVitalsHistory, resetVitalsToInactive]),
   );
 
   useEffect(() => {
@@ -557,32 +614,38 @@ export default function Home() {
               </Text>
             </View>
           ) : null}
-          <CurrentVitals />
+          <CurrentVitals isWristActive={isWristActive} />
 
           <View style={styles.vitalsGrid}>
             <VitalCard
               label="Heart Rate"
-              value={heartRate}
-              unit=" BPM"
+              value={isWristActive ? heartRate : "--"}
+              unit={isWristActive ? " BPM" : ""}
               icon={require("@/assets/icons/cardiogram.png")}
               color="#FFFFFF"
               backgroundColor="#12A5B5"
-              rangeDetail="60 - 100 BPM"
+              rangeText={isWristActive ? "Normal Range" : "Wrist Inactive"}
+              rangeDetail={isWristActive ? "60 - 100 BPM" : "No live signal in 30s"}
+              rangeDotColor={isWristActive ? "#FFFFFF" : "rgba(255, 255, 255, 0.45)"}
               history={heartHistory}
               chartGradientId="hrGradient"
               tickType="heart"
+              isActive={isWristActive}
             />
             <VitalCard
               label="Temperature"
-              value={temperature}
-              unit=" °C"
+              value={isWristActive ? temperature : "--"}
+              unit={isWristActive ? " °C" : ""}
               icon={require("@/assets/icons/temperature.png")}
               color="#FFFFFF"
               backgroundColor="#F16A66"
-              rangeDetail="36.0 - 37.5 °C"
+              rangeText={isWristActive ? "Normal Range" : "Wrist Inactive"}
+              rangeDetail={isWristActive ? "36.0 - 37.5 °C" : "No live signal in 30s"}
+              rangeDotColor={isWristActive ? "#FFFFFF" : "rgba(255, 255, 255, 0.45)"}
               history={tempHistory}
               chartGradientId="tempGradient"
               tickType="temp"
+              isActive={isWristActive}
             />
           </View>
         </View>
@@ -605,6 +668,7 @@ export default function Home() {
           <LastUpdatedCard
             lastUpdated={lastUpdated}
             batteryLevel={batteryLevel}
+            isWristActive={isWristActive}
           />
         </View>
 

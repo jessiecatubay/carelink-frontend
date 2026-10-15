@@ -51,6 +51,11 @@ export default function ManagePatientScreen() {
   const [currentConnection, setCurrentConnection] = useState<Connection | null>(
     null,
   );
+  const [primaryContact, setPrimaryContact] = useState<{
+    name?: string | null;
+    relationship?: string | null;
+    phoneNumber?: string | null;
+  } | null>(null);
 
   const [alertModal, setAlertModal] = useState<{
     visible: boolean;
@@ -85,6 +90,32 @@ export default function ManagePatientScreen() {
         null;
 
       setCurrentConnection(active);
+
+      // Fetch emergency contacts directly from the database EmergencyContact table
+      const activePatientId = active?.patient?.id;
+      if (activePatientId) {
+        try {
+          const ecRes = await axiosInstance.post(
+            "/api/emergency-contact/v1/emergency-contacts/patient",
+            { patientProfileId: activePatientId },
+          );
+          const list = ecRes.data?.data || [];
+          if (Array.isArray(list) && list.length > 0) {
+            const prio = list.find((c: any) => c.isPriority) || list[0];
+            setPrimaryContact({
+              name: prio.name,
+              relationship: prio.relationship || "Primary Emergency Contact",
+              phoneNumber: prio.phoneNumber,
+            });
+          } else {
+            setPrimaryContact(null);
+          }
+        } catch (ecErr) {
+          console.log("Could not load emergency contact in manage-patient:", ecErr);
+        }
+      } else {
+        setPrimaryContact(null);
+      }
     } catch (error) {
       console.error("Failed to load patient profile:", error);
     } finally {
@@ -231,9 +262,16 @@ export default function ManagePatientScreen() {
 
               {/* Emergency Contact */}
               <EmergencyContactCard
-                contactName={`${patientName}'s Emergency Contact`}
-                phoneNumber={emergencyContact}
-                relationship="Caregiver / Emergency"
+                contactName={
+                  primaryContact?.name || `${patientName}'s Emergency Contact`
+                }
+                phoneNumber={
+                  primaryContact?.phoneNumber || patient?.phoneNumber || null
+                }
+                relationship={
+                  primaryContact?.relationship || "Primary Emergency Contact"
+                }
+                onManagePress={() => router.push("/(protected)/emergency-contacts")}
               />
 
               {/* Action Button */}

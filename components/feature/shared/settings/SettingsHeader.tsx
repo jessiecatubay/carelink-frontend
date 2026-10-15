@@ -22,7 +22,7 @@ export default function SettingsHeader({
       return;
     }
     if (router.canGoBack()) {
-      router.back();
+      router.push("/patient/dashboard/(tabs)");
     } else {
       router.replace(fallbackRoute);
     }

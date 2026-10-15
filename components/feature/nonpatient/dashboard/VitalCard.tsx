@@ -55,7 +55,7 @@ const formatTickValue = (value: number, type: "heart" | "temp") => {
 
 interface VitalCardProps {
   label: string;
-  value: number;
+  value: number | string;
   unit: string;
   icon: any;
   iconColor?: string;
@@ -67,6 +67,7 @@ interface VitalCardProps {
   history: number[];
   chartGradientId: string;
   tickType: "heart" | "temp";
+  isActive?: boolean;
 }
 
 export default function VitalCard({
@@ -83,16 +84,18 @@ export default function VitalCard({
   history,
   chartGradientId,
   tickType,
+  isActive = true,
 }: VitalCardProps) {
   const resolvedIconColor = iconColor || backgroundColor;
+  const displayValue = isActive ? value : "--";
 
   return (
-    <View style={[styles.vitalCard, { backgroundColor }]}>
+    <View style={[styles.vitalCard, { backgroundColor }, !isActive && styles.vitalCardInactive]}>
       <View style={styles.vitalTop}>
-        <View style={styles.vitalIconContainer}>
+        <View style={[styles.vitalIconContainer, !isActive && styles.vitalIconContainerInactive]}>
           <Image
             source={icon}
-            style={[styles.vitalIcon, { tintColor: resolvedIconColor }]}
+            style={[styles.vitalIcon, { tintColor: resolvedIconColor }, !isActive && { opacity: 0.75 }]}
             resizeMode="contain"
           />
         </View>
@@ -100,26 +103,33 @@ export default function VitalCard({
           <Text style={styles.vitalLabel}>{label}</Text>
           <View style={styles.vitalValueRow}>
             <Text
-              style={styles.vitalValue}
+              style={[styles.vitalValue, !isActive && styles.vitalValueInactive]}
               numberOfLines={1}
               adjustsFontSizeToFit
             >
-              {value}
+              {displayValue}
             </Text>
-            <Text style={styles.vitalUnit}>{unit}</Text>
+            {isActive && unit ? (
+              <Text style={styles.vitalUnit}>{unit}</Text>
+            ) : null}
           </View>
           <View style={styles.rangeRow}>
             <View
-              style={[styles.rangeDot, { backgroundColor: rangeDotColor }]}
+              style={[
+                styles.rangeDot,
+                { backgroundColor: isActive ? rangeDotColor : "rgba(255, 255, 255, 0.45)" },
+              ]}
             />
-            <Text style={styles.rangeText}>{rangeText}</Text>
+            <Text style={[styles.rangeText, !isActive && { opacity: 0.85 }]}>
+              {isActive ? rangeText : "Wrist Inactive"}
+            </Text>
           </View>
           <Text
-            style={styles.rangeDetail}
+            style={[styles.rangeDetail, !isActive && { opacity: 0.75 }]}
             numberOfLines={1}
             adjustsFontSizeToFit
           >
-            {rangeDetail}
+            {isActive ? rangeDetail : "No signal for 30s"}
           </Text>
         </View>
       </View>
@@ -261,5 +271,14 @@ const styles = StyleSheet.create({
   graphContainer: {
     flex: 1,
     height: CHART_HEIGHT,
+  },
+  vitalCardInactive: {
+    opacity: 0.9,
+  },
+  vitalIconContainerInactive: {
+    backgroundColor: "rgba(255, 255, 255, 0.88)",
+  },
+  vitalValueInactive: {
+    color: "rgba(255, 255, 255, 0.92)",
   },
 });
