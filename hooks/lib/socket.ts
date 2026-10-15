@@ -172,6 +172,32 @@ export function onPatientConnectionStatus(
   };
 }
 
+export function onPatientWristInactive(
+  callback: (payload: {
+    patientId: string;
+    deviceId?: string;
+    status: string;
+    timestamp: string;
+  }) => void,
+) {
+  const currentSocket = initSocket();
+
+  if (!currentSocket) {
+    return () => {};
+  }
+
+  const handleInactive = (payload: any) => {
+    if (!payload || typeof payload !== "object") return;
+    callback(payload);
+  };
+
+  currentSocket.on("patientWristInactive", handleInactive);
+
+  return () => {
+    currentSocket.off("patientWristInactive", handleInactive);
+  };
+}
+
 /**
  * Listen for real-time patient-caregiver pairing / connection updates
  */

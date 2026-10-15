@@ -144,77 +144,45 @@ export default function EmergencyContactsScreen() {
         } catch (e) {
           console.log("Could not fetch patient emergency contacts:", e);
         }
-      }
 
-      // 3. If connected patient has an emergency contact in patientProfile not yet in the list, add it
-      if (connectedPatientsList.length > 0) {
-        for (const conn of connectedPatientsList) {
-          const p = conn.patient;
-          if (!p) continue;
-          const pPhone = (
-            p.patientProfile?.emergencyContact ||
-            p.phoneNumber ||
+        // 3. If database table has no contacts yet and caregiver has an emergency contact, persist it directly to database
+        if (fetchedList.length === 0 && currentUserObj.role === "NON_PATIENT") {
+          const userPhone = (
+            currentUserObj.emergencyContact ||
+            currentUserObj.nonPatientProfile?.emergencyContact ||
             ""
           ).toString().trim();
-          const pName =
-            [p.firstName, p.lastName].filter(Boolean).join(" ") || "Patient";
 
-          if (pPhone) {
-            const alreadyExists = fetchedList.some(
-              (c) =>
-                c.phoneNumber?.replace(/\D/g, "") ===
-                pPhone.replace(/\D/g, "") && pPhone.length > 0,
-            );
-            if (!alreadyExists) {
-              fetchedList.push({
-                id: `patient-profile-contact-${p.id}`,
-                name: `${pName}'s Emergency Contact`,
-                relationship: "Connected Patient",
-                phoneNumber: pPhone,
-                isPriority: fetchedList.length === 0,
-                patientProfileId: p.id,
-              });
+          if (userPhone) {
+            const userRel =
+              currentUserObj.nonPatientProfile?.relationship || "Primary Caregiver";
+            const contactName =
+              currentUserObj.emergencyContactName ||
+              currentUserObj.nonPatientProfile?.emergencyContactName ||
+              ([currentUserObj.firstName, currentUserObj.lastName]
+                .filter(Boolean)
+                .join(" ")
+                ? `${[currentUserObj.firstName, currentUserObj.lastName].filter(Boolean).join(" ")} (Caregiver)`
+                : "Emergency Contact");
+
+            try {
+              const res = await axiosInstance.post(
+                "/api/emergency-contact/v1/create-emergency-contact",
+                {
+                  name: contactName,
+                  relationship: userRel,
+                  phoneNumber: userPhone,
+                  patientProfileId: targetPatientId,
+                  isPriority: true,
+                },
+              );
+              if (res.data?.data) {
+                fetchedList = [res.data.data];
+              }
+            } catch (seedErr) {
+              console.log("Could not seed caregiver into EmergencyContact table:", seedErr);
             }
           }
-        }
-      }
-
-      // 4. If current user (NON_PATIENT) has an emergency contact from onboarding or profile, include it
-      const userPhone = (
-        currentUserObj.emergencyContact ||
-        currentUserObj.nonPatientProfile?.emergencyContact ||
-        ""
-      )
-        .toString()
-        .trim();
-
-      if (currentUserObj.role === "NON_PATIENT" && userPhone) {
-        const userRel =
-          currentUserObj.nonPatientProfile?.relationship || "Emergency Contact";
-        const contactName =
-          currentUserObj.emergencyContactName ||
-          currentUserObj.nonPatientProfile?.emergencyContactName ||
-          ([currentUserObj.firstName, currentUserObj.lastName]
-            .filter(Boolean)
-            .join(" ")
-            ? `${[currentUserObj.firstName, currentUserObj.lastName].filter(Boolean).join(" ")} (Caregiver)`
-            : "Emergency Contact");
-
-        const alreadyExists = fetchedList.some(
-          (c) =>
-            c.phoneNumber?.replace(/\D/g, "") === userPhone.replace(/\D/g, "") &&
-            userPhone.length > 0,
-        );
-
-        if (!alreadyExists) {
-          fetchedList.unshift({
-            id: "profile-self-contact",
-            name: contactName,
-            relationship: userRel,
-            phoneNumber: userPhone,
-            isPriority: fetchedList.length === 0,
-            patientProfileId: targetPatientId,
-          });
         }
       }
 
@@ -321,7 +289,7 @@ export default function EmergencyContactsScreen() {
     try {
       setSubmitting(true);
 
-      if (editingContact && editingContact.id !== "profile-self-contact") {
+      if (editingContact?.id) {
         const payload = {
           id: editingContact.id,
           name: formattedName,
@@ -330,56 +298,43 @@ export default function EmergencyContactsScreen() {
           isPriority,
         };
 
-        const response = await axiosInstance.put(
+        await axiosInstance.put(
           "/api/emergency-contact/v1/update-emergency-contact",
           payload,
         );
-
-        if (response.data?.status === "success" || response.data?.data) {
-          await fetchContacts();
-          setModalVisible(false);
-          resetForm();
-        }
       } else {
-        // If we have an active patient ID, create in database
-        if (activePatientProfileId) {
-          const payload = {
-            name: formattedName,
-            relationship: relValue,
-            phoneNumber: trimmedPhone,
-            patientProfileId: activePatientProfileId,
-            isPriority,
-          };
+        const targetId =
+          activePatientProfileId || (user?.role === "PATIENT" ? user.id : "");
 
-          await axiosInstance.post(
-            "/api/emergency-contact/v1/create-emergency-contact",
-            payload,
-          );
+        if (!targetId) {
+          setAlertModal({
+            visible: true,
+            type: "warning",
+            title: "Connected Patient Required",
+            message:
+              "Please pair or connect with a patient first before adding emergency contacts.",
+            confirmText: "OK",
+          });
+          return;
         }
 
-        // Also update local user emergency contact profile if it's the user's primary contact
-        if (user && (isPriority || !user.emergencyContact || editingContact?.id === "profile-self-contact")) {
-          try {
-            await axiosInstance.put("/api/user/v1/update-user", {
-              email: user.email,
-              emergencyContact: trimmedPhone,
-            });
-            await updateUser({
-              ...user,
-              emergencyContact: trimmedPhone,
-              nonPatientProfile: user.nonPatientProfile
-                ? { ...user.nonPatientProfile, relationship: relValue, emergencyContact: trimmedPhone }
-                : null,
-            });
-          } catch (e) {
-            console.log("Error syncing user profile emergency contact:", e);
-          }
-        }
+        const payload = {
+          name: formattedName,
+          relationship: relValue,
+          phoneNumber: trimmedPhone,
+          patientProfileId: targetId,
+          isPriority,
+        };
 
-        await fetchContacts();
-        setModalVisible(false);
-        resetForm();
+        await axiosInstance.post(
+          "/api/emergency-contact/v1/create-emergency-contact",
+          payload,
+        );
       }
+
+      await fetchContacts();
+      setModalVisible(false);
+      resetForm();
     } catch (error) {
       console.error("Failed to save emergency contact:", error);
       setAlertModal({
@@ -408,13 +363,12 @@ export default function EmergencyContactsScreen() {
       onConfirm: async () => {
         setAlertModal((prev) => ({ ...prev, visible: false }));
         try {
-          if (contact.id !== "profile-self-contact") {
-            await axiosInstance.delete(
-              "/api/emergency-contact/v1/delete-emergency-contact",
-              { data: { id: contact.id } },
-            );
-          }
+          await axiosInstance.delete(
+            "/api/emergency-contact/v1/delete-emergency-contact",
+            { data: { id: contact.id } },
+          );
           setContacts((prev) => prev.filter((c) => c.id !== contact.id));
+          await fetchContacts();
         } catch (error) {
           console.error("Failed to delete emergency contact:", error);
           setAlertModal({

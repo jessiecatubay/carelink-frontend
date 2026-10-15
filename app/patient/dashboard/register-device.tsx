@@ -27,7 +27,7 @@ export default function RegisterDeviceScreen() {
       <SafeAreaView edges={["top"]} style={styles.screen}>
         <View style={styles.header}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.push("/patient/dashboard/(tabs)/settings")}
             style={styles.backButton}
             hitSlop={10}
           >

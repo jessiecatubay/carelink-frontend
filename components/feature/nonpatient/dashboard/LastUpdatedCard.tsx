@@ -4,11 +4,13 @@ import { Image, StyleSheet, Text, View } from "react-native";
 interface LastUpdatedCardProps {
   lastUpdated: string;
   batteryLevel: number | null;
+  isWristActive?: boolean;
 }
 
 export default function LastUpdatedCard({
   lastUpdated,
   batteryLevel,
+  isWristActive = true,
 }: LastUpdatedCardProps) {
   const getBatteryColor = (level: number | null) => {
     if (level === null) return "#94A3B8";
@@ -24,12 +26,23 @@ export default function LastUpdatedCard({
       <View style={styles.syncCol}>
         <Image
           source={require("@/assets/icons/belt.png")}
-          style={styles.beltIcon}
+          style={[
+            styles.beltIcon,
+            !isWristActive && { tintColor: "#94A3B8" },
+          ]}
           resizeMode="contain"
         />
-        <Text style={styles.syncText} numberOfLines={1}>
-          {lastUpdated
+        <Text
+          style={[
+            styles.syncText,
+            !isWristActive && styles.syncTextInactive,
+          ]}
+          numberOfLines={1}
+        >
+          {isWristActive && lastUpdated
             ? `Synced: ${lastUpdated}`
+            : lastUpdated
+            ? `Last active: ${lastUpdated}`
             : "No vitals recorded yet"}
         </Text>
       </View>
@@ -37,29 +50,60 @@ export default function LastUpdatedCard({
       <View style={styles.syncDivider} />
 
       <View style={styles.deviceRightCol}>
-        {/* Battery */}
-        <View style={styles.batteryContainer}>
-          <Text style={[styles.batteryText, { color: batteryColor }]}>
-            {batteryLevel !== null ? `${batteryLevel}%` : "--"}
-          </Text>
-          <View style={[styles.batteryBody, { borderColor: batteryColor }]}>
-            <View
-              style={[
-                styles.batteryFill,
-                {
-                  backgroundColor: batteryColor,
-                  width: `${Math.max(4, Math.min(100, batteryLevel ?? 0))}%`,
-                },
-              ]}
-            />
+        {/* Battery - removed when wrist is inactive or batteryLevel is null */}
+        {isWristActive && batteryLevel !== null ? (
+          <View style={styles.batteryContainer}>
+            <Text style={[styles.batteryText, { color: batteryColor }]}>
+              {`${batteryLevel}%`}
+            </Text>
+            <View style={[styles.batteryBody, { borderColor: batteryColor }]}>
+              <View
+                style={[
+                  styles.batteryFill,
+                  {
+                    backgroundColor: batteryColor,
+                    width: `${Math.max(4, Math.min(100, batteryLevel))}%`,
+                  },
+                ]}
+              />
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={styles.inactiveBadge}>
+            <View style={styles.inactiveDot} />
+            <Text style={styles.inactiveBadgeText}>Inactive</Text>
+          </View>
+        )}
 
         {/* Signal */}
         <View style={styles.signalContainer}>
-          <View style={[styles.signalBar, { height: 5 }]} />
-          <View style={[styles.signalBar, { height: 8 }]} />
-          <View style={[styles.signalBar, { height: 12 }]} />
+          <View
+            style={[
+              styles.signalBar,
+              {
+                height: 5,
+                backgroundColor: isWristActive ? "#10B981" : "#CBD5E1",
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.signalBar,
+              {
+                height: 8,
+                backgroundColor: isWristActive ? "#10B981" : "#CBD5E1",
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.signalBar,
+              {
+                height: 12,
+                backgroundColor: isWristActive ? "#10B981" : "#CBD5E1",
+              },
+            ]}
+          />
         </View>
       </View>
     </View>
@@ -100,6 +144,10 @@ const styles = StyleSheet.create({
     color: "#334155",
     fontWeight: "700",
   },
+  syncTextInactive: {
+    color: "#64748B",
+    fontWeight: "600",
+  },
   syncDivider: {
     width: 1,
     height: 16,
@@ -131,6 +179,27 @@ const styles = StyleSheet.create({
   batteryFill: {
     height: 6,
     borderRadius: 1,
+  },
+  inactiveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginRight: 6,
+    gap: 4,
+  },
+  inactiveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#94A3B8",
+  },
+  inactiveBadgeText: {
+    fontSize: 10.5,
+    fontWeight: "700",
+    color: "#64748B",
   },
   signalContainer: {
     flexDirection: "row",

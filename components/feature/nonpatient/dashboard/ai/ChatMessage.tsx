@@ -11,7 +11,7 @@ export type Message = {
 
 type ChatMessageProps = {
   message: Message;
-  isCopyable: boolean
+  isCopyable: boolean;
 };
 
 export default function ChatMessage({ message, isCopyable }: ChatMessageProps) {
@@ -37,19 +37,23 @@ export default function ChatMessage({ message, isCopyable }: ChatMessageProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    marginBottom: 20,
-    alignItems: "flex-end",
+    marginBottom: 16,
     paddingHorizontal: 16,
+    width: "100%",
   },
   aiRow: {
     justifyContent: "flex-start",
+    alignItems: "flex-end",
   },
   userRow: {
     justifyContent: "flex-end",
+    alignItems: "flex-end",
   },
-  
   avatarWrap: {
+    width: 44,
+    height: 44,
     marginRight: 10,
     marginBottom: 2,
+    flexShrink: 0,
   },
 });
