@@ -4,7 +4,7 @@ import { Vital } from "@/types/user";
 import { formatPhilippineDateTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const PAGE_SIZE = 20;
@@ -69,7 +69,17 @@ export default function HistoryScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const pageRef = useRef(1);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadPage(pageRef.current || 1);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const loadPage = async (pageNumber: number) => {
     pageRef.current = pageNumber;
@@ -162,7 +172,21 @@ export default function HistoryScreen() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        bounces={true}
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0AA7A8"]}
+            tintColor="#0AA7A8"
+          />
+        }
+      >
         {loading ? (
           <Text style={styles.message}>Loading vitals...</Text>
         ) : vitals.length === 0 ? (
@@ -261,7 +285,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: "#17191B", fontSize: 18, fontWeight: "700" },
   count: { color: "#079BA8", fontSize: 11, marginTop: 2 },
-  content: { padding: 14, paddingBottom: 30 },
+  content: { flexGrow: 1, padding: 14, paddingBottom: 30 },
   message: { color: "#777B7D", padding: 24, textAlign: "center" },
   list: { gap: 10 },
   vitalCard: {

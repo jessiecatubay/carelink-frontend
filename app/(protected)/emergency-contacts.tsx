@@ -468,10 +468,17 @@ export default function EmergencyContactsScreen() {
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+          alwaysBounceVertical={true}
+          bounces={true}
+          overScrollMode="always"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
+              colors={["#0AA7A8"]}
               tintColor="#0AA7A8"
             />
           }
@@ -628,8 +635,10 @@ export default function EmergencyContactsScreen() {
             </View>
 
             <ScrollView
+              contentContainerStyle={styles.modalScrollContent}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               bounces={false}
             >
               {/* FULL NAME INPUT */}
@@ -787,9 +796,10 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   infoBanner: {
     flexDirection: "row",
@@ -1027,6 +1037,9 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 36,
     maxHeight: "90%",
+  },
+  modalScrollContent: {
+    paddingBottom: 40,
   },
   modalHeader: {
     flexDirection: "row",

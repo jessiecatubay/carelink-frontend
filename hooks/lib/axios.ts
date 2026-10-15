@@ -9,6 +9,7 @@ import {
   clearAuthTokens,
   getAccessToken
 } from "@/services/token";
+import { reportNetworkError } from "@/services/networkMonitor";
 
 const backendURL =
   process.env.EXPO_PUBLIC_BACKEND_URL ||
@@ -84,6 +85,9 @@ axiosInstance.interceptors.response.use(
       if (error.response) {
         console.warn(`[API ${status} Error] ${originalRequest.method?.toUpperCase()} ${originalRequest.url}:`, error.response.data);
       } else if (!status || status >= 500) {
+        if (!status) {
+          reportNetworkError();
+        }
         console.error("[API System Error]", {
           method: originalRequest.method?.toUpperCase(),
           url: originalRequest.url,

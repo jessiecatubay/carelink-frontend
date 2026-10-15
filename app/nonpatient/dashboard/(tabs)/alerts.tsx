@@ -10,6 +10,7 @@ import {
   Image,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -116,8 +117,18 @@ export default function AlertsScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const pageRef = useRef(1);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadPage(pageRef.current || 1);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const loadPage = async (pageNumber: number) => {
     pageRef.current = pageNumber;
@@ -223,7 +234,22 @@ export default function AlertsScreen() {
           />
         </Pressable>
       </View>
-      <ScrollView contentContainerStyle={styles.list}>
+
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        bounces={true}
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0AA7A8"]}
+            tintColor="#0AA7A8"
+          />
+        }
+      >
         <View style={styles.filterRow}>
           {filters.map((filter) => (
             <Pressable
@@ -383,7 +409,7 @@ const styles = StyleSheet.create({
   },
   title: { color: "#17191B", fontSize: 18, fontWeight: "700" },
   count: { color: "#079BA8", fontSize: 13 },
-  list: { gap: 10, padding: 14 },
+  list: { flexGrow: 1, gap: 10, padding: 14, paddingBottom: 40 },
   filterRow: { flexDirection: "row", gap: 8, marginBottom: 4 },
   filter: {
     alignItems: "center",

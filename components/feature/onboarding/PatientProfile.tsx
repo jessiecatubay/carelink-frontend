@@ -111,13 +111,15 @@ export default function PatientProfile({ initialValues, onContinue }: PatientPro
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboardContainer}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
       >
         <View>
           <View style={styles.paginationWrap}>
@@ -317,6 +319,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingBottom: 80,
     justifyContent: "space-between",
   },
   paginationWrap: {

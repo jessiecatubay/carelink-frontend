@@ -4,8 +4,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -26,14 +29,68 @@ export default function VerifyEmailScreen() {
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [resendCountdown, setResendCountdown] = useState(30);
+  const [isFocused, setIsFocused] = useState(true);
 
   const inputRef = useRef<TextInput>(null);
+
+  const onRefresh = async () => {
+    if (!email) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      await resendEmailVerification(email);
+      setSuccessMessage("Refreshed! A new verification code was sent to your email.");
+      setTimeLeft(15 * 60);
+      setResendCountdown(30);
+      setCode("");
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "";
+      if (msg.toLowerCase().includes("already verified")) {
+        setSuccessMessage("Your email is already verified! Redirecting to login...");
+        setTimeout(() => {
+          router.replace("/login");
+        }, 1200);
+      } else {
+        setSuccessMessage("Checked status with database.");
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Sync keyboard dismissal with focus state so tapping always re-opens the soft keyboard
+  useEffect(() => {
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setIsFocused(false);
+      inputRef.current?.blur();
+    });
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setIsFocused(true);
+    });
+
+    return () => {
+      hideSub.remove();
+      showSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleFocusInput = () => {
+    inputRef.current?.focus();
+  };
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -186,7 +243,20 @@ export default function VerifyEmailScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
+          bounces={true}
+          overScrollMode="always"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#0AA7A8"]}
+              tintColor="#0AA7A8"
+            />
+          }
         >
           <TouchableOpacity
             style={styles.backButton}
@@ -245,42 +315,55 @@ export default function VerifyEmailScreen() {
               </View>
             ) : null}
 
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => inputRef.current?.focus()}
+            <Pressable
               style={styles.codeContainer}
+              onPress={handleFocusInput}
             >
+              <View style={styles.boxesRow} pointerEvents="none">
+                {Array.from({ length: 6 }).map((_, index) => {
+                  const digit = code[index];
+                  const isActive =
+                    isFocused &&
+                    (index === code.length || (index === 5 && code.length === 6));
+
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.codeBox,
+                        isActive && styles.codeBoxActive,
+                        Boolean(digit) && styles.codeBoxFilled,
+                      ]}
+                    >
+                      <Text style={styles.codeText}>
+                        {digit || ""}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+
               <TextInput
                 ref={inputRef}
                 value={code}
                 onChangeText={handleCodeChange}
                 keyboardType="number-pad"
                 maxLength={6}
-                autoFocus
-                style={styles.hiddenInput}
+                autoFocus={true}
+                caretHidden={true}
+                cursorColor="transparent"
+                selectionColor="transparent"
+                underlineColorAndroid="transparent"
+                showSoftInputOnFocus={true}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onTouchStart={handleFocusInput}
+                onPressIn={handleFocusInput}
+                style={styles.fullCoverageInput}
                 textContentType="oneTimeCode"
                 autoComplete="one-time-code"
               />
-
-              {Array.from({ length: 6 }).map((_, index) => {
-                const digit = code[index];
-                const isActive = index === code.length;
-
-                return (
-                  <View
-                    key={index}
-                    style={[
-                      styles.codeBox,
-                      isActive && styles.codeBoxActive,
-                    ]}
-                  >
-                    <Text style={styles.codeText}>
-                      {digit || ""}
-                    </Text>
-                  </View>
-                );
-              })}
-            </TouchableOpacity>
+            </Pressable>
 
             <Text style={styles.expiryText}>
               {timeLeft > 0
@@ -355,7 +438,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
 
   backButton: {
@@ -440,17 +523,36 @@ const styles = StyleSheet.create({
 
   codeContainer: {
     width: "100%",
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 64,
+  },
+
+  boxesRow: {
     flexDirection: "row",
     justifyContent: "center",
     gap: 8,
-    marginTop: 8,
+    width: "100%",
   },
 
-  hiddenInput: {
+  fullCoverageInput: {
     position: "absolute",
-    width: 1,
-    height: 1,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: 56,
     opacity: 0,
+    fontSize: 1,
+    lineHeight: 1,
+    color: "transparent",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    padding: 0,
+    zIndex: 10,
   },
 
   codeBox: {
@@ -473,6 +575,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 2,
+  },
+
+  codeBoxFilled: {
+    borderColor: "#0AA7A8",
+    backgroundColor: "#F0FDFA",
   },
 
   codeText: {

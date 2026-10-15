@@ -199,6 +199,8 @@ export default function AiHelpScreen() {
           ref={scrollViewRef}
           contentContainerStyle={styles.chatScroll}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           onContentSizeChange={scrollToBottom}
         >
           {messages.map((msg) => (

@@ -61,6 +61,8 @@ export default function NewPasswordScreen() {
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         >
           <ForgotPasswordHeader
             title="Create New Password"
@@ -93,7 +95,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 40,
-    paddingBottom: 32,
+    paddingBottom: 80,
   },
   errorText: {
     color: "#EF4444",

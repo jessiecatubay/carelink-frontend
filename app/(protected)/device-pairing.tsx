@@ -210,6 +210,8 @@ export default function DevicePairingScreen() {
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         >
           {isSuccess ? (
             <PairingSuccess
@@ -349,9 +351,10 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   successContent: {
     flexGrow: 1,

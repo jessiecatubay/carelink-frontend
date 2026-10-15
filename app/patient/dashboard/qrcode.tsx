@@ -2,10 +2,11 @@ import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +22,7 @@ export default function PatientQRCodeScreen() {
   const { user } = useAuth();
   const [code, setCode] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
     initSocket();
@@ -39,41 +41,50 @@ export default function PatientQRCodeScreen() {
     };
   }, [router]);
 
-  useEffect(() => {
-    const getGeneratedCode = async () => {
-      if (!user?.id) {
-        setLoading(false);
+  const getGeneratedCode = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post("/api/user/v1/get-user-by-id", {
+        id: user?.id,
+      });
+
+      const codeGenerated =
+        response.data?.data?.patientProfile?.connectionCode;
+
+      if (codeGenerated) {
+        setCode(codeGenerated);
         return;
       }
 
-      try {
-        const response = await axiosInstance.post("/api/user/v1/get-user-by-id", {
-          id: user?.id,
-        });
+      const result = await axiosInstance.post(
+        "/api/patient-profile/v1/generate-connection-code",
+        { id: user?.id },
+      );
 
-        const codeGenerated =
-          response.data?.data?.patientProfile?.connectionCode;
-
-        if (codeGenerated) {
-          setCode(codeGenerated);
-          return;
-        }
-
-        const result = await axiosInstance.post(
-          "/api/patient-profile/v1/generate-connection-code",
-          { id: user?.id },
-        );
-
-        setCode(result.data?.data?.generatedCode);
-      } catch (error) {
-        console.error("Failed to load connection QR code:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getGeneratedCode();
+      setCode(result.data?.data?.generatedCode);
+    } catch (error) {
+      console.error("Failed to load connection QR code:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    getGeneratedCode();
+  }, [getGeneratedCode]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await getGeneratedCode();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [getGeneratedCode]);
 
   const qrData = JSON.stringify({
     connectionCode: code,
@@ -112,6 +123,17 @@ export default function PatientQRCodeScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        bounces={true}
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0AA7A8"]}
+            tintColor="#0AA7A8"
+          />
+        }
       >
         <Text style={styles.title}>Device Pairing</Text>
 

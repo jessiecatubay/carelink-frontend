@@ -140,6 +140,8 @@ export default function EnterResetCodeScreen() {
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         >
           <ForgotPasswordHeader
             title="Enter Reset Code"
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 40,
-    paddingBottom: 32,
+    paddingBottom: 80,
   },
 
   card: {

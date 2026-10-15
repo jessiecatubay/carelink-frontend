@@ -177,10 +177,14 @@ export default function ConnectedCaregiversScreen() {
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
+          bounces={true}
+          overScrollMode="always"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
+              colors={["#0AA7A8"]}
               tintColor="#0AA7A8"
             />
           }
@@ -399,6 +403,7 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 40,

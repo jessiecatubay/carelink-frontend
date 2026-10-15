@@ -114,6 +114,8 @@ export default function UserNameStep({ onContinue }: UserNameStepProps) {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
@@ -186,7 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingHorizontal: 24,
     paddingTop: 50,
-    paddingBottom: 32,
+    paddingBottom: 60,
     alignItems: "center",
   },
   welcomeText: {

@@ -3,6 +3,7 @@ import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import PasswordRequirements from "./PasswordRequirements";
 import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import {
@@ -22,6 +23,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -66,7 +68,39 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [resendCountdown, setResendCountdown] = useState(30);
 
+  const [isCodeFocused, setIsCodeFocused] = useState(true);
+
   const codeInputRef = useRef<TextInput>(null);
+
+  // Sync keyboard dismissal with focus state so tapping always re-opens the soft keyboard
+  useEffect(() => {
+    if (step !== 4) return;
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setIsCodeFocused(false);
+      codeInputRef.current?.blur();
+    });
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setIsCodeFocused(true);
+    });
+
+    return () => {
+      hideSub.remove();
+      showSub.remove();
+    };
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 4) {
+      const timer = setTimeout(() => {
+        codeInputRef.current?.focus();
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
+  const handleFocusCodeInput = () => {
+    codeInputRef.current?.focus();
+  };
 
   // 3-second auto-redirect to login when Step 5 (Success) is reached
   useEffect(() => {
@@ -525,7 +559,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       {step === 3 ? (
         <View>
           <PasswordInput
-            placeholder="Password (min. 8 chars, 1 uppercase, 1 number)"
+            placeholder="Create Password"
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -553,6 +587,13 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
               if (generalError) setGeneralError(null);
             }}
             error={errors.confirmPassword}
+          />
+
+          {/* Explicit Password Requirements Visibility & Validation */}
+          <View style={styles.space} />
+          <PasswordRequirements
+            password={password}
+            confirmPassword={confirmPassword}
           />
 
           <View style={styles.largeSpace} />
@@ -585,41 +626,53 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
             </Text>
           </View>
 
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={() => codeInputRef.current?.focus()}
+          <Pressable
             style={styles.codeContainer}
+            onPress={handleFocusCodeInput}
           >
+            <View style={styles.boxesRow} pointerEvents="none">
+              {Array.from({ length: 6 }).map((_, index) => {
+                const digit = code[index];
+                const isActive =
+                  isCodeFocused &&
+                  (index === code.length || (index === 5 && code.length === 6));
+
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.codeBox,
+                      isActive && styles.codeBoxActive,
+                      digit ? styles.codeBoxFilled : null,
+                    ]}
+                  >
+                    <Text style={styles.codeText}>{digit || ""}</Text>
+                  </View>
+                );
+              })}
+            </View>
+
             <TextInput
               ref={codeInputRef}
               value={code}
               onChangeText={handleCodeChange}
               keyboardType="number-pad"
               maxLength={6}
-              autoFocus
-              style={styles.hiddenInput}
+              autoFocus={true}
+              caretHidden={true}
+              cursorColor="transparent"
+              selectionColor="transparent"
+              underlineColorAndroid="transparent"
+              showSoftInputOnFocus={true}
+              onFocus={() => setIsCodeFocused(true)}
+              onBlur={() => setIsCodeFocused(false)}
+              onTouchStart={handleFocusCodeInput}
+              onPressIn={handleFocusCodeInput}
+              style={styles.fullCoverageInput}
               textContentType="oneTimeCode"
               autoComplete="one-time-code"
             />
-
-            {Array.from({ length: 6 }).map((_, index) => {
-              const digit = code[index];
-              const isActive = index === code.length;
-
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.codeBox,
-                    isActive && styles.codeBoxActive,
-                    digit ? styles.codeBoxFilled : null,
-                  ]}
-                >
-                  <Text style={styles.codeText}>{digit || ""}</Text>
-                </View>
-              );
-            })}
-          </TouchableOpacity>
+          </Pressable>
 
           <Text style={styles.expiryText}>
             {timeLeft > 0
@@ -870,17 +923,36 @@ const styles = StyleSheet.create({
 
   codeContainer: {
     width: "100%",
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 12,
+    minHeight: 64,
+  },
+
+  boxesRow: {
     flexDirection: "row",
     justifyContent: "center",
     gap: 8,
-    marginVertical: 12,
+    width: "100%",
   },
 
-  hiddenInput: {
+  fullCoverageInput: {
     position: "absolute",
-    width: 1,
-    height: 1,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: 52,
     opacity: 0,
+    fontSize: 1,
+    lineHeight: 1,
+    color: "transparent",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    padding: 0,
+    zIndex: 10,
   },
 
   codeBox: {

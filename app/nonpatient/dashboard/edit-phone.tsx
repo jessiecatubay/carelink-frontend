@@ -134,6 +134,8 @@ export default function EditPhoneScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         >
           <Text style={styles.title}>Update Phone Number</Text>
           <Text style={styles.subtitle}>
@@ -233,9 +235,10 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   title: {
     fontSize: 22,

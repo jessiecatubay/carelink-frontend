@@ -87,6 +87,14 @@ export default function PatientRelationshipModal({
           {/* Handle bar */}
           <View style={styles.dragHandle} />
 
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollBody}
+            bounces={false}
+          >
+
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
@@ -198,6 +206,7 @@ export default function PatientRelationshipModal({
               )}
             </TouchableOpacity>
           </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -220,11 +229,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 36 : 24,
+    maxHeight: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
+  },
+  scrollBody: {
+    paddingBottom: 20,
   },
   dragHandle: {
     width: 40,
