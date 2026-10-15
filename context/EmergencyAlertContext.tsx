@@ -60,65 +60,6 @@ export function EmergencyAlertProvider({
     stopEmergencySiren();
   };
 
-  // Helper to trigger system notification banner & sound for non-emergency alerts
-  const showLocalAlertNotification = async (payload: any) => {
-    try {
-      // Patients should never receive notification banners for commands they sent
-      if (user?.role === "PATIENT") {
-        return;
-      }
-
-      const command = (payload?.command || payload?.alertType || payload?.type || "").toUpperCase();
-      if (!command) return;
-
-      let title = "CareLink Alert";
-      let body = "The patient sent a new alert.";
-
-      switch (command) {
-        case "FOOD":
-          title = "🍱 Food Assistance";
-          body = `${payload?.patientName || "The patient"} is requesting food.`;
-          break;
-        case "WATER":
-          title = "💧 Water Assistance";
-          body = `${payload?.patientName || "The patient"} is requesting water.`;
-          break;
-        case "ASSISTANCE":
-          title = "🙋 Assistance Requested";
-          body = `${payload?.patientName || "The patient"} is requesting assistance.`;
-          break;
-        case "SATISFIED":
-          title = "✅ Request Satisfied";
-          body = `${payload?.patientName || "The patient"}'s request has been marked as satisfied.`;
-          break;
-        case "PILL_REMINDER":
-          title = payload?.title?.trim() || "Pill Reminder";
-          body =
-            payload?.description?.trim() ||
-            "It is time for the patient to take their scheduled medication.";
-          break;
-        default:
-          title = `CareLink Alert: ${command}`;
-          body = `${payload?.patientName || "The patient"} sent a new request.`;
-          break;
-      }
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          sound: "default",
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          vibrate: [0, 250, 250, 250],
-          data: payload,
-        },
-        trigger: null,
-      });
-    } catch (error) {
-      console.warn("Local notification error:", error);
-    }
-  };
-
   // 1. Listen for real-time WebSocket socket alerts from connected patients
   useEffect(() => {
     const unsubscribe = onPatientAlert((payload) => {
@@ -139,7 +80,6 @@ export function EmergencyAlertProvider({
 
       if (command === "SATISFIED" || alertType === "SATISFIED") {
         dismissEmergencyAlert();
-        showLocalAlertNotification(payload);
         return;
       }
 
@@ -164,9 +104,10 @@ export function EmergencyAlertProvider({
           phoneNumber: (payload as any)?.phoneNumber,
           deviceId: (payload as any)?.deviceId,
         });
-      } else {
-        showLocalAlertNotification(payload);
       }
+      // Note: Non-emergency alerts (Food, Water, Assistance) are delivered as push notifications
+      // by the backend to avoid duplicate notifications on the caregiver device, while real-time UI
+      // is updated via socket listeners in RecentActivity and Alerts tab.
     });
 
     return () => {
@@ -236,31 +177,33 @@ export function EmergencyAlertProvider({
     };
   }, [user?.role]);
 
-  // 3. Real-time Pill Reminder notifications (for non-patients/caregivers and patients)
+  // 3. Real-time Pill Reminder notifications (for active in-app sessions)
   useEffect(() => {
     if (!user?.id) return;
 
     const unsubscribe = onPillReminder(async (payload) => {
       console.log("💊 EmergencyAlertContext received pill reminder:", payload);
       try {
-        const pillHeader = payload.title?.trim() || "Pill Reminder";
-        const pillBody =
-          payload.description?.trim() ||
-          (user.role === "NON_PATIENT"
-            ? "It is time for the patient to take their scheduled medication."
-            : "It is time to take your scheduled medication.");
+        // Connected caregivers (NON_PATIENT) receive the remote push notification from backend
+        // to avoid duplicate notifications. Patients receive this local notification if active.
+        if (user.role === "PATIENT") {
+          const pillHeader = payload.title?.trim() || "Pill Reminder";
+          const pillBody =
+            payload.description?.trim() ||
+            "It is time to take your scheduled medication.";
 
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Pill Reminder - " + pillHeader,
-            body: pillBody,
-            sound: "default",
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            vibrate: [0, 250, 250, 250],
-            data: payload,
-          },
-          trigger: null,
-        });
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Pill Reminder - " + pillHeader,
+              body: pillBody,
+              sound: "default",
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+              vibrate: [0, 250, 250, 250],
+              data: payload,
+            },
+            trigger: null,
+          });
+        }
       } catch (err) {
         console.warn("Failed to schedule local pill reminder notification:", err);
       }

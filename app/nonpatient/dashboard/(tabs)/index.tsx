@@ -13,6 +13,7 @@ import { User, Vital } from "@/types/user";
 import {
   formatPhilippineDate,
   formatPhilippineTime,
+  formatTimeString,
   isSamePhilippineDay,
 } from "@/utils/date";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -53,7 +54,9 @@ type PillReminder = {
 };
 
 const formatReminderSchedule = (reminder: PillReminder) => {
-  const timeFormatted = formatPhilippineTime(reminder.scheduledAt);
+  const timeFormatted = reminder.timeString
+    ? formatTimeString(reminder.timeString)
+    : formatPhilippineTime(reminder.scheduledAt);
 
   if (reminder.daysOfWeek && reminder.daysOfWeek.length > 0) {
     const days = reminder.daysOfWeek;

@@ -18,6 +18,7 @@ export default function PatientRemote() {
   // 5-Second Cooldown on Satisfied button
   const [satisfiedCooldown, setSatisfiedCooldown] = useState(0);
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isSendingRef = useRef(false);
 
   const clearCooldownTimer = () => {
     if (cooldownIntervalRef.current) {
@@ -54,6 +55,11 @@ export default function PatientRemote() {
       return;
     }
 
+    if (isSendingRef.current) {
+      return;
+    }
+
+    isSendingRef.current = true;
     try {
       await patientCommand(
         "ESP32-001",
@@ -63,6 +69,8 @@ export default function PatientRemote() {
       );
     } catch (error) {
       console.error("Failed to send patient command:", error);
+    } finally {
+      isSendingRef.current = false;
     }
   };
 

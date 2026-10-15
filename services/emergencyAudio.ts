@@ -9,12 +9,14 @@ let isSirenPlaying = false;
 let sirenInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Triggers the emergency siren notification chime and SOS vibration.
+ * Triggers the emergency siren notification chime fallback.
+ * Uses a static identifier so it updates rather than generating duplicate notifications.
  */
 async function triggerEmergencyChime(): Promise<void> {
   if (Platform.OS === "web") return;
   try {
     await Notifications.scheduleNotificationAsync({
+      identifier: "carelink-emergency-active",
       content: {
         title: "🚨 CARELINK EMERGENCY ALERT",
         body: "Emergency siren active — Connected patient needs immediate assistance!",
@@ -91,20 +93,10 @@ export async function playEmergencySiren(): Promise<void> {
       }
     }
 
-    // 4. Android notification chime fallback / companion
-    if (Platform.OS !== "web") {
+    // 4. Fallback chime if native sound module is unavailable (e.g., Expo Go)
+    // Only triggered if native audio didn't play, avoiding duplicate notifications.
+    if (!nativeSoundPlayed && Platform.OS !== "web") {
       await triggerEmergencyChime();
-
-      if (sirenInterval) {
-        clearInterval(sirenInterval);
-      }
-      sirenInterval = setInterval(() => {
-        if (!isSirenPlaying) {
-          if (sirenInterval) clearInterval(sirenInterval);
-          return;
-        }
-        triggerEmergencyChime();
-      }, 4000);
     }
   } catch (error) {
     console.error("Failed to play emergency siren:", error);
@@ -148,6 +140,13 @@ export async function stopEmergencySiren(): Promise<void> {
     }
     activeAudioHandle = null;
   }
+
+  // 5. Dismiss fallback emergency notification
+  try {
+    if (Platform.OS !== "web") {
+      await Notifications.dismissNotificationAsync("carelink-emergency-active");
+    }
+  } catch {}
 }
 
 

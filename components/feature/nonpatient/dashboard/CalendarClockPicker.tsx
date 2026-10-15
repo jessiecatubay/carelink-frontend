@@ -174,6 +174,45 @@ export default function CalendarClockPicker({
     );
   };
 
+  const adjustMinute = (delta: number) => {
+    const currentMin = value.getMinutes();
+    const nextMin = (currentMin + delta + 60) % 60;
+    onChange(
+      dateWithParts(
+        value,
+        value.getFullYear(),
+        value.getMonth(),
+        value.getDate(),
+        value.getHours(),
+        nextMin,
+      ),
+    );
+  };
+
+  const handleDialTouch = (evt: any) => {
+    if (clockStage !== "minute") return;
+    const { locationX, locationY } = evt.nativeEvent;
+    if (typeof locationX !== "number" || typeof locationY !== "number") return;
+    const dx = locationX - DIAL_SIZE / 2;
+    const dy = locationY - DIAL_SIZE / 2;
+    if (Math.hypot(dx, dy) < 18) return;
+
+    const rad = Math.atan2(dy, dx);
+    const deg = ((rad * 180) / Math.PI + 90 + 360) % 360;
+    const minute = Math.round((deg / 360) * 60) % 60;
+
+    onChange(
+      dateWithParts(
+        value,
+        value.getFullYear(),
+        value.getMonth(),
+        value.getDate(),
+        value.getHours(),
+        minute,
+      ),
+    );
+  };
+
   return (
     <View style={styles.panel}>
       <View style={styles.clockHeader}>
@@ -230,8 +269,82 @@ export default function CalendarClockPicker({
         </View>
       </View>
 
-      <View style={styles.dial}>
+      {/* 1-Minute Step Controls */}
+      {clockStage === "minute" && (
+        <View style={styles.minuteStepperRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Minus 5 minutes"
+            onPress={() => adjustMinute(-5)}
+            style={styles.stepButton}
+          >
+            <Text style={styles.stepButtonText}>-5m</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Minus 1 minute"
+            onPress={() => adjustMinute(-1)}
+            style={[styles.stepButton, styles.stepButtonPrimary]}
+          >
+            <Ionicons name="remove" size={14} color="#0B777A" />
+            <Text style={styles.stepButtonPrimaryText}>1m</Text>
+          </Pressable>
+          <View style={styles.currentMinuteBadge}>
+            <Text style={styles.currentMinuteBadgeText}>
+              {String(value.getMinutes()).padStart(2, "0")} min
+            </Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Plus 1 minute"
+            onPress={() => adjustMinute(1)}
+            style={[styles.stepButton, styles.stepButtonPrimary]}
+          >
+            <Ionicons name="add" size={14} color="#0B777A" />
+            <Text style={styles.stepButtonPrimaryText}>1m</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Plus 5 minutes"
+            onPress={() => adjustMinute(5)}
+            style={styles.stepButton}
+          >
+            <Text style={styles.stepButtonText}>+5m</Text>
+          </Pressable>
+        </View>
+      )}
+
+      <View
+        style={styles.dial}
+        onStartShouldSetResponder={() => clockStage === "minute"}
+        onMoveShouldSetResponder={() => clockStage === "minute"}
+        onResponderGrant={handleDialTouch}
+        onResponderMove={handleDialTouch}
+      >
         <View style={styles.dialCenter} />
+
+        {/* Hand indicator pointing to selected hour/minute */}
+        <View
+          pointerEvents="none"
+          style={[
+            styles.dialHandContainer,
+            {
+              transform: [
+                {
+                  rotate: `${
+                    clockStage === "hour"
+                      ? (hour12 / 12) * 360
+                      : (value.getMinutes() / 60) * 360
+                  }deg`,
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.dialHandLine} />
+          <View style={styles.dialHandDot} />
+        </View>
+
         {dialValues.map((dialValue, index) => {
           const angle = (index / dialValues.length) * Math.PI * 2 - Math.PI / 2;
           const left =
@@ -303,7 +416,7 @@ export default function CalendarClockPicker({
       <Text style={styles.clockHint}>
         {clockStage === "hour"
           ? "Tap an hour, then choose minutes"
-          : "Minutes are set in 5-minute steps"}
+          : "Tap or drag dial, or use -1m / +1m to set exact minute"}
       </Text>
     </View>
   );
@@ -484,5 +597,72 @@ const styles = StyleSheet.create({
     color: "#73878F",
     fontSize: 11,
     textAlign: "center",
+  },
+  minuteStepperRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginBottom: 10,
+  },
+  stepButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "#E2ECEE",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 2,
+  },
+  stepButtonPrimary: {
+    backgroundColor: "#DFF2F0",
+    borderWidth: 1,
+    borderColor: "#A7DCD7",
+  },
+  stepButtonText: {
+    color: "#475569",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  stepButtonPrimaryText: {
+    color: "#0B777A",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  currentMinuteBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "#0B8F91",
+  },
+  currentMinuteBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  dialHandContainer: {
+    position: "absolute",
+    width: DIAL_SIZE,
+    height: DIAL_SIZE,
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  dialHandLine: {
+    position: "absolute",
+    top: DIAL_SIZE / 2 - DIAL_RADIUS + DIAL_VALUE_SIZE / 2,
+    width: 2,
+    height: DIAL_RADIUS - DIAL_VALUE_SIZE / 2,
+    backgroundColor: "#0B8F91",
+  },
+  dialHandDot: {
+    position: "absolute",
+    top: DIAL_SIZE / 2 - DIAL_RADIUS,
+    width: DIAL_VALUE_SIZE,
+    height: DIAL_VALUE_SIZE,
+    borderRadius: DIAL_VALUE_SIZE / 2,
+    backgroundColor: "rgba(11, 143, 145, 0.2)",
+    borderWidth: 2,
+    borderColor: "#0B8F91",
   },
 });
