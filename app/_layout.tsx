@@ -86,7 +86,7 @@ export default function RootLayout() {
     initSocket();
 
     if (Platform.OS === "android") {
-      Notifications.setNotificationChannelAsync("carelink-emergency-v2", {
+      Notifications.setNotificationChannelAsync("carelink-emergency-v3", {
         name: "CareLink Critical Emergency",
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 500, 200, 500, 200, 1000],

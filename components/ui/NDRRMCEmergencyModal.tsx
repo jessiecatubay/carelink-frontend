@@ -150,7 +150,9 @@ export default function NDRRMCEmergencyModal({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onDismiss}
+      onRequestClose={() => {
+        triggerAppHaptic("warning");
+      }}
     >
       <View style={styles.overlay}>
         {/* Fullscreen Strobe Red Ambient Flash */}
