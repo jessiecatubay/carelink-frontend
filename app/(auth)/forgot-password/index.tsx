@@ -4,10 +4,10 @@ import { forgotPassword } from "@/services/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -39,7 +39,7 @@ export default function ForgotPasswordIndexScreen() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+        keyboardVerticalOffset={0}
         style={styles.container}
       >
         <View style={styles.headerBar}>
@@ -58,12 +58,12 @@ export default function ForgotPasswordIndexScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={true}
+          extraScrollHeight={65}
         >
           <ForgotPasswordHeader
             title="Forgot Password"
@@ -73,7 +73,7 @@ export default function ForgotPasswordIndexScreen() {
             onSubmit={handleSendResetLink}
             loading={loading}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

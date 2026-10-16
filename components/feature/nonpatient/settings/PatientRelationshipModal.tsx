@@ -1,3 +1,4 @@
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import NoteBox from "@/components/ui/NoteBox";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -87,12 +88,13 @@ export default function PatientRelationshipModal({
           {/* Handle bar */}
           <View style={styles.dragHandle} />
 
-          <ScrollView
+          <KeyboardAwareScrollView
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollBody}
             bounces={false}
+            extraScrollHeight={65}
           >
 
           {/* Header */}
@@ -206,7 +208,7 @@ export default function PatientRelationshipModal({
               )}
             </TouchableOpacity>
           </View>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -237,6 +239,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   scrollBody: {
+    flexGrow: 1,
     paddingBottom: 20,
   },
   dragHandle: {

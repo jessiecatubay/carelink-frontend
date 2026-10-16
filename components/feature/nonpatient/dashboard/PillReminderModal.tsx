@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import CalendarClockPicker from "@/components/feature/nonpatient/dashboard/CalendarClockPicker";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -278,12 +278,12 @@ export default function PillReminderModal({
             </Pressable>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
-            automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.form}
+            extraScrollHeight={75}
           >
             <Text style={styles.label}>Pill name</Text>
             <TextInput
@@ -615,7 +615,7 @@ export default function PillReminderModal({
                 )}
               </Pressable>
             ) : null}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>

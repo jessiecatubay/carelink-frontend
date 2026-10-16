@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -94,12 +94,12 @@ export default function EmergencyContactScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           showsVerticalScrollIndicator={false}
+          extraScrollHeight={75}
         >
           <View style={styles.container}>
             <View>
@@ -181,7 +181,7 @@ export default function EmergencyContactScreen() {
               />
             </View>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
     justifyContent: "space-between",
   },

@@ -1,4 +1,5 @@
 import CustomAlertModal, { AlertModalType } from "@/components/ui/CustomAlertModal";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import PhoneInput from "@/components/ui/PhoneInput";
 import SlideToCall911 from "@/components/ui/SlideToCall911";
 import { useAuth } from "@/context/AuthContext";
@@ -588,12 +589,13 @@ export default function EmergencyContactsScreen() {
               </Pressable>
             </View>
 
-            <ScrollView
+            <KeyboardAwareScrollView
               contentContainerStyle={styles.modalScrollContent}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               bounces={false}
+              extraScrollHeight={65}
             >
               {/* FULL NAME INPUT */}
               <Text style={styles.inputLabel}>Full Name</Text>
@@ -675,7 +677,7 @@ export default function EmergencyContactsScreen() {
                   )}
                 </Pressable>
               </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -993,6 +995,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   modalScrollContent: {
+    flexGrow: 1,
     paddingBottom: 40,
   },
   modalHeader: {

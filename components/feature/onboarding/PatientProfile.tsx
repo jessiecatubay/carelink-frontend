@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -114,12 +114,12 @@ export default function PatientProfile({ initialValues, onContinue }: PatientPro
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboardContainer}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+        extraScrollHeight={75}
       >
         <View>
           <View style={styles.paginationWrap}>
@@ -306,7 +306,7 @@ export default function PatientProfile({ initialValues, onContinue }: PatientPro
             style={styles.button}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </KeyboardAvoidingView>
   );
 }

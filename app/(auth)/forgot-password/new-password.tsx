@@ -1,9 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
 } from "react-native";
@@ -57,12 +57,12 @@ export default function NewPasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+          extraScrollHeight={65}
         >
           <ForgotPasswordHeader
             title="Create New Password"
@@ -77,7 +77,7 @@ export default function NewPasswordScreen() {
             onSubmit={handleResetPassword}
             loading={loading}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

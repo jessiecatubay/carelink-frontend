@@ -1,11 +1,11 @@
 import RegisterDeviceSection from "@/components/feature/patient/settings/RegisterDeviceSection";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -44,15 +44,15 @@ export default function RegisterDeviceScreen() {
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
-            automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+            extraScrollHeight={65}
           >
             <RegisterDeviceSection />
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </>

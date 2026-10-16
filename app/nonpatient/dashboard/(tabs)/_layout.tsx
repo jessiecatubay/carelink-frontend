@@ -20,6 +20,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: "#0AA7A8",
         tabBarInactiveTintColor: "#64748B",
         tabBarStyle: {

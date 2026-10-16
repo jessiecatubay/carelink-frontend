@@ -1,77 +1,89 @@
-import { useState } from "react";
-import { Image, ImageSourcePropType, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { forwardRef, useState } from "react";
+import {
+  Image,
+  ImageSourcePropType,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+  ViewStyle,
+} from "react-native";
 
-type InputProps = {
-  placeholder?: string;
-  placeholderTextColor?: string;
-  value?: string;
-  onChangeText?: (text: string) => void;
-  keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
+export type InputProps = Omit<TextInputProps, "style"> & {
   error?: string;
   icon?: ImageSourcePropType;
-  autoCapitalize?: "none" | "sentences" | "words" | "characters";
-  autoComplete?: any;
-  textContentType?: any;
-  onFocus?: () => void;
-  onBlur?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
 };
 
-export default function Input({
-  placeholder = "Email",
-  placeholderTextColor = "#94A3B8",
-  value = "",
-  onChangeText,
-  keyboardType = "default",
-  error,
-  icon,
-  autoCapitalize,
-  autoComplete,
-  textContentType,
-  onFocus,
-  onBlur,
-}: InputProps) {
-  const [isFocused, setIsFocused] = useState(false);
-  const resolvedIcon = icon || require("@/assets/icons/user.png");
+const Input = forwardRef<TextInput, InputProps>(
+  (
+    {
+      placeholder = "Email",
+      placeholderTextColor = "#94A3B8",
+      value = "",
+      onChangeText,
+      keyboardType = "default",
+      error,
+      icon,
+      autoCapitalize,
+      autoComplete,
+      textContentType,
+      onFocus,
+      onBlur,
+      containerStyle,
+      ...restProps
+    },
+    ref
+  ) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const resolvedIcon = icon || require("@/assets/icons/user.png");
 
-  return (
-    <View>
-      <View
-        style={[
-          styles.container,
-          isFocused ? styles.focusedContainer : null,
-          error ? styles.errorContainer : null,
-        ]}
-      >
-        <Image
-          source={resolvedIcon}
-          style={[styles.icon, isFocused ? styles.iconFocused : null]}
-          resizeMode="contain"
-        />
+    return (
+      <View style={containerStyle}>
+        <View
+          style={[
+            styles.container,
+            isFocused ? styles.focusedContainer : null,
+            error ? styles.errorContainer : null,
+          ]}
+        >
+          <Image
+            source={resolvedIcon}
+            style={[styles.icon, isFocused ? styles.iconFocused : null]}
+            resizeMode="contain"
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor={placeholderTextColor}
-          value={value}
-          onChangeText={onChangeText}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          autoComplete={autoComplete}
-          textContentType={textContentType}
-          onFocus={() => {
-            setIsFocused(true);
-            onFocus?.();
-          }}
-          onBlur={() => {
-            setIsFocused(false);
-            onBlur?.();
-          }}
-        />
+          <TextInput
+            ref={ref}
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor={placeholderTextColor}
+            value={value}
+            onChangeText={onChangeText}
+            keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
+            autoComplete={autoComplete}
+            textContentType={textContentType}
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocus?.(e as any);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e as any);
+            }}
+            {...restProps}
+          />
+        </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </View>
-  );
-}
+    );
+  }
+);
+
+Input.displayName = "Input";
 
 const styles = StyleSheet.create({
   container: {
@@ -112,3 +124,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+export default Input;

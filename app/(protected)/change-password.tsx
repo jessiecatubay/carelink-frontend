@@ -12,12 +12,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -120,7 +120,7 @@ export default function ChangePasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardContainer}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.content,
             (isSuccess || isGoogleUser) && styles.successContent,
@@ -128,7 +128,7 @@ export default function ChangePasswordScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+          extraScrollHeight={65}
         >
           {isSuccess ? (
             <ChangePasswordSuccess onContinue={handleGoBack} />
@@ -183,7 +183,7 @@ export default function ChangePasswordScreen() {
               />
             </>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

@@ -7,10 +7,10 @@ import { nameStepSchema } from "@/schema/auth";
 import { updateUser as updateUserApi } from "@/services/auth";
 import { capitalizeWords, formatNameInput } from "@/utils/string";
 import React, { useEffect, useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -111,12 +111,12 @@ export default function UserNameStep({ onContinue }: UserNameStepProps) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1 }}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         showsVerticalScrollIndicator={false}
+        extraScrollHeight={65}
       >
         <View style={styles.container}>
 
@@ -174,7 +174,7 @@ export default function UserNameStep({ onContinue }: UserNameStepProps) {
             style={styles.button}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </KeyboardAvoidingView>
   );
 }

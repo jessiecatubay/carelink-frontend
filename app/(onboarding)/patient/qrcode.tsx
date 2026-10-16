@@ -51,7 +51,7 @@ export default function DevicePairingScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardContainer}
       >
         <View style={styles.container}>
