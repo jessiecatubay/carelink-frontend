@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { onPatientAlert, onPillReminder } from "@/hooks/lib/socket";
 import { playEmergencySiren, stopEmergencySiren } from "@/services/emergencyAudio";
 import * as Notifications from "expo-notifications";
+import { router } from "expo-router";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -117,7 +118,10 @@ export function EmergencyAlertProvider({
 
   // 2. Listen for Push Notifications (foreground received + opened from closed/background state)
   useEffect(() => {
-    const handlePushNotification = (notification: Notifications.Notification) => {
+    const handlePushNotification = (
+      notification: Notifications.Notification,
+      isUserAction = false,
+    ) => {
       if (user?.role === "PATIENT") {
         return;
       }
@@ -149,25 +153,35 @@ export function EmergencyAlertProvider({
           phoneNumber: data?.phoneNumber,
           deviceId: data?.deviceId,
         });
+      } else if (
+        isUserAction &&
+        (data?.type === "TEMPERATURE_ALERT" ||
+          data?.alertType?.includes("TEMPERATURE"))
+      ) {
+        try {
+          router.push("/nonpatient/dashboard");
+        } catch (navErr) {
+          console.warn("Could not navigate to dashboard:", navErr);
+        }
       }
     };
 
     // When a notification arrives while the app is in foreground
     const notificationListener =
       Notifications.addNotificationReceivedListener((notification) => {
-        handlePushNotification(notification);
+        handlePushNotification(notification, false);
       });
 
     // When the user taps/clicks a notification (e.g. from background or lockscreen)
     const responseListener =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        handlePushNotification(response.notification);
+        handlePushNotification(response.notification, true);
       });
 
-    // Check if the app was launched by tapping an emergency notification
+    // Check if the app was launched by tapping an emergency/alert notification
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (response?.notification) {
-        handlePushNotification(response.notification);
+        handlePushNotification(response.notification, true);
       }
     });
 

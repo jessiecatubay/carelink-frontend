@@ -11,7 +11,7 @@ export default function WelcomeHeader() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.tagline}>Better Health. Closer Together.</Text>
+      <Text style={styles.tagline}>Smarter Care. Closer Together.</Text>
     </View>
   );
 }

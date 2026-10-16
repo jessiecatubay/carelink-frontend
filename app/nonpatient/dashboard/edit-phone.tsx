@@ -7,11 +7,11 @@ import { isValidPhilippinePhoneNumber } from "@/utils/phone";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -130,12 +130,12 @@ export default function EditPhoneScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardContainer}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+          extraScrollHeight={65}
         >
           <Text style={styles.title}>Update Phone Number</Text>
           <Text style={styles.subtitle}>
@@ -173,7 +173,7 @@ export default function EditPhoneScreen() {
               style={styles.saveButton}
             />
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
 
       <CustomAlertModal

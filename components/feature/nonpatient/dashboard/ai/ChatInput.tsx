@@ -1,45 +1,56 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
-type ChatInputProps = {
+export type ChatInputProps = {
   onSend: (text: string) => void;
   disabled?: boolean;
+  onFocus?: () => void;
 };
 
-export default function ChatInput({ onSend, disabled = false }: ChatInputProps) {
-  const [input, setInput] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
+const ChatInput = forwardRef<TextInput, ChatInputProps>(
+  ({ onSend, disabled = false, onFocus }, ref) => {
+    const [input, setInput] = useState("");
+    const [isFocused, setIsFocused] = useState(false);
 
-  const handleSend = () => {
-    if (!input.trim() || disabled) return;
-    onSend(input.trim());
-    setInput("");
-  };
+    const handleSend = () => {
+      if (!input.trim() || disabled) return;
+      onSend(input.trim());
+      setInput("");
+    };
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={[styles.input, isFocused && styles.inputFocused]}
-        placeholder="Ask for help..."
-        placeholderTextColor="#9CA3AF"
-        value={input}
-        onChangeText={setInput}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        onSubmitEditing={handleSend}
-        returnKeyType="send"
-      />
-      <Pressable
-        onPress={handleSend}
-        style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
-        disabled={disabled || !input.trim()}
-      >
-        <Ionicons name="send" size={18} color="#FFFFFF" />
-      </Pressable>
-    </View>
-  );
-}
+    return (
+      <View style={styles.container}>
+        <TextInput
+          ref={ref}
+          style={[styles.input, isFocused && styles.inputFocused]}
+          placeholder="Ask for help..."
+          placeholderTextColor="#9CA3AF"
+          value={input}
+          onChangeText={setInput}
+          onFocus={() => {
+            setIsFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => setIsFocused(false)}
+          onSubmitEditing={handleSend}
+          returnKeyType="send"
+        />
+        <Pressable
+          onPress={handleSend}
+          style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
+          disabled={disabled || !input.trim()}
+        >
+          <Ionicons name="send" size={18} color="#FFFFFF" />
+        </Pressable>
+      </View>
+    );
+  }
+);
+
+ChatInput.displayName = "ChatInput";
+
+export default ChatInput;
 
 const styles = StyleSheet.create({
   container: {

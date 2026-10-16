@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { forwardRef, useState } from "react";
 import {
   Image,
   Pressable,
@@ -11,83 +11,91 @@ import {
   ViewStyle,
 } from "react-native";
 
-type PasswordInputProps = Omit<TextInputProps, "style"> & {
+export type PasswordInputProps = Omit<TextInputProps, "style"> & {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-export default function PasswordInput({
-  placeholder = "Password",
-  value,
-  onChangeText,
-  error,
-  onFocus,
-  onBlur,
-  editable = true,
-  containerStyle,
-  ...props
-}: PasswordInputProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+const PasswordInput = forwardRef<TextInput, PasswordInputProps>(
+  (
+    {
+      placeholder = "Password",
+      value,
+      onChangeText,
+      error,
+      onFocus,
+      onBlur,
+      editable = true,
+      containerStyle,
+      ...props
+    },
+    ref
+  ) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
-  return (
-    <View style={containerStyle}>
-      <View
-        style={[
-          styles.container,
-          !editable ? styles.containerDisabled : null,
-          isFocused ? styles.focusedContainer : null,
-          error ? styles.errorContainer : null,
-        ]}
-      >
-        <Image
-          source={require("@/assets/icons/padlock.png")}
-          style={[styles.icon, isFocused ? styles.iconFocused : null]}
-          resizeMode="contain"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor="#94A3B8"
-          secureTextEntry={!showPassword}
-          value={value}
-          onChangeText={onChangeText}
-          editable={editable}
-          autoCapitalize="none"
-          autoCorrect={false}
-          onFocus={(e) => {
-            setIsFocused(true);
-            onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setIsFocused(false);
-            onBlur?.(e);
-          }}
-          {...props}
-        />
-
-        <Pressable
-          disabled={!editable}
-          onPress={() => setShowPassword(!showPassword)}
-          hitSlop={8}
+    return (
+      <View style={containerStyle}>
+        <View
+          style={[
+            styles.container,
+            !editable ? styles.containerDisabled : null,
+            isFocused ? styles.focusedContainer : null,
+            error ? styles.errorContainer : null,
+          ]}
         >
           <Image
-            source={
-              showPassword
-                ? require("@/assets/icons/hide.png")
-                : require("@/assets/icons/view.png")
-            }
-            style={styles.eyeIcon}
+            source={require("@/assets/icons/padlock.png")}
+            style={[styles.icon, isFocused ? styles.iconFocused : null]}
             resizeMode="contain"
           />
-        </Pressable>
-      </View>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </View>
-  );
-}
+          <TextInput
+            ref={ref}
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor="#94A3B8"
+            secureTextEntry={!showPassword}
+            value={value}
+            onChangeText={onChangeText}
+            editable={editable}
+            autoCapitalize="none"
+            autoCorrect={false}
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
+            {...props}
+          />
+
+          <Pressable
+            disabled={!editable}
+            onPress={() => setShowPassword(!showPassword)}
+            hitSlop={8}
+          >
+            <Image
+              source={
+                showPassword
+                  ? require("@/assets/icons/hide.png")
+                  : require("@/assets/icons/view.png")
+              }
+              style={styles.eyeIcon}
+              resizeMode="contain"
+            />
+          </Pressable>
+        </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </View>
+    );
+  }
+);
+
+PasswordInput.displayName = "PasswordInput";
 
 const styles = StyleSheet.create({
   container: {
@@ -146,3 +154,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+export default PasswordInput;

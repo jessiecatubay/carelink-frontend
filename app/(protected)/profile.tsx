@@ -14,12 +14,12 @@ import { capitalizeWords, formatNameInput } from "@/utils/string";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -305,15 +305,15 @@ export default function ProfileScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           alwaysBounceVertical={true}
           bounces={true}
           overScrollMode="always"
+          extraScrollHeight={75}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -362,7 +362,7 @@ export default function ProfileScreen() {
             style={styles.editButton}
             disabled={saving}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
 
       <CustomAlertModal

@@ -2,6 +2,7 @@ import { resendEmailVerification, verifyEmail } from "@/services/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   ActivityIndicator,
   Keyboard,
@@ -9,7 +10,6 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -240,15 +240,15 @@ export default function VerifyEmailScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           showsVerticalScrollIndicator={false}
           alwaysBounceVertical={true}
           bounces={true}
           overScrollMode="always"
+          extraScrollHeight={65}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -419,7 +419,7 @@ export default function VerifyEmailScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

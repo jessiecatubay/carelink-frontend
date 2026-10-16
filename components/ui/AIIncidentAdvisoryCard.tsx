@@ -124,18 +124,6 @@ export default function AIIncidentAdvisoryCard({
         <View style={styles.headerTextWrap}>
           <View style={styles.titleRow}>
             <Text style={styles.headerTitle}>AI Incident Advisory</Text>
-            {advisory?.priorityLevel ? (
-              <View
-                style={[
-                  styles.priorityPill,
-                  { backgroundColor: getPriorityBadgeColor(advisory.priorityLevel) },
-                ]}
-              >
-                <Text style={styles.priorityPillText}>
-                  {advisory.priorityLevel}
-                </Text>
-              </View>
-            ) : null}
           </View>
           <Text style={styles.headerDescription}>
             Our AI instantly analyzes the emergency alert context and provides

@@ -2,10 +2,10 @@ import RegisterForm from "@/components/feature/auth/RegisterForm";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import KeyboardAwareScrollView from "@/components/common/KeyboardAwareScrollView";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -22,7 +22,7 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+        keyboardVerticalOffset={0}
       >
         {!isSuccess && (
           <View style={styles.headerBar}>
@@ -42,7 +42,7 @@ export default function RegisterScreen() {
           </View>
         )}
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.scrollContent,
             isSuccess && styles.scrollContentCentered,
@@ -50,7 +50,7 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets={true}
+          extraScrollHeight={65}
         >
           {!isSuccess && (
             <View style={styles.header}>
@@ -62,7 +62,7 @@ export default function RegisterScreen() {
           )}
 
           <RegisterForm onSuccess={() => setIsSuccess(true)} />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

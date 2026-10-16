@@ -1,14 +1,18 @@
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "@/hooks/lib/axios";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  KeyboardAvoidingView,
+  Animated,
+  Keyboard,
+  KeyboardEvent,
+  LayoutChangeEvent,
   Platform,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import AIHeader from "@/components/feature/nonpatient/dashboard/ai/AIHeader";
 import ChatInput from "@/components/feature/nonpatient/dashboard/ai/ChatInput";
@@ -52,6 +56,137 @@ export default function AiHelpScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const [isAIResponding, setIsAIResponding] = useState(false);
 
+  // Tab bar height for exact iOS keyboard clearance above bottom tabs
+  const rawTabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight =
+    typeof rawTabBarHeight === "number" && !isNaN(rawTabBarHeight)
+      ? rawTabBarHeight
+      : Platform.OS === "ios"
+        ? 88
+        : 68;
+
+  // Reactive bottom padding animation
+  const keyboardOffset = useRef(new Animated.Value(0)).current;
+  const isKeyboardOpenRef = useRef(false);
+  const currentKeyboardHeightRef = useRef(0);
+  const initialContainerHeightRef = useRef(0);
+  const currentContainerHeightRef = useRef(0);
+
+  const calculateTargetOffset = useCallback(
+    (keyboardHeight: number) => {
+      if (keyboardHeight <= 0) return 0;
+
+      if (Platform.OS === "ios") {
+        // On iOS, the tab bar remains visible under the keyboard.
+        // The view ends at the top of the tab bar, so the keyboard overlaps
+        // the view only by the extent it exceeds the tab bar height.
+        return Math.max(0, keyboardHeight - tabBarHeight);
+      }
+
+      // On Android:
+      // Check if Android OS / WindowInsets has already resized the container layout.
+      const initialHeight = initialContainerHeightRef.current;
+      const currentHeight = currentContainerHeightRef.current;
+      const layoutShrinkage =
+        initialHeight > 0 && currentHeight > 0
+          ? Math.max(0, initialHeight - currentHeight)
+          : 0;
+
+      // If the container already shrank by keyboard height (e.g. adjustResize mode),
+      // no extra padding is required.
+      // If the container did NOT shrink (edge-to-edge / bottom tabs), layoutShrinkage is 0,
+      // so targetOffset equals keyboardHeight.
+      return Math.max(0, keyboardHeight - layoutShrinkage);
+    },
+    [tabBarHeight]
+  );
+
+  const animateKeyboardOffset = useCallback(
+    (toValue: number, duration: number = 250) => {
+      Animated.timing(keyboardOffset, {
+        toValue,
+        duration: Platform.OS === "ios" ? duration : 150,
+        useNativeDriver: false,
+      }).start();
+    },
+    [keyboardOffset]
+  );
+
+  const scrollToBottom = useCallback((animated = true) => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    });
+    const t1 = setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    }, 100);
+    const t2 = setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    }, 280);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyboardShow = (e: KeyboardEvent) => {
+      isKeyboardOpenRef.current = true;
+      const kh = e.endCoordinates.height;
+      currentKeyboardHeightRef.current = kh;
+      const target = calculateTargetOffset(kh);
+      animateKeyboardOffset(target, e.duration || 250);
+      scrollToBottom();
+    };
+
+    const handleKeyboardHide = (e?: KeyboardEvent) => {
+      isKeyboardOpenRef.current = false;
+      currentKeyboardHeightRef.current = 0;
+      animateKeyboardOffset(0, e?.duration || 200);
+    };
+
+    const subs = [
+      Keyboard.addListener(
+        Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+        handleKeyboardShow
+      ),
+      Keyboard.addListener(
+        Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+        handleKeyboardHide
+      ),
+    ];
+
+    if (Platform.OS === "android") {
+      try {
+        subs.push(
+          Keyboard.addListener("keyboardWillShow", handleKeyboardShow),
+          Keyboard.addListener("keyboardWillHide", handleKeyboardHide)
+        );
+      } catch {}
+    }
+
+    return () => {
+      subs.forEach((sub) => sub.remove());
+    };
+  }, [animateKeyboardOffset, calculateTargetOffset, scrollToBottom]);
+
+  const handleContainerLayout = (e: LayoutChangeEvent) => {
+    const { height } = e.nativeEvent.layout;
+    if (height <= 0) return;
+
+    if (!isKeyboardOpenRef.current) {
+      if (!initialContainerHeightRef.current || height > initialContainerHeightRef.current) {
+        initialContainerHeightRef.current = height;
+      }
+    }
+    currentContainerHeightRef.current = height;
+
+    if (isKeyboardOpenRef.current && Platform.OS === "android") {
+      const target = calculateTargetOffset(currentKeyboardHeightRef.current);
+      animateKeyboardOffset(target, 100);
+      scrollToBottom();
+    }
+  };
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -86,7 +221,6 @@ export default function AiHelpScreen() {
 
     fetchPatient();
   }, [user?.id]);
-
 
   useEffect(() => {
     const loadChatHistory = async () => {
@@ -123,12 +257,6 @@ export default function AiHelpScreen() {
 
     saveChatHistory();
   }, [messages, isLoadingHistory]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  };
 
   const handleSend = async (text: string) => {
     const trimmedText = text.trim();
@@ -186,38 +314,38 @@ export default function AiHelpScreen() {
 
     scrollToBottom();
   };
+
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <AIHeader patientName={patientName} />
 
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      <Animated.View
+        style={[styles.container, { paddingBottom: keyboardOffset }]}
+        onLayout={handleContainerLayout}
       >
         <ScrollView
           ref={scrollViewRef}
+          style={styles.chatScrollView}
           contentContainerStyle={styles.chatScroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          onContentSizeChange={scrollToBottom}
+          onContentSizeChange={() => scrollToBottom()}
         >
           {messages.map((msg) => (
             <ChatMessage key={msg.id} message={msg} isCopyable={true} />
           ))}
 
           {isAIResponding && (
-            <View
-                  style={[
-                    styles.row,
-                    styles.aiRow,
-                  ]}
-                >
-            <View style={styles.avatarWrap}>
-                      <AIIcon size={44} />
-                    </View>
-            <ChatBubble text="CareLink is thinking..." isUser={false} isCopyable={false} />
+            <View style={[styles.row, styles.aiRow]}>
+              <View style={styles.avatarWrap}>
+                <AIIcon size={44} />
+              </View>
+              <ChatBubble
+                text="CareLink is thinking..."
+                isUser={false}
+                isCopyable={false}
+              />
             </View>
           )}
         </ScrollView>
@@ -228,8 +356,8 @@ export default function AiHelpScreen() {
           onSelectPrompt={handleSend}
         />
 
-        <ChatInput onSend={handleSend} />
-      </KeyboardAvoidingView>
+        <ChatInput onSend={handleSend} onFocus={scrollToBottom} />
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -242,6 +370,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  chatScrollView: {
+    flex: 1,
   },
   chatScroll: {
     paddingVertical: 18,
