@@ -35,7 +35,7 @@ export async function registerForPushNotificationsAsync() {
   }
 
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("carelink-emergency-v2", {
+    await Notifications.setNotificationChannelAsync("carelink-emergency-v3", {
       name: "CareLink Critical Emergency",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 500, 200, 500, 200, 1000],

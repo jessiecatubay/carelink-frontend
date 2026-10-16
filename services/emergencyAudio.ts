@@ -1,42 +1,81 @@
 import { getNotificationSettings } from "@/hooks/lib/notification-settings";
 import * as Notifications from "expo-notifications";
-import { NativeModules, Platform, Vibration } from "react-native";
+import { Platform, Vibration } from "react-native";
 
-const { EmergencySoundModule } = NativeModules;
-
-let activeAudioHandle: any = null;
 let isSirenPlaying = false;
-let sirenInterval: ReturnType<typeof setInterval> | null = null;
+let chimeIntervalId: ReturnType<typeof setInterval> | null = null;
+let webAudio: any = null;
+
+// alert_sound.wav has an exact duration of ~5.59 seconds
+const WAV_LOOP_INTERVAL_MS = 5500;
 
 /**
  * Triggers the emergency siren notification chime fallback.
- * Uses a static identifier so it updates rather than generating duplicate notifications.
+ * Uses sticky + autoDismiss:false so the notification banner CANNOT be dismissed by swiping away on Android,
+ * and refreshes the sound every loop cycle.
  */
 async function triggerEmergencyChime(): Promise<void> {
   if (Platform.OS === "web") return;
   try {
+    // Dismiss previous instance so Android treats this as a fresh alert and replays the sound
+    await Notifications.dismissNotificationAsync("carelink-emergency-active").catch(() => {});
+
     await Notifications.scheduleNotificationAsync({
       identifier: "carelink-emergency-active",
       content: {
         title: "🚨 CARELINK EMERGENCY ALERT",
-        body: "Emergency siren active — Connected patient needs immediate assistance!",
+        body: "Emergency siren active — Connected patient needs immediate assistance! Tap to respond.",
         sound: "alert_sound.wav",
         priority: Notifications.AndroidNotificationPriority.MAX,
         vibrate: [0, 600, 200, 600, 200, 600, 400, 800],
+        sticky: true,
+        autoDismiss: false,
         data: { type: "EMERGENCY", command: "EMERGENCY" },
-        ...(Platform.OS === "android" ? { channelId: "carelink-emergency-v2" } : {}),
       },
-      trigger: null,
+      trigger: Platform.OS === "android" ? { channelId: "carelink-emergency-v3" } : null,
     });
   } catch (err) {
     console.warn("triggerEmergencyChime error:", err);
   }
 }
 
+function playWebAudio() {
+  if (Platform.OS !== "web") return;
+  try {
+    if (typeof window !== "undefined" && typeof window.Audio !== "undefined") {
+      if (!webAudio) {
+        try {
+          const soundAsset = require("@/assets/sounds/alert_sound.wav");
+          const src = typeof soundAsset === "string" ? soundAsset : soundAsset?.default || soundAsset?.uri;
+          if (src) {
+            webAudio = new window.Audio(src);
+            webAudio.loop = true;
+          }
+        } catch {
+          // Fallback or asset require unsupported
+        }
+      }
+      if (webAudio) {
+        webAudio.play().catch(() => {});
+      }
+    }
+  } catch (err) {
+    console.warn("Web audio playback error:", err);
+  }
+}
+
+function stopWebAudio() {
+  if (Platform.OS !== "web" || !webAudio) return;
+  try {
+    webAudio.pause();
+    webAudio.currentTime = 0;
+  } catch {}
+}
+
 /**
- * Plays the emergency siren sound using alert_sound.wav safely.
- * Loops loudly through speakers and vibrates until stopEmergencySiren() is called.
- * Works seamlessly in native Android Development/Release APKs, Expo Go, and Web.
+ * Plays the emergency siren sound using alert_sound.wav.
+ * Loops vibration and triggers the high-priority emergency notification channel with custom sound.
+ * Won't stop until stopEmergencySiren() is called upon caregiver acknowledgment.
  */
 export async function playEmergencySiren(): Promise<void> {
   try {
@@ -61,42 +100,32 @@ export async function playEmergencySiren(): Promise<void> {
       console.warn("Vibration warning:", vibErr);
     }
 
-    let nativeSoundPlayed = false;
-
-    // 2. Native Android MediaPlayer playback (Direct hardware audio through USAGE_ALARM)
-    if (Platform.OS === "android" && EmergencySoundModule?.playEmergencySound) {
-      try {
-        await EmergencySoundModule.playEmergencySound();
-        nativeSoundPlayed = true;
-        console.log("🔊 alert_sound.wav playing via Native Android MediaPlayer (EmergencySoundModule).");
-      } catch (nativeErr) {
-        console.warn("EmergencySoundModule.playEmergencySound error:", nativeErr);
-      }
+    // 2. Web browser audio playback if on Web
+    if (Platform.OS === "web") {
+      playWebAudio();
     }
 
-    // 3. Web Audio if running on Web browser
-    if (!nativeSoundPlayed && Platform.OS === "web" && typeof window !== "undefined") {
-      try {
-        const audio = new (window as any).Audio(require("@/assets/sounds/alert_sound.wav"));
-        audio.loop = true;
-        audio.volume = 1.0;
-        await audio.play();
-        activeAudioHandle = {
-          stop: () => {
-            audio.pause();
-            audio.currentTime = 0;
-          },
-        };
-        console.log("🔊 alert_sound.wav playing via Web Audio API.");
-      } catch (webAudioErr) {
-        console.warn("Web audio playback error:", webAudioErr);
-      }
-    }
-
-    // 4. Fallback chime if native sound module is unavailable (e.g., Expo Go)
-    // Only triggered if native audio didn't play, avoiding duplicate notifications.
-    if (!nativeSoundPlayed && Platform.OS !== "web") {
+    // 3. Native emergency notification chime with custom sound (res/raw/alert_sound.wav)
+    if (Platform.OS !== "web") {
       await triggerEmergencyChime();
+
+      // Clear any previous interval just in case
+      if (chimeIntervalId) {
+        clearInterval(chimeIntervalId);
+        chimeIntervalId = null;
+      }
+
+      // Re-trigger chime every 5.5 seconds (duration of alert_sound.wav) so it loops continuously
+      chimeIntervalId = setInterval(() => {
+        if (!isSirenPlaying) {
+          if (chimeIntervalId) {
+            clearInterval(chimeIntervalId);
+            chimeIntervalId = null;
+          }
+          return;
+        }
+        triggerEmergencyChime();
+      }, WAV_LOOP_INTERVAL_MS);
     }
   } catch (error) {
     console.error("Failed to play emergency siren:", error);
@@ -104,19 +133,19 @@ export async function playEmergencySiren(): Promise<void> {
 }
 
 /**
- * Stops the emergency siren sound, cancels vibration, and releases audio handles.
+ * Stops the emergency siren sound, cancels vibration, and dismisses the emergency banner.
+ * Called when the caregiver acknowledges the emergency.
  */
 export async function stopEmergencySiren(): Promise<void> {
   isSirenPlaying = false;
 
-  // 1. Stop Native Android MediaPlayer
-  if (Platform.OS === "android" && EmergencySoundModule?.stopEmergencySound) {
-    try {
-      await EmergencySoundModule.stopEmergencySound();
-    } catch (nativeStopErr) {
-      console.warn("EmergencySoundModule.stopEmergencySound error:", nativeStopErr);
-    }
+  if (chimeIntervalId) {
+    clearInterval(chimeIntervalId);
+    chimeIntervalId = null;
   }
+
+  // 1. Stop web audio if playing
+  stopWebAudio();
 
   // 2. Cancel vibration
   try {
@@ -125,30 +154,10 @@ export async function stopEmergencySiren(): Promise<void> {
     }
   } catch {}
 
-  // 3. Clear siren interval
-  if (sirenInterval) {
-    clearInterval(sirenInterval);
-    sirenInterval = null;
-  }
-
-  // 4. Stop web audio handle
-  if (activeAudioHandle) {
-    try {
-      await activeAudioHandle.stop();
-    } catch (e) {
-      console.warn("Error stopping activeAudioHandle:", e);
-    }
-    activeAudioHandle = null;
-  }
-
-  // 5. Dismiss fallback emergency notification
+  // 3. Dismiss sticky emergency notification banner
   try {
     if (Platform.OS !== "web") {
       await Notifications.dismissNotificationAsync("carelink-emergency-active");
     }
   } catch {}
 }
-
-
-
-
